@@ -1,22 +1,21 @@
-import { useState, useEffect } from "react";
 import { Resource } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
+import { fetchResources } from "@/lib/api";
 
-export function useResources(categories: string[], location: string | null) {
+export function useResources(
+  categoryId: string | null, 
+  subcategoryId: string | null, 
+  location: { type: 'zipCode', value: string } | { type: 'coordinates', latitude: number, longitude: number } | null
+) {
   // Query key that depends on filters
-  const queryKey = ['/api/resources', { 
-    categories: categories.join(','), 
-    location 
-  }];
-  
-  // Build query params
-  const queryParams = new URLSearchParams();
-  if (categories.length > 0) {
-    queryParams.append('categories', categories.join(','));
-  }
-  if (location) {
-    queryParams.append('location', location);
-  }
+  const queryKey = [
+    '/api/resources', 
+    { 
+      categoryId, 
+      subcategoryId,
+      location: location ? JSON.stringify(location) : null 
+    }
+  ];
   
   // Make the API request
   const {
@@ -24,25 +23,37 @@ export function useResources(categories: string[], location: string | null) {
     isLoading,
     error,
     refetch
-  } = useQuery<{ resources: Resource[], total: number }>({
+  } = useQuery<Resource[]>({
     queryKey,
-    queryFn: ({ queryKey }) => {
-      // Using the built-in fetcher from queryClient.ts
-      const [baseUrl, params] = queryKey;
-      const url = queryParams.toString() 
-        ? `${baseUrl}?${queryParams.toString()}` 
-        : baseUrl as string;
-      return fetch(url, { credentials: 'include' }).then(res => {
-        if (!res.ok) throw new Error(`API request failed with status ${res.status}`);
-        return res.json();
-      });
+    queryFn: async () => {
+      if (location) {
+        if (location.type === 'zipCode') {
+          return fetchResources(
+            categoryId || undefined, 
+            subcategoryId || undefined, 
+            location.value
+          );
+        } else {
+          return fetchResources(
+            categoryId || undefined, 
+            subcategoryId || undefined, 
+            undefined, 
+            { latitude: location.latitude, longitude: location.longitude }
+          );
+        }
+      } else {
+        return fetchResources(
+          categoryId || undefined, 
+          subcategoryId || undefined
+        );
+      }
     },
     enabled: true,
   });
   
   return {
-    resources: data?.resources || [],
-    totalCount: data?.total || 0,
+    resources: data || [],
+    totalCount: data?.length || 0,
     isLoading,
     error: error as Error | null,
     refetch

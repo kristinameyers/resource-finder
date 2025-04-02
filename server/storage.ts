@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, type Resource, type Category, type Location } from "@shared/schema";
+import { users, type User, type InsertUser, type Resource, type Category, type Subcategory, type Location } from "@shared/schema";
 import fetch from "node-fetch";
 
 // modify the interface with any CRUD methods
@@ -10,15 +10,19 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Resources related methods
-  getResources(categories?: string[], location?: string): Promise<Resource[]>;
+  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number): Promise<Resource[]>;
   getCategories(): Promise<Category[]>;
+  getSubcategories(categoryId: string): Promise<Subcategory[]>;
   getLocations(): Promise<Location[]>;
+  getLocationByZipCode(zipCode: string): Promise<Location | undefined>;
+  getLocationByCoordinates(latitude: number, longitude: number): Promise<Location | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private resources: Resource[];
   private categories: Category[];
+  private subcategories: Subcategory[];
   private locations: Location[];
   currentId: number;
 
@@ -29,24 +33,67 @@ export class MemStorage implements IStorage {
     // Initialize with empty arrays
     this.resources = [];
     this.categories = [];
+    this.subcategories = [];
     this.locations = [];
     
-    // Populate default categories
+    // Populate default categories with icons
     this.categories = [
-      { id: 'health', name: 'Health & Wellness' },
-      { id: 'education', name: 'Education' },
-      { id: 'housing', name: 'Housing' },
-      { id: 'employment', name: 'Employment' },
-      { id: 'food', name: 'Food Assistance' },
+      { id: 'housing', name: 'Housing', icon: 'home' },
+      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase' },
+      { id: 'food', name: 'Food', icon: 'utensils' },
+      { id: 'transportation', name: 'Transportation', icon: 'bus' },
+      { id: 'healthcare', name: 'Health Care', icon: 'stethoscope' },
+      { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower' },
+      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain' },
+      { id: 'substance-use', name: 'Substance Use', icon: 'pills' },
+      { id: 'children-family', name: 'Children & Family', icon: 'users' },
+      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap' },
+      { id: 'education', name: 'Education', icon: 'book' },
+      { id: 'seniors-caregivers', name: 'Seniors & Caregivers', icon: 'user-nurse' },
+      { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel' },
+      { id: 'utilities', name: 'Utilities', icon: 'bolt' },
+      { id: 'reentry', name: 'Reentry', icon: 'door-open' },
     ];
     
-    // Populate default locations
+    // Populate subcategories for each category
+    this.subcategories = [
+      // Housing subcategories
+      { id: 'emergency-shelters', name: 'Emergency Shelters', categoryId: 'housing' },
+      { id: 'transitional-housing', name: 'Transitional Housing', categoryId: 'housing' },
+      { id: 'rental-assistance', name: 'Rental Assistance', categoryId: 'housing' },
+      { id: 'affordable-housing', name: 'Affordable Housing', categoryId: 'housing' },
+      
+      // Finance & Employment subcategories
+      { id: 'job-training', name: 'Job Training', categoryId: 'finance-employment' },
+      { id: 'job-placement', name: 'Job Placement', categoryId: 'finance-employment' },
+      { id: 'financial-assistance', name: 'Financial Assistance', categoryId: 'finance-employment' },
+      { id: 'financial-education', name: 'Financial Education', categoryId: 'finance-employment' },
+      
+      // Food subcategories
+      { id: 'food-pantries', name: 'Food Pantries', categoryId: 'food' },
+      { id: 'meal-programs', name: 'Meal Programs', categoryId: 'food' },
+      { id: 'snap-benefits', name: 'SNAP Benefits', categoryId: 'food' },
+      { id: 'wic', name: 'WIC', categoryId: 'food' },
+      
+      // Add a few subcategories for each main category
+      { id: 'public-transit', name: 'Public Transit', categoryId: 'transportation' },
+      { id: 'medical-transportation', name: 'Medical Transportation', categoryId: 'transportation' },
+      
+      { id: 'primary-care', name: 'Primary Care', categoryId: 'healthcare' },
+      { id: 'specialty-care', name: 'Specialty Care', categoryId: 'healthcare' },
+      { id: 'dental-care', name: 'Dental Care', categoryId: 'healthcare' },
+      
+      { id: 'counseling', name: 'Counseling', categoryId: 'mental-wellness' },
+      { id: 'crisis-support', name: 'Crisis Support', categoryId: 'mental-wellness' },
+    ];
+    
+    // Populate default locations with zip codes
     this.locations = [
-      { id: 'new-york', name: 'New York, NY' },
-      { id: 'los-angeles', name: 'Los Angeles, CA' },
-      { id: 'chicago', name: 'Chicago, IL' },
-      { id: 'houston', name: 'Houston, TX' },
-      { id: 'phoenix', name: 'Phoenix, AZ' },
+      { id: 'new-york', name: 'New York, NY', zipCode: '10001', latitude: 40.7128, longitude: -74.0060 },
+      { id: 'los-angeles', name: 'Los Angeles, CA', zipCode: '90001', latitude: 34.0522, longitude: -118.2437 },
+      { id: 'chicago', name: 'Chicago, IL', zipCode: '60601', latitude: 41.8781, longitude: -87.6298 },
+      { id: 'houston', name: 'Houston, TX', zipCode: '77001', latitude: 29.7604, longitude: -95.3698 },
+      { id: 'phoenix', name: 'Phoenix, AZ', zipCode: '85001', latitude: 33.4484, longitude: -112.0740 },
     ];
   }
 
@@ -67,61 +114,61 @@ export class MemStorage implements IStorage {
     return user;
   }
   
-  async getResources(categories?: string[], location?: string): Promise<Resource[]> {
-    // Here we'd normally fetch from an external API
-    // For now, we'll use the API proxy from our own server
-    try {
-      const apiUrl = 'https://api.211sandiego.org/v1/resources';
-      const url = new URL(apiUrl);
-      
-      // Add query parameters if provided
-      if (categories && categories.length > 0) {
-        url.searchParams.append('categories', categories.join(','));
+  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number): Promise<Resource[]> {
+    // Here we would normally fetch from an external API
+    // For testing, we'll generate mock resources if none exist yet
+    if (this.resources.length === 0) {
+      // Generate some sample resources for each category and subcategory
+      for (const category of this.categories) {
+        // Get subcategories for this category
+        const categorySubs = this.subcategories.filter(sub => sub.categoryId === category.id);
+        
+        for (const sub of categorySubs) {
+          // Generate 2-4 resources per subcategory
+          const numResources = 2 + Math.floor(Math.random() * 3);
+          
+          for (let i = 0; i < numResources; i++) {
+            const resourceId = `${category.id}-${sub.id}-${i}`;
+            
+            this.resources.push({
+              id: resourceId,
+              name: `${sub.name} Resource ${i + 1}`,
+              description: `This is a resource for ${sub.name} under the ${category.name} category.`,
+              categoryId: category.id,
+              subcategoryId: sub.id,
+              location: "Various Locations",
+              zipCode: "00000", // Default zip code
+              url: `https://example.com/resources/${resourceId}`
+            });
+          }
+        }
       }
-      
-      if (location) {
-        url.searchParams.append('location', location);
-      }
-      
-      // Set limit and other parameters
-      url.searchParams.append('limit', '100');
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
-      }
-      
-      const data = await response.json() as any;
-      
-      if (!Array.isArray(data)) {
-        // Format the data to match our Resource type
-        // This depends on the exact shape of the API response
-        // For now, returning our empty array
-        return this.resources;
-      }
-      
-      return data.map((item: any) => ({
-        id: item.id || String(Math.random()),
-        name: item.name || item.title || 'Resource',
-        description: item.description || item.summary || 'No description available',
-        category: item.category || 'Uncategorized',
-        location: item.location || 'Unknown location',
-        imageUrl: item.image_url || item.imageUrl,
-        url: item.url || item.website,
-      })) as Resource[];
-      
-    } catch (error) {
-      console.error('Error fetching resources:', error);
-      // Since this is a fallback, we'll return our cached resources if available
-      // or an empty array if we don't have any cached
-      return this.resources.length ? this.resources : [];
     }
+    
+    // Filter resources based on provided parameters
+    let filteredResources = [...this.resources];
+    
+    if (categoryId) {
+      filteredResources = filteredResources.filter(r => r.categoryId === categoryId);
+    }
+    
+    if (subcategoryId) {
+      filteredResources = filteredResources.filter(r => r.subcategoryId === subcategoryId);
+    }
+    
+    if (zipCode) {
+      // For now, just filter to resources that have a matching zip code
+      // In a real app, we might include resources from nearby zip codes
+      filteredResources = filteredResources.filter(r => r.zipCode === zipCode);
+    }
+    
+    if (latitude && longitude) {
+      // In a real app, we would filter resources by proximity to these coordinates
+      // For now, we'll just return all resources since this is a mock implementation
+      console.log(`Filtering by coordinates: ${latitude}, ${longitude}`);
+    }
+    
+    return filteredResources;
   }
   
   async getCategories(): Promise<Category[]> {
@@ -129,9 +176,26 @@ export class MemStorage implements IStorage {
     return this.categories;
   }
   
+  async getSubcategories(categoryId: string): Promise<Subcategory[]> {
+    // Filter subcategories by category ID
+    return this.subcategories.filter(sub => sub.categoryId === categoryId);
+  }
+  
   async getLocations(): Promise<Location[]> {
     // Return our predefined locations
     return this.locations;
+  }
+  
+  async getLocationByZipCode(zipCode: string): Promise<Location | undefined> {
+    // Find location by zip code
+    return this.locations.find(loc => loc.zipCode === zipCode);
+  }
+  
+  async getLocationByCoordinates(latitude: number, longitude: number): Promise<Location | undefined> {
+    // In a real app, we would find the closest location to the given coordinates
+    // For now, we'll just return the first location since this is a mock implementation
+    console.log(`Finding location by coordinates: ${latitude}, ${longitude}`);
+    return this.locations[0];
   }
 }
 

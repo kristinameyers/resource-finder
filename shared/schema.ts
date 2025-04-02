@@ -20,20 +20,31 @@ export type User = typeof users.$inferSelect;
 export interface Category {
   id: string;
   name: string;
+  icon?: string; // Icon identifier for this category
+}
+
+export interface Subcategory {
+  id: string;
+  name: string;
+  categoryId: string; // Parent category ID
 }
 
 export interface Location {
   id: string;
   name: string;
+  zipCode: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Resource {
   id: string;
   name: string;
   description: string;
-  category: string;
+  categoryId: string;
+  subcategoryId?: string;
   location: string;
-  imageUrl?: string;
+  zipCode?: string;
   url?: string;
 }
 
@@ -41,20 +52,31 @@ export const resourceSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  category: z.string(),
+  categoryId: z.string(),
+  subcategoryId: z.string().optional(),
   location: z.string(),
-  imageUrl: z.string().optional(),
+  zipCode: z.string().optional(),
   url: z.string().optional(),
 });
 
 export const categorySchema = z.object({
   id: z.string(),
   name: z.string(),
+  icon: z.string().optional(),
+});
+
+export const subcategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  categoryId: z.string(),
 });
 
 export const locationSchema = z.object({
   id: z.string(),
   name: z.string(),
+  zipCode: z.string(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 export type ResourcesResponse = {
@@ -64,6 +86,10 @@ export type ResourcesResponse = {
 
 export type CategoriesResponse = {
   categories: Category[];
+};
+
+export type SubcategoriesResponse = {
+  subcategories: Subcategory[];
 };
 
 export type LocationsResponse = {

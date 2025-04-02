@@ -1,67 +1,75 @@
-import { type Resource } from "@shared/schema";
-import { MapPin } from "lucide-react";
+import { Resource, Category, Subcategory } from "@shared/schema";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ResourceCardProps {
   resource: Resource;
+  category?: Category;
+  subcategory?: Subcategory;
 }
 
-// Mapping of categories to background and text colors
-const categoryColorMap: Record<string, { bg: string; text: string }> = {
-  health: { bg: "bg-blue-100", text: "text-blue-800" },
-  education: { bg: "bg-indigo-100", text: "text-indigo-800" },
-  housing: { bg: "bg-green-100", text: "text-green-800" },
-  employment: { bg: "bg-purple-100", text: "text-purple-800" },
-  food: { bg: "bg-yellow-100", text: "text-yellow-800" },
-};
-
-export default function ResourceCard({ resource }: ResourceCardProps) {
-  // Get color for this category, default to blue if not found
-  const categoryColor = categoryColorMap[resource.category.toLowerCase()] || 
-    { bg: "bg-blue-100", text: "text-blue-800" };
-  
-  // Default image if not provided
-  const defaultImage = "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60";
-  
+export default function ResourceCard({ resource, category, subcategory }: ResourceCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow">
-      <div className="h-40 bg-gray-200 overflow-hidden">
-        <img 
-          src={resource.imageUrl || defaultImage} 
-          alt={resource.name} 
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // On error, revert to default image
-            (e.target as HTMLImageElement).src = defaultImage;
-          }}
-        />
-      </div>
-      <div className="p-4">
-        <div className="flex justify-between items-start">
-          <h3 className="text-lg font-semibold mb-2">{resource.name}</h3>
-          <span className={`inline-block ${categoryColor.bg} ${categoryColor.text} text-xs px-2 py-1 rounded-full`}>
-            {resource.category}
-          </span>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start gap-2">
+          <CardTitle className="text-lg sm:text-xl">{resource.name}</CardTitle>
         </div>
-        <p className="text-gray-600 mb-4 text-sm">
-          {resource.description}
-        </p>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center text-gray-500 text-sm">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{resource.location}</span>
-          </div>
-          {resource.url && (
-            <a 
-              href={resource.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:text-blue-700 font-medium text-sm"
+        <div className="flex flex-wrap gap-2 mt-2">
+          {category && (
+            <Badge 
+              variant="outline" 
+              className="bg-primary/10 text-primary border-primary/20"
             >
-              View Details
-            </a>
+              {category.name}
+            </Badge>
+          )}
+          {subcategory && (
+            <Badge 
+              variant="outline" 
+              className="bg-secondary/10 text-secondary border-secondary/20"
+            >
+              {subcategory.name}
+            </Badge>
           )}
         </div>
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent className="py-2 flex-grow">
+        <CardDescription className="text-sm text-muted-foreground mb-2 line-clamp-3">
+          {resource.description}
+        </CardDescription>
+        
+        {resource.location && (
+          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-4">
+            <MapPin className="h-4 w-4" />
+            <span>{resource.location}</span>
+            {resource.zipCode && <span className="text-xs">({resource.zipCode})</span>}
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="pt-2">
+        {resource.url && (
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            size="sm"
+            onClick={() => window.open(resource.url, '_blank')}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" /> 
+            Visit Resource
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
   );
 }
