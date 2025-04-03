@@ -182,7 +182,7 @@ export default function FilterSection({
           {/* Current location status */}
           {locationState.type === 'coordinates' && (
             <div className="mb-3 p-2 bg-primary/10 rounded flex items-center">
-              <MapPin className="h-4 w-4 mr-2 text-primary" />
+              <MapPin className="h-4 w-4 mr-2 highlight" />
               <div className="text-sm">
                 <div className="font-medium">Using your current location</div>
                 <div className="text-xs text-muted-foreground">
@@ -203,7 +203,7 @@ export default function FilterSection({
           {/* Zip code status */}
           {locationState.type === 'zipCode' && (
             <div className="mb-3 p-2 bg-primary/10 rounded flex items-center">
-              <MapPin className="h-4 w-4 mr-2 text-primary" />
+              <MapPin className="h-4 w-4 mr-2 highlight" />
               <div className="text-sm">
                 <div className="font-medium">Zip code: {locationState.zipCode}</div>
                 <div className="text-xs text-muted-foreground">
@@ -239,7 +239,7 @@ export default function FilterSection({
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full btn-highlight"
                   onClick={onUseMyLocation}
                   disabled={isLoadingLocation}
                 >
@@ -265,7 +265,7 @@ export default function FilterSection({
                       type="submit"
                       variant="outline"
                       size="sm"
-                      className="ml-2"
+                      className="ml-2 btn-highlight"
                       disabled={!zipCode.trim() || isLoadingLocation}
                     >
                       {isLoadingLocation ? (

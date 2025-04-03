@@ -47,14 +47,14 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
             key={category.id}
             className={cn(
               "cursor-pointer transition-all hover:scale-105 hover:shadow-md",
-              selectedCategoryId === category.id ? "bg-primary/10 border-primary" : "bg-white"
+              selectedCategoryId === category.id ? "bg-primary/10 border-highlight highlight-border" : "bg-white"
             )}
             onClick={() => onCategorySelect(category.id)}
           >
             <CardContent className="flex flex-col items-center justify-center p-4 text-center">
               <div className={cn(
                 "p-3 rounded-full mb-2",
-                selectedCategoryId === category.id ? "text-primary" : "text-muted-foreground"
+                selectedCategoryId === category.id ? "highlight" : "text-muted-foreground"
               )}>
                 {getCategoryIcon(category)}
               </div>

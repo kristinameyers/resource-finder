@@ -115,7 +115,7 @@ export default function ResourceDetail() {
         <h1 className="text-3xl font-bold mb-2">{resource.name}</h1>
         <div className="flex flex-wrap gap-2">
           {category && (
-            <Badge variant="outline" className="bg-primary/10">
+            <Badge variant="outline" className="bg-primary/10 highlight">
               {category.name}
             </Badge>
           )}
@@ -256,7 +256,7 @@ export default function ResourceDetail() {
         )}
         
         {resource.url && (
-          <Button asChild>
+          <Button asChild className="btn-highlight">
             <a href={resource.url} target="_blank" rel="noopener noreferrer">
               <Globe className="mr-2 h-4 w-4" />
               Visit Website

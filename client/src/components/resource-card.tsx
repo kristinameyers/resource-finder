@@ -31,7 +31,7 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
             {category && (
               <Badge 
                 variant="outline" 
-                className="bg-primary/10 text-primary border-primary/20"
+                className="bg-primary/10 highlight border-primary/20"
               >
                 {category.name}
               </Badge>
@@ -63,7 +63,7 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
       <CardFooter className="pt-2 flex gap-2">
         <Button 
           variant="default" 
-          className="flex-1" 
+          className="flex-1 btn-highlight" 
           size="sm"
           asChild
         >
