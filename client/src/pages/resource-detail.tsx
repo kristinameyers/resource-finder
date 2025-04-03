@@ -32,12 +32,12 @@ export default function ResourceDetail() {
       const response = await fetch('/api/resources');
       if (!response.ok) throw new Error('Failed to fetch resources');
       const data = await response.json();
-      return data.resources;
+      return data;
     }
   });
 
-  // Find the specific resource
-  const resource = resourcesQuery.data?.find((r: any) => r.id === id);
+  // Find the specific resource from the resources array
+  const resource = resourcesQuery.data?.resources?.find((r: any) => r.id === id);
   
   // Fetch categories
   const categoriesQuery = useQuery({
@@ -46,12 +46,12 @@ export default function ResourceDetail() {
       const response = await fetch('/api/categories');
       if (!response.ok) throw new Error('Failed to fetch categories');
       const data = await response.json();
-      return data.categories;
+      return data;
     }
   });
 
   // Find the category for this resource
-  const category = categoriesQuery.data?.find((c: any) => c.id === resource?.categoryId);
+  const category = categoriesQuery.data?.categories?.find((c: any) => c.id === resource?.categoryId);
   
   // Fetch subcategories if we have a category
   const subcategoriesQuery = useQuery({
@@ -60,13 +60,13 @@ export default function ResourceDetail() {
       const response = await fetch(`/api/subcategories?categoryId=${resource?.categoryId}`);
       if (!response.ok) throw new Error('Failed to fetch subcategories');
       const data = await response.json();
-      return data.subcategories;
+      return data;
     },
     enabled: !!resource?.categoryId
   });
 
   // Find the subcategory for this resource
-  const subcategory = subcategoriesQuery.data?.find((s: any) => s.id === resource?.subcategoryId);
+  const subcategory = subcategoriesQuery.data?.subcategories?.find((s: any) => s.id === resource?.subcategoryId);
 
   const isLoading = resourcesQuery.isLoading || categoriesQuery.isLoading || 
                    (!!resource?.categoryId && subcategoriesQuery.isLoading);
