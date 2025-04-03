@@ -46,6 +46,12 @@ export interface Resource {
   location: string;
   zipCode?: string;
   url?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  schedules?: string;
+  accessibility?: string;
+  languages?: string[];
 }
 
 export const resourceSchema = z.object({
@@ -57,6 +63,12 @@ export const resourceSchema = z.object({
   location: z.string(),
   zipCode: z.string().optional(),
   url: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  address: z.string().optional(),
+  schedules: z.string().optional(),
+  accessibility: z.string().optional(),
+  languages: z.array(z.string()).optional(),
 });
 
 export const categorySchema = z.object({

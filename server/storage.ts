@@ -133,12 +133,18 @@ export class MemStorage implements IStorage {
             this.resources.push({
               id: resourceId,
               name: `${sub.name} Resource ${i + 1}`,
-              description: `This is a resource for ${sub.name} under the ${category.name} category.`,
+              description: `This is a resource for ${sub.name} under the ${category.name} category. We provide support services for individuals in need.`,
               categoryId: category.id,
               subcategoryId: sub.id,
               location: "Various Locations",
               zipCode: "00000", // Default zip code
-              url: `https://example.com/resources/${resourceId}`
+              url: `https://example.com/resources/${resourceId}`,
+              phone: `(555) 123-${1000 + i}`,
+              email: `contact@${sub.id}-resource${i + 1}.org`,
+              address: `${100 + i} Main Street, Anytown, USA`,
+              schedules: `Monday-Friday: 9am-5pm\nSaturday: 10am-2pm\nSunday: Closed`,
+              accessibility: i % 2 === 0 ? "Wheelchair accessible, ADA compliant" : "Limited accessibility, please call ahead",
+              languages: ["English", "Spanish", i % 3 === 0 ? "Mandarin" : "French"]
             });
           }
         }
