@@ -1,12 +1,13 @@
 import { useState } from "react";
 import FilterSection from "@/components/filter-section";
+import CategoryGrid from "@/components/category-grid";
 import ResultsSection from "@/components/results-section";
 import { useResources } from "@/hooks/use-resources";
 import { useSubcategories } from "@/hooks/use-subcategories";
 import { useLocation, LocationState } from "@/hooks/use-location";
 import { useQuery } from "@tanstack/react-query";
 import { type Category, type Subcategory } from "@shared/schema";
-import { Loader2, Menu } from "lucide-react";
+import { Loader2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -94,6 +95,12 @@ export default function Home() {
     setSelectedSubcategoryId(subcategoryId);
   };
   
+  // Category grid selection handler
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setSelectedSubcategoryId(null);
+  };
+  
   // "Use my location" button handler
   const handleUseMyLocation = async () => {
     setIsLocationLoading(true);
@@ -118,6 +125,12 @@ export default function Home() {
     setSelectedCategoryId(null);
     setSelectedSubcategoryId(null);
     clearLocation();
+  };
+  
+  // Back to categories button handler
+  const handleBackToCategories = () => {
+    setSelectedCategoryId(null);
+    setSelectedSubcategoryId(null);
   };
   
   return (
@@ -153,15 +166,39 @@ export default function Home() {
           isLoadingLocation={isLocationLoading}
         />
         
-        <ResultsSection 
-          resources={resources}
-          categories={categories}
-          subcategories={[...subcategories, ...allSubcategories]}
-          isLoading={isLoadingResources}
-          error={resourcesError}
-          onRetry={refetchResources}
-          onClearFilters={handleClearFilters}
-        />
+        {selectedCategoryId ? (
+          // Show results when a category is selected
+          <>
+            <div className="mb-4">
+              <Button
+                variant="ghost"
+                className="flex items-center text-muted-foreground"
+                onClick={handleBackToCategories}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back to Categories
+              </Button>
+            </div>
+            
+            <ResultsSection 
+              resources={resources}
+              categories={categories}
+              subcategories={[...subcategories, ...allSubcategories]}
+              isLoading={isLoadingResources}
+              error={resourcesError}
+              onRetry={refetchResources}
+              onClearFilters={handleClearFilters}
+              selectedCategoryId={selectedCategoryId}
+            />
+          </>
+        ) : (
+          // Show category grid when no category is selected
+          <CategoryGrid 
+            categories={categories}
+            onCategorySelect={handleCategorySelect}
+            selectedCategoryId={selectedCategoryId}
+          />
+        )}
       </main>
       
       {/* Footer */}

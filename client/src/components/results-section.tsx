@@ -11,6 +11,7 @@ interface ResultsSectionProps {
   error: Error | null;
   onRetry: () => void;
   onClearFilters: () => void;
+  selectedCategoryId?: string | null;
 }
 
 export default function ResultsSection({
@@ -20,7 +21,8 @@ export default function ResultsSection({
   isLoading,
   error,
   onRetry,
-  onClearFilters
+  onClearFilters,
+  selectedCategoryId
 }: ResultsSectionProps) {
   // Find category and subcategory objects for a resource
   const getCategoryForResource = (categoryId: string) => {
@@ -69,12 +71,16 @@ export default function ResultsSection({
     );
   }
 
+  // Get the selected category if there is one
+  const selectedCategory = selectedCategoryId ? categories.find(c => c.id === selectedCategoryId) : null;
+
   // Display results
   return (
     <div>
       <div className="mb-4">
         <h2 className="text-xl font-semibold">
-          {resources.length} Resource{resources.length !== 1 && 's'} Found
+          {resources.length} Resource{resources.length !== 1 && 's'} 
+          {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
         </h2>
       </div>
       
