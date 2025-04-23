@@ -63,25 +63,35 @@ export async function searchResourcesByTaxonomy(
   offset: number = 0
 ): Promise<{ resources: Resource[], total: number }> {
   try {
+    console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
+    
     const queryParams = new URLSearchParams();
     
-    // Add taxonomy code
+    // Add taxonomy code (we can search by parent code)
     queryParams.append('taxonomy_code', taxonomyCode);
     
     // Add location parameters if provided
     if (zipCode) {
+      console.log(`Adding zip code filter: ${zipCode}`);
       queryParams.append('zip_code', zipCode);
     } else if (latitude !== undefined && longitude !== undefined) {
+      console.log(`Adding coordinates filter: ${latitude}, ${longitude}`);
       queryParams.append('latitude', latitude.toString());
       queryParams.append('longitude', longitude.toString());
+      // Add a reasonable radius (in miles)
+      queryParams.append('radius', '20');
     }
     
     // Add pagination
     queryParams.append('limit', limit.toString());
     queryParams.append('offset', offset.toString());
     
+    // Build the full URL
+    const requestUrl = `${API_URL}/resources/search?${queryParams.toString()}`;
+    console.log(`Making 211 API request to: ${requestUrl}`);
+    
     // Make the API request
-    const response = await fetch(`${API_URL}/resources/search?${queryParams.toString()}`, {
+    const response = await fetch(requestUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -91,13 +101,15 @@ export async function searchResourcesByTaxonomy(
     
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`211 API Error: ${response.status}`, errorText);
       throw new Error(`211 API Error: ${response.status} - ${errorText}`);
     }
     
     const data = await response.json() as SearchResourcesResponse;
+    console.log(`Received ${data.resources?.length || 0} resources from 211 API`);
     
     // Transform the 211 resource format to our app's resource format
-    const transformedResources = data.resources.map(transformResource);
+    const transformedResources = data.resources?.map(transformResource) || [];
     
     return {
       resources: transformedResources,
@@ -114,7 +126,12 @@ export async function searchResourcesByTaxonomy(
  */
 export async function getResourceById(id: string): Promise<Resource | null> {
   try {
-    const response = await fetch(`${API_URL}/resources/${id}`, {
+    console.log(`Fetching resource with ID: ${id}`);
+    
+    const requestUrl = `${API_URL}/resources/${id}`;
+    console.log(`Making 211 API request to: ${requestUrl}`);
+    
+    const response = await fetch(requestUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -124,18 +141,61 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     
     if (!response.ok) {
       if (response.status === 404) {
+        console.log(`Resource with ID ${id} not found in 211 API`);
         return null;
       }
       const errorText = await response.text();
+      console.error(`211 API Error fetching resource: ${response.status}`, errorText);
       throw new Error(`211 API Error: ${response.status} - ${errorText}`);
     }
     
     const data = await response.json() as National211Resource;
+    console.log(`Successfully retrieved resource "${data.name}" from 211 API`);
+    
     return transformResource(data);
   } catch (error) {
     console.error('Error fetching resource by ID:', error);
     throw error;
   }
+}
+
+// Mapping of taxonomy codes to our category IDs
+const taxonomyToCategory: { [key: string]: string } = {
+  'BH': 'housing',
+  'N': 'finance-employment',
+  'BD': 'food',
+  'BT': 'transportation',
+  'L': 'healthcare',
+  'BM-3000': 'hygiene-household',
+  'RR': 'mental-wellness',
+  'RX': 'substance-use',
+  'P': 'children-family',
+  'YB-9000': 'young-adults',
+  'H': 'education',
+  'YB-8000': 'seniors-caregivers',
+  'F': 'legal-assistance',
+  'BV': 'utilities',
+};
+
+/**
+ * Maps a 211 taxonomy code to our app's category ID
+ */
+function getCategoryIdFromTaxonomy(taxonomyCode?: string): string {
+  if (!taxonomyCode) return '';
+  
+  // First check exact match
+  if (taxonomyToCategory[taxonomyCode]) {
+    return taxonomyToCategory[taxonomyCode];
+  }
+  
+  // Then check for parent code match (e.g., if BD-1000, check for BD)
+  const parentCode = taxonomyCode.split('-')[0];
+  if (taxonomyToCategory[parentCode]) {
+    return taxonomyToCategory[parentCode];
+  }
+  
+  // Default to the first part of the taxonomy code
+  return parentCode.toLowerCase();
 }
 
 /**
@@ -167,12 +227,17 @@ function transformResource(apiResource: National211Resource): Resource {
       ].filter(Boolean).join('\n')
     : undefined;
   
+  // Map taxonomy code to category ID
+  const categoryId = getCategoryIdFromTaxonomy(apiResource.taxonomy_code);
+  console.log(`Mapping taxonomy code ${apiResource.taxonomy_code} to category ID ${categoryId}`);
+  
   // Create the transformed resource
   return {
     id: apiResource.id,
     name: apiResource.name,
     description: apiResource.description || 'No description available',
-    categoryId: apiResource.taxonomy_code || '',
+    categoryId,
+    subcategoryId: apiResource.taxonomy_name ? apiResource.taxonomy_name.toLowerCase().replace(/\s+/g, '-') : undefined,
     location: location?.name || 'Unknown location',
     zipCode: location?.postal_code,
     url: apiResource.url,

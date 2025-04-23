@@ -1,0 +1,97 @@
+Housing - BH
+* Animal Housing
+* Emergency Housing & Shelters  - BH-1800
+* Housing Expense Assistance - BH-3800
+* Housing Financial & Legal Assistance
+* Supportive Services for Homeless Individuals & Families - BH-0500
+
+Finance & Employment - N
+* Employment - ND
+* Money Management
+* Personal & Household Items
+* Pet Support Services
+* Public Assistance & Benefits - NL
+* Utility Assistance - BV-8900
+
+Food - BD
+* Food - BD
+* Meals - BD-5000
+* Nutrition Education
+* Pet Food
+
+Transportation - BT
+* DMV
+* Medical Transportation
+* Public Transportation - BT-4500
+* Senior Ride Programs
+
+Health Care - L
+* Disability Services
+* Disease & Poison Control
+* Health insurance
+* Home Nursing & Caregiving
+* Medical Facilities - LL
+* Medical Transportation - LD-1500
+* Sexual & Reproductive Health -
+* Specialty Screenings & Services
+
+Hygiene & Household - BM-3000
+* Clothing
+* Grooming
+* Household
+* Pet Services
+
+Mental Wellness - RR
+* Counseling
+* Hotlines & Crisis Response
+* Mental Wellness Information & Education
+* Psychiatric Services
+* Report Potential Abuse
+* Support Groups
+
+Substance Use - RX
+* Alcohol Treatment & Facilities
+* Drug Treatment & Facilities
+* Education, Prevention & Testing
+
+Children & Family - P
+* Child & Family Support
+* Child Abuse Prevention
+* Child Care & Early Education
+* Expectant & New Parents
+* Family Counseling
+* Family Law
+* Foster Care & Adoption
+* Military Families
+* Parenting Resources
+
+Young Adults - YB-9000
+* Counseling & Support Services
+* Prevention & Intervention
+* Sports & Youth Programs
+* Teen Sexual & Reproductive Health
+
+Education - H
+* Education Programs
+* Educational Services
+* Immigration
+
+Seniors & Caregivers - YB-8000
+* Caregiver Support Service
+* Elder Abuse Prevention
+* Senior Health Care
+* Senior Housing
+* Senior Meals
+* Senior Support Services
+* Senior Transportation
+
+Legal Assistance - F
+* Courts
+* General Legal Services
+* Immigration Services
+* Records & Certificates
+* Victim Assistance
+
+Utilities - BV
+* Utility Assistance
+* Weatherization

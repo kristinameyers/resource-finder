@@ -38,53 +38,122 @@ export class MemStorage implements IStorage {
     
     // Populate default categories with icons and 211 taxonomy codes
     this.categories = [
-      { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH-1800' },
-      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'ND-1000' },
-      { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD-1800' },
-      { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT-4500' },
-      { id: 'healthcare', name: 'Health Care', icon: 'stethoscope', taxonomyCode: 'LH-3000' },
-      { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower', taxonomyCode: 'BH-5000' },
-      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'RP-1500' },
-      { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX-8450' },
-      { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'PH-1800' },
-      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'PH-6500' },
-      { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'HH-0500' },
-      { id: 'seniors-caregivers', name: 'Seniors & Caregivers', icon: 'user-nurse', taxonomyCode: 'PH-0250' },
-      { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel', taxonomyCode: 'FT-3000' },
-      { id: 'utilities', name: 'Utilities', icon: 'bolt', taxonomyCode: 'BV-8600' },
+      { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH' },
+      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'N' },
+      { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD' },
+      { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT' },
+      { id: 'healthcare', name: 'Health Care', icon: 'stethoscope', taxonomyCode: 'L' },
+      { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower', taxonomyCode: 'BM-3000' },
+      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'RR' },
+      { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX' },
+      { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'P' },
+      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'YB-9000' },
+      { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'H' },
+      { id: 'seniors-caregivers', name: 'Seniors & Caregivers', icon: 'user-nurse', taxonomyCode: 'YB-8000' },
+      { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel', taxonomyCode: 'F' },
+      { id: 'utilities', name: 'Utilities', icon: 'bolt', taxonomyCode: 'BV' },
       { id: 'reentry', name: 'Reentry', icon: 'door-open', taxonomyCode: 'TJ-6500' },
     ];
     
     // Populate subcategories for each category
     this.subcategories = [
       // Housing subcategories
-      { id: 'emergency-shelters', name: 'Emergency Shelters', categoryId: 'housing' },
-      { id: 'transitional-housing', name: 'Transitional Housing', categoryId: 'housing' },
-      { id: 'rental-assistance', name: 'Rental Assistance', categoryId: 'housing' },
-      { id: 'affordable-housing', name: 'Affordable Housing', categoryId: 'housing' },
+      { id: 'animal-housing', name: 'Animal Housing', categoryId: 'housing' },
+      { id: 'emergency-housing-shelters', name: 'Emergency Housing & Shelters', categoryId: 'housing' },
+      { id: 'housing-expense-assistance', name: 'Housing Expense Assistance', categoryId: 'housing' },
+      { id: 'housing-financial-legal-assistance', name: 'Housing Financial & Legal Assistance', categoryId: 'housing' },
+      { id: 'supportive-services-homeless', name: 'Supportive Services for Homeless Individuals & Families', categoryId: 'housing' },
       
       // Finance & Employment subcategories
-      { id: 'job-training', name: 'Job Training', categoryId: 'finance-employment' },
-      { id: 'job-placement', name: 'Job Placement', categoryId: 'finance-employment' },
-      { id: 'financial-assistance', name: 'Financial Assistance', categoryId: 'finance-employment' },
-      { id: 'financial-education', name: 'Financial Education', categoryId: 'finance-employment' },
+      { id: 'employment', name: 'Employment', categoryId: 'finance-employment' },
+      { id: 'money-management', name: 'Money Management', categoryId: 'finance-employment' },
+      { id: 'personal-household-items', name: 'Personal & Household Items', categoryId: 'finance-employment' },
+      { id: 'pet-support-services', name: 'Pet Support Services', categoryId: 'finance-employment' },
+      { id: 'public-assistance-benefits', name: 'Public Assistance & Benefits', categoryId: 'finance-employment' },
+      { id: 'utility-assistance', name: 'Utility Assistance', categoryId: 'finance-employment' },
       
       // Food subcategories
-      { id: 'food-pantries', name: 'Food Pantries', categoryId: 'food' },
-      { id: 'meal-programs', name: 'Meal Programs', categoryId: 'food' },
-      { id: 'snap-benefits', name: 'SNAP Benefits', categoryId: 'food' },
-      { id: 'wic', name: 'WIC', categoryId: 'food' },
+      { id: 'food', name: 'Food', categoryId: 'food' },
+      { id: 'meals', name: 'Meals', categoryId: 'food' },
+      { id: 'nutrition-education', name: 'Nutrition Education', categoryId: 'food' },
+      { id: 'pet-food', name: 'Pet Food', categoryId: 'food' },
       
-      // Add a few subcategories for each main category
-      { id: 'public-transit', name: 'Public Transit', categoryId: 'transportation' },
+      // Transportation subcategories
+      { id: 'dmv', name: 'DMV', categoryId: 'transportation' },
       { id: 'medical-transportation', name: 'Medical Transportation', categoryId: 'transportation' },
+      { id: 'public-transportation', name: 'Public Transportation', categoryId: 'transportation' },
+      { id: 'senior-ride-programs', name: 'Senior Ride Programs', categoryId: 'transportation' },
       
-      { id: 'primary-care', name: 'Primary Care', categoryId: 'healthcare' },
-      { id: 'specialty-care', name: 'Specialty Care', categoryId: 'healthcare' },
-      { id: 'dental-care', name: 'Dental Care', categoryId: 'healthcare' },
+      // Health Care subcategories
+      { id: 'disability-services', name: 'Disability Services', categoryId: 'healthcare' },
+      { id: 'disease-poison-control', name: 'Disease & Poison Control', categoryId: 'healthcare' },
+      { id: 'health-insurance', name: 'Health Insurance', categoryId: 'healthcare' },
+      { id: 'home-nursing-caregiving', name: 'Home Nursing & Caregiving', categoryId: 'healthcare' },
+      { id: 'medical-facilities', name: 'Medical Facilities', categoryId: 'healthcare' },
+      { id: 'medical-transportation-health', name: 'Medical Transportation', categoryId: 'healthcare' },
+      { id: 'sexual-reproductive-health', name: 'Sexual & Reproductive Health', categoryId: 'healthcare' },
+      { id: 'specialty-screenings-services', name: 'Specialty Screenings & Services', categoryId: 'healthcare' },
       
+      // Hygiene & Household subcategories
+      { id: 'clothing', name: 'Clothing', categoryId: 'hygiene-household' },
+      { id: 'grooming', name: 'Grooming', categoryId: 'hygiene-household' },
+      { id: 'household', name: 'Household', categoryId: 'hygiene-household' },
+      { id: 'pet-services', name: 'Pet Services', categoryId: 'hygiene-household' },
+      
+      // Mental Wellness subcategories
       { id: 'counseling', name: 'Counseling', categoryId: 'mental-wellness' },
-      { id: 'crisis-support', name: 'Crisis Support', categoryId: 'mental-wellness' },
+      { id: 'hotlines-crisis-response', name: 'Hotlines & Crisis Response', categoryId: 'mental-wellness' },
+      { id: 'mental-wellness-information-education', name: 'Mental Wellness Information & Education', categoryId: 'mental-wellness' },
+      { id: 'psychiatric-services', name: 'Psychiatric Services', categoryId: 'mental-wellness' },
+      { id: 'report-potential-abuse', name: 'Report Potential Abuse', categoryId: 'mental-wellness' },
+      { id: 'support-groups', name: 'Support Groups', categoryId: 'mental-wellness' },
+      
+      // Substance Use subcategories
+      { id: 'alcohol-treatment-facilities', name: 'Alcohol Treatment & Facilities', categoryId: 'substance-use' },
+      { id: 'drug-treatment-facilities', name: 'Drug Treatment & Facilities', categoryId: 'substance-use' },
+      { id: 'education-prevention-testing', name: 'Education, Prevention & Testing', categoryId: 'substance-use' },
+      
+      // Children & Family subcategories
+      { id: 'child-family-support', name: 'Child & Family Support', categoryId: 'children-family' },
+      { id: 'child-abuse-prevention', name: 'Child Abuse Prevention', categoryId: 'children-family' },
+      { id: 'child-care-early-education', name: 'Child Care & Early Education', categoryId: 'children-family' },
+      { id: 'expectant-new-parents', name: 'Expectant & New Parents', categoryId: 'children-family' },
+      { id: 'family-counseling', name: 'Family Counseling', categoryId: 'children-family' },
+      { id: 'family-law', name: 'Family Law', categoryId: 'children-family' },
+      { id: 'foster-care-adoption', name: 'Foster Care & Adoption', categoryId: 'children-family' },
+      { id: 'military-families', name: 'Military Families', categoryId: 'children-family' },
+      { id: 'parenting-resources', name: 'Parenting Resources', categoryId: 'children-family' },
+      
+      // Young Adults subcategories
+      { id: 'counseling-support-services', name: 'Counseling & Support Services', categoryId: 'young-adults' },
+      { id: 'prevention-intervention', name: 'Prevention & Intervention', categoryId: 'young-adults' },
+      { id: 'sports-youth-programs', name: 'Sports & Youth Programs', categoryId: 'young-adults' },
+      { id: 'teen-sexual-reproductive-health', name: 'Teen Sexual & Reproductive Health', categoryId: 'young-adults' },
+      
+      // Education subcategories
+      { id: 'education-programs', name: 'Education Programs', categoryId: 'education' },
+      { id: 'educational-services', name: 'Educational Services', categoryId: 'education' },
+      { id: 'immigration', name: 'Immigration', categoryId: 'education' },
+      
+      // Seniors & Caregivers subcategories
+      { id: 'caregiver-support-service', name: 'Caregiver Support Service', categoryId: 'seniors-caregivers' },
+      { id: 'elder-abuse-prevention', name: 'Elder Abuse Prevention', categoryId: 'seniors-caregivers' },
+      { id: 'senior-health-care', name: 'Senior Health Care', categoryId: 'seniors-caregivers' },
+      { id: 'senior-housing', name: 'Senior Housing', categoryId: 'seniors-caregivers' },
+      { id: 'senior-meals', name: 'Senior Meals', categoryId: 'seniors-caregivers' },
+      { id: 'senior-support-services', name: 'Senior Support Services', categoryId: 'seniors-caregivers' },
+      { id: 'senior-transportation', name: 'Senior Transportation', categoryId: 'seniors-caregivers' },
+      
+      // Legal Assistance subcategories
+      { id: 'courts', name: 'Courts', categoryId: 'legal-assistance' },
+      { id: 'general-legal-services', name: 'General Legal Services', categoryId: 'legal-assistance' },
+      { id: 'immigration-services', name: 'Immigration Services', categoryId: 'legal-assistance' },
+      { id: 'records-certificates', name: 'Records & Certificates', categoryId: 'legal-assistance' },
+      { id: 'victim-assistance', name: 'Victim Assistance', categoryId: 'legal-assistance' },
+      
+      // Utilities subcategories
+      { id: 'utility-assistance-util', name: 'Utility Assistance', categoryId: 'utilities' },
+      { id: 'weatherization', name: 'Weatherization', categoryId: 'utilities' },
     ];
     
     // Populate default locations with zip codes
