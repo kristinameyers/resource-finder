@@ -49,6 +49,10 @@ const API_KEY = process.env.NATIONAL_211_API_KEY;
 
 if (!API_URL || !API_KEY) {
   console.error('Missing 211 API configuration. Please set NATIONAL_211_API_URL and NATIONAL_211_API_KEY environment variables.');
+} else {
+  console.log('211 API configuration found');
+  // Don't log the actual API key, just the base URL to confirm it exists
+  console.log(`API URL: ${API_URL}`);
 }
 
 /**
