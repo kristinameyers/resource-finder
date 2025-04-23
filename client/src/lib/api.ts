@@ -10,13 +10,25 @@ import {
   type LocationsResponse
 } from "@shared/schema";
 
+// Type for the enhanced resources response
+interface EnhancedResourcesResponse extends ResourcesResponse {
+  source: string;
+}
+
+// Interface for resource details response
+interface ResourceDetailResponse {
+  resource: Resource;
+  source: string;
+}
+
 // Fetch resources with optional filtering
 export async function fetchResources(
   categoryId?: string,
   subcategoryId?: string,
   zipCode?: string,
-  coordinates?: { latitude: number; longitude: number }
-): Promise<Resource[]> {
+  coordinates?: { latitude: number; longitude: number },
+  useApi: boolean = true
+): Promise<{resources: Resource[], source: string}> {
   const queryParams = new URLSearchParams();
   
   // Add filter parameters if they exist
@@ -37,14 +49,42 @@ export async function fetchResources(
     queryParams.append('longitude', coordinates.longitude.toString());
   }
   
+  // Add parameter to use National 211 API
+  queryParams.append('useApi', useApi.toString());
+  
   const url = `/api/resources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   
   try {
     const response = await apiRequest('GET', url);
-    const data = await response.json() as ResourcesResponse;
-    return data.resources;
+    const data = await response.json() as EnhancedResourcesResponse;
+    return {
+      resources: data.resources,
+      source: data.source || 'local'
+    };
   } catch (error) {
     console.error('Error fetching resources:', error);
+    throw error;
+  }
+}
+
+// Fetch a specific resource by ID
+export async function fetchResourceById(id: string, useApi: boolean = true): Promise<Resource> {
+  const queryParams = new URLSearchParams();
+  if (useApi) {
+    queryParams.append('useApi', 'true');
+  }
+  
+  const url = `/api/resources/${id}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  
+  try {
+    const response = await apiRequest('GET', url);
+    if (response.status === 404) {
+      throw new Error('Resource not found');
+    }
+    const data = await response.json() as ResourceDetailResponse;
+    return data.resource;
+  } catch (error) {
+    console.error('Error fetching resource by ID:', error);
     throw error;
   }
 }

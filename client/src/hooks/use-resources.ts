@@ -2,10 +2,16 @@ import { Resource } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { fetchResources } from "@/lib/api";
 
+interface ResourcesResponse {
+  resources: Resource[];
+  source: string;
+}
+
 export function useResources(
   categoryId: string | null, 
   subcategoryId: string | null, 
-  location: { type: 'zipCode', value: string } | { type: 'coordinates', latitude: number, longitude: number } | null
+  location: { type: 'zipCode', value: string } | { type: 'coordinates', latitude: number, longitude: number } | null,
+  useApi: boolean = true
 ) {
   // Query key that depends on filters
   const queryKey = [
@@ -13,7 +19,8 @@ export function useResources(
     { 
       categoryId, 
       subcategoryId,
-      location: location ? JSON.stringify(location) : null 
+      location: location ? JSON.stringify(location) : null,
+      useApi
     }
   ];
   
@@ -23,37 +30,47 @@ export function useResources(
     isLoading,
     error,
     refetch
-  } = useQuery<Resource[]>({
+  } = useQuery<ResourcesResponse>({
     queryKey,
     queryFn: async () => {
+      let result;
       if (location) {
         if (location.type === 'zipCode') {
-          return fetchResources(
+          result = await fetchResources(
             categoryId || undefined, 
             subcategoryId || undefined, 
-            location.value
+            location.value,
+            undefined,
+            useApi
           );
         } else {
-          return fetchResources(
+          result = await fetchResources(
             categoryId || undefined, 
             subcategoryId || undefined, 
             undefined, 
-            { latitude: location.latitude, longitude: location.longitude }
+            { latitude: location.latitude, longitude: location.longitude },
+            useApi
           );
         }
       } else {
-        return fetchResources(
+        result = await fetchResources(
           categoryId || undefined, 
-          subcategoryId || undefined
+          subcategoryId || undefined,
+          undefined,
+          undefined,
+          useApi
         );
       }
+      
+      return result;
     },
     enabled: true,
   });
   
   return {
-    resources: data || [],
-    totalCount: data?.length || 0,
+    resources: data?.resources || [],
+    totalCount: data?.resources?.length || 0,
+    dataSource: data?.source || 'local',
     isLoading,
     error: error as Error | null,
     refetch

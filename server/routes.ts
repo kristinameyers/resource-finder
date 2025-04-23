@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { resourceSchema } from "@shared/schema";
+import { searchResourcesByTaxonomy, getResourceById } from "./services/national211Service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -34,8 +35,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const longitude = req.query.longitude
         ? parseFloat(String(req.query.longitude))
         : undefined;
+        
+      const useApi = req.query.useApi === 'true';
 
-      // Get filtered resources
+      // If useApi flag is true and we have a categoryId, use the 211 API
+      if (useApi && categoryId) {
+        try {
+          // Get the category to find its taxonomy code
+          const categories = await storage.getCategories();
+          const category = categories.find(c => c.id === categoryId);
+          
+          if (category && category.taxonomyCode) {
+            // Use the 211 API to search by taxonomy code
+            const result = await searchResourcesByTaxonomy(
+              category.taxonomyCode,
+              zipCode,
+              latitude,
+              longitude
+            );
+            
+            return res.status(200).json({
+              resources: result.resources,
+              total: result.total,
+              source: '211 API'
+            });
+          }
+        } catch (apiError) {
+          console.error("Error fetching from 211 API:", apiError);
+          // Continue to fallback if API fails
+        }
+      }
+
+      // Fallback to local storage if not using API or if the API failed
       const resources = await storage.getResources(
         categoryId,
         subcategoryId,
@@ -47,6 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({
         resources,
         total: resources.length,
+        source: 'local'
       });
     } catch (error) {
       console.error("Error fetching resources:", error);
@@ -171,6 +203,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching location by coordinates:", error);
       return res.status(500).json({
         message: "Error fetching location by coordinates",
+        error: (error as Error).message,
+      });
+    }
+  });
+  
+  // API endpoint to get a specific resource by ID
+  app.get("/api/resources/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const useApi = req.query.useApi === 'true';
+      
+      if (!id) {
+        return res.status(400).json({
+          message: "Resource ID is required"
+        });
+      }
+      
+      // If useApi=true, attempt to get the resource from the 211 API
+      if (useApi) {
+        try {
+          const resource = await getResourceById(id);
+          if (resource) {
+            return res.status(200).json({
+              resource,
+              source: '211 API'
+            });
+          }
+          // If not found in API, continue to fallback
+        } catch (apiError) {
+          console.error("Error fetching resource from 211 API:", apiError);
+          // Continue to fallback if API fails
+        }
+      }
+      
+      // Fallback to local storage
+      const resources = await storage.getResources();
+      const resource = resources.find(r => r.id === id);
+      
+      if (!resource) {
+        return res.status(404).json({
+          message: "Resource not found"
+        });
+      }
+      
+      return res.status(200).json({
+        resource,
+        source: 'local'
+      });
+    } catch (error) {
+      console.error("Error fetching resource by ID:", error);
+      return res.status(500).json({
+        message: "Error fetching resource",
         error: (error as Error).message,
       });
     }
