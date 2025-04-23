@@ -90,8 +90,10 @@ export async function searchResourcesByTaxonomy(
     queryParams.append('limit', limit.toString());
     queryParams.append('offset', offset.toString());
     
-    // Build the full URL
-    const requestUrl = `${API_URL}/resources/search?${queryParams.toString()}`;
+    // Build the full URL - ensure no double slashes
+    // The API URL might already include a trailing slash
+    const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
+    const requestUrl = `${baseUrl}/resources/search?${queryParams.toString()}`;
     console.log(`Making 211 API request to: ${requestUrl}`);
     
     // Make the API request
@@ -132,7 +134,9 @@ export async function getResourceById(id: string): Promise<Resource | null> {
   try {
     console.log(`Fetching resource with ID: ${id}`);
     
-    const requestUrl = `${API_URL}/resources/${id}`;
+    // Fix URL formatting to prevent double slashes
+    const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
+    const requestUrl = `${baseUrl}/resources/${id}`;
     console.log(`Making 211 API request to: ${requestUrl}`);
     
     const response = await fetch(requestUrl, {
