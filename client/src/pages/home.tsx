@@ -7,8 +7,10 @@ import { useSubcategories } from "@/hooks/use-subcategories";
 import { useLocation, LocationState } from "@/hooks/use-location";
 import { useQuery } from "@tanstack/react-query";
 import { type Category, type Subcategory } from "@shared/schema";
-import { Loader2, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronLeft, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { fetchCategories } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   // State for selected filters
@@ -19,12 +21,19 @@ export default function Home() {
   const { locationState, requestCurrentLocation, setLocationByZipCode, clearLocation } = useLocation();
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   
+  // State for API data source
+  const [useNational211Api, setUseNational211Api] = useState<boolean>(true);
+  
   // Fetch categories
   const { 
     data: categories = [], 
     isLoading: isLoadingCategories 
   } = useQuery<{categories: Category[]}, Error, Category[]>({ 
     queryKey: ['/api/categories'],
+    queryFn: async () => {
+      const categoriesData = await fetchCategories();
+      return { categories: categoriesData };
+    },
     select: (data) => data.categories
   });
   
@@ -75,13 +84,15 @@ export default function Home() {
   // Fetch resources based on current filters
   const {
     resources,
+    dataSource,
     isLoading: isLoadingResources,
     error: resourcesError,
     refetch: refetchResources
   } = useResources(
     selectedCategoryId,
     selectedSubcategoryId,
-    getLocationParam()
+    getLocationParam(),
+    useNational211Api
   );
   
   // Category change handler
@@ -151,6 +162,37 @@ export default function Home() {
       </header>
       
       <main className="flex-grow container mx-auto px-4 py-6">
+        {/* Data source toggle */}
+        <div className="flex items-center justify-end mb-4 gap-2">
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant={useNational211Api ? "outline" : "default"}
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={() => setUseNational211Api(false)}
+            >
+              <Database className="h-4 w-4" />
+              Local Data
+            </Button>
+            <Button 
+              variant={useNational211Api ? "default" : "outline"}
+              size="sm"
+              className="flex items-center gap-1 btn-highlight"
+              onClick={() => setUseNational211Api(true)}
+            >
+              <Database className="h-4 w-4" />
+              211 API
+            </Button>
+          </div>
+          
+          {dataSource && (
+            <Badge variant="outline" className={dataSource === '211 API' ? 'bg-primary/10 highlight' : 'bg-muted'}>
+              <Database className="h-3 w-3 mr-1" /> 
+              {dataSource}
+            </Badge>
+          )}
+        </div>
+        
         <FilterSection 
           categories={categories}
           selectedCategoryId={selectedCategoryId}

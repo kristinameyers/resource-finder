@@ -15,38 +15,36 @@ import {
   Calendar, 
   Accessibility, 
   Languages, 
-  ChevronLeft 
+  ChevronLeft,
+  AlertCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { fetchResourceById, fetchCategories, fetchSubcategories } from '@/lib/api';
 
 export default function ResourceDetail() {
   const { id } = useParams();
   const { toast } = useToast();
   
-  // Fetch all resources and filter locally to find the one we need
-  const resourcesQuery = useQuery({
-    queryKey: ['/api/resources'],
+  // Fetch the resource directly by ID using the 211 API
+  const resourceQuery = useQuery({
+    queryKey: ['/api/resources', id],
     queryFn: async () => {
-      const response = await fetch('/api/resources');
-      if (!response.ok) throw new Error('Failed to fetch resources');
-      const data = await response.json();
-      return data;
-    }
+      if (!id) throw new Error('Resource ID is required');
+      return await fetchResourceById(id, true); // true to use 211 API
+    },
+    enabled: !!id
   });
 
-  // Find the specific resource from the resources array
-  const resource = resourcesQuery.data?.resources?.find((r: any) => r.id === id);
+  const resource = resourceQuery.data;
   
   // Fetch categories
   const categoriesQuery = useQuery({
     queryKey: ['/api/categories'],
     queryFn: async () => {
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      const data = await response.json();
-      return data;
+      const categories = await fetchCategories();
+      return { categories };
     }
   });
 
@@ -57,10 +55,9 @@ export default function ResourceDetail() {
   const subcategoriesQuery = useQuery({
     queryKey: ['/api/subcategories', resource?.categoryId],
     queryFn: async () => {
-      const response = await fetch(`/api/subcategories?categoryId=${resource?.categoryId}`);
-      if (!response.ok) throw new Error('Failed to fetch subcategories');
-      const data = await response.json();
-      return data;
+      if (!resource?.categoryId) throw new Error('Category ID is required');
+      const subcategories = await fetchSubcategories(resource.categoryId);
+      return { subcategories };
     },
     enabled: !!resource?.categoryId
   });
@@ -68,10 +65,10 @@ export default function ResourceDetail() {
   // Find the subcategory for this resource
   const subcategory = subcategoriesQuery.data?.subcategories?.find((s: any) => s.id === resource?.subcategoryId);
 
-  const isLoading = resourcesQuery.isLoading || categoriesQuery.isLoading || 
+  const isLoading = resourceQuery.isLoading || categoriesQuery.isLoading || 
                    (!!resource?.categoryId && subcategoriesQuery.isLoading);
   
-  const error = resourcesQuery.error || categoriesQuery.error || subcategoriesQuery.error;
+  const error = resourceQuery.error || categoriesQuery.error || subcategoriesQuery.error;
 
   if (isLoading) {
     return (
