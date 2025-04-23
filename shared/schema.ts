@@ -21,6 +21,7 @@ export interface Category {
   id: string;
   name: string;
   icon?: string; // Icon identifier for this category
+  taxonomyCode?: string; // 211 taxonomy code for this category
 }
 
 export interface Subcategory {
@@ -75,6 +76,7 @@ export const categorySchema = z.object({
   id: z.string(),
   name: z.string(),
   icon: z.string().optional(),
+  taxonomyCode: z.string().optional(),
 });
 
 export const subcategorySchema = z.object({

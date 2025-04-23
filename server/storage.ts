@@ -36,23 +36,23 @@ export class MemStorage implements IStorage {
     this.subcategories = [];
     this.locations = [];
     
-    // Populate default categories with icons
+    // Populate default categories with icons and 211 taxonomy codes
     this.categories = [
-      { id: 'housing', name: 'Housing', icon: 'home' },
-      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase' },
-      { id: 'food', name: 'Food', icon: 'utensils' },
-      { id: 'transportation', name: 'Transportation', icon: 'bus' },
-      { id: 'healthcare', name: 'Health Care', icon: 'stethoscope' },
-      { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower' },
-      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain' },
-      { id: 'substance-use', name: 'Substance Use', icon: 'pills' },
-      { id: 'children-family', name: 'Children & Family', icon: 'users' },
-      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap' },
-      { id: 'education', name: 'Education', icon: 'book' },
-      { id: 'seniors-caregivers', name: 'Seniors & Caregivers', icon: 'user-nurse' },
-      { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel' },
-      { id: 'utilities', name: 'Utilities', icon: 'bolt' },
-      { id: 'reentry', name: 'Reentry', icon: 'door-open' },
+      { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH-1800' },
+      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'ND-1000' },
+      { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD-1800' },
+      { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT-4500' },
+      { id: 'healthcare', name: 'Health Care', icon: 'stethoscope', taxonomyCode: 'LH-3000' },
+      { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower', taxonomyCode: 'BH-5000' },
+      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'RP-1500' },
+      { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX-8450' },
+      { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'PH-1800' },
+      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'PH-6500' },
+      { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'HH-0500' },
+      { id: 'seniors-caregivers', name: 'Seniors & Caregivers', icon: 'user-nurse', taxonomyCode: 'PH-0250' },
+      { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel', taxonomyCode: 'FT-3000' },
+      { id: 'utilities', name: 'Utilities', icon: 'bolt', taxonomyCode: 'BV-8600' },
+      { id: 'reentry', name: 'Reentry', icon: 'door-open', taxonomyCode: 'TJ-6500' },
     ];
     
     // Populate subcategories for each category
