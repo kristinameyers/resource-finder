@@ -71,29 +71,31 @@ export async function searchResourcesByTaxonomy(
     
     const queryParams = new URLSearchParams();
     
-    // Add taxonomy code (we can search by parent code)
-    queryParams.append('taxonomy_code', taxonomyCode);
+    // Add taxonomy code (we can search by parent code) - use TaxonomyCode with capital letters as per API docs
+    queryParams.append('TaxonomyCode', taxonomyCode);
     
     // Add location parameters if provided
     if (zipCode) {
       console.log(`Adding zip code filter: ${zipCode}`);
-      queryParams.append('zip_code', zipCode);
+      queryParams.append('Location', zipCode); // Use Location parameter as per API docs
     } else if (latitude !== undefined && longitude !== undefined) {
       console.log(`Adding coordinates filter: ${latitude}, ${longitude}`);
-      queryParams.append('latitude', latitude.toString());
-      queryParams.append('longitude', longitude.toString());
-      // Add a reasonable radius (in miles)
-      queryParams.append('radius', '20');
+      // Format coordinates as "latitude,longitude" string for the Location parameter
+      queryParams.append('Location', `${latitude},${longitude}`);
+      // Add a reasonable distance (in miles)
+      queryParams.append('Distance', '20');
     }
     
-    // Add pagination
-    queryParams.append('limit', limit.toString());
-    queryParams.append('offset', offset.toString());
+    // Add pagination - use Skip and Top as per API docs
+    queryParams.append('Skip', offset.toString());
+    queryParams.append('Top', limit.toString());
     
     // Build the full URL - ensure no double slashes
     // The API URL might already include a trailing slash
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
-    const requestUrl = `${baseUrl}/resources/search?${queryParams.toString()}`;
+    
+    // Use the Guided endpoint as per API documentation
+    const requestUrl = `${baseUrl}/Guided?${queryParams.toString()}`;
     console.log(`Making 211 API request to: ${requestUrl}`);
     
     // Make the API request
@@ -136,7 +138,9 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     
     // Fix URL formatting to prevent double slashes
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
-    const requestUrl = `${baseUrl}/resources/${id}`;
+    
+    // For resource details, we'll try using the Resource/Details endpoint
+    const requestUrl = `${baseUrl}/Resource/Details?Id=${id}`;
     console.log(`Making 211 API request to: ${requestUrl}`);
     
     const response = await fetch(requestUrl, {
