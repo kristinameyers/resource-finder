@@ -94,6 +94,9 @@ export async function searchResourcesByTaxonomy(
     queryParams.append('Skip', offset.toString());
     queryParams.append('Top', limit.toString());
     
+    // Also try adding subscription key as a query parameter
+    queryParams.append('subscription-key', SUBSCRIPTION_KEY);
+    
     // Build the full URL - ensure no double slashes
     // The API URL might already include a trailing slash
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
@@ -102,13 +105,21 @@ export async function searchResourcesByTaxonomy(
     const requestUrl = `${baseUrl}/Guided?${queryParams.toString()}`;
     console.log(`Making 211 API request to: ${requestUrl}`);
     
-    // Make the API request with subscription key header
+    // Try different header approaches for the subscription key
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
+      // Alternative ways to send the subscription key
+      'subscription-key': SUBSCRIPTION_KEY,
+      'api-key': SUBSCRIPTION_KEY,
+    };
+    
+    console.log('Sending request with headers:', JSON.stringify(headers));
+    
+    // Make the API request
     const response = await fetch(requestUrl, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
-      }
+      headers
     });
     
     if (!response.ok) {
@@ -143,16 +154,29 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     // Fix URL formatting to prevent double slashes
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
     
-    // For resource details, we'll try using the Resource/Details endpoint
-    const requestUrl = `${baseUrl}/Resource/Details?Id=${id}`;
+    // For resource details, construct URL with query parameters including subscription key
+    const queryParams = new URLSearchParams();
+    queryParams.append('Id', id);
+    queryParams.append('subscription-key', SUBSCRIPTION_KEY);
+    
+    const requestUrl = `${baseUrl}/Resource/Details?${queryParams.toString()}`;
     console.log(`Making 211 API request to: ${requestUrl}`);
     
+    // Try different header approaches for the subscription key
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
+      // Alternative ways to send the subscription key
+      'subscription-key': SUBSCRIPTION_KEY,
+      'api-key': SUBSCRIPTION_KEY,
+    };
+    
+    console.log('Sending detail request with headers:', JSON.stringify(headers));
+    
+    // Make the API request
     const response = await fetch(requestUrl, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
-      }
+      headers
     });
     
     if (!response.ok) {
