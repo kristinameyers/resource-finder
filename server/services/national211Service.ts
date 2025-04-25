@@ -45,14 +45,18 @@ interface SearchResourcesResponse {
 }
 
 const API_URL = process.env.NATIONAL_211_API_URL;
-const API_KEY = process.env.NATIONAL_211_API_KEY;
 
-if (!API_URL || !API_KEY) {
-  console.error('Missing 211 API configuration. Please set NATIONAL_211_API_URL and NATIONAL_211_API_KEY environment variables.');
+// Subscription key for the 211 API - provided by user
+const SUBSCRIPTION_KEY = 'd0b38b7a580b46a0a14c993849bde8c0';
+// Backup subscription key if needed
+const BACKUP_SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545';
+
+if (!API_URL) {
+  console.error('Missing 211 API configuration. Please set NATIONAL_211_API_URL environment variable.');
 } else {
   console.log('211 API configuration found');
-  // Don't log the actual API key, just the base URL to confirm it exists
   console.log(`API URL: ${API_URL}`);
+  console.log('Using subscription key authentication');
 }
 
 /**
@@ -98,12 +102,12 @@ export async function searchResourcesByTaxonomy(
     const requestUrl = `${baseUrl}/Guided?${queryParams.toString()}`;
     console.log(`Making 211 API request to: ${requestUrl}`);
     
-    // Make the API request
+    // Make the API request with subscription key header
     const response = await fetch(requestUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
       }
     });
     
@@ -147,7 +151,7 @@ export async function getResourceById(id: string): Promise<Resource | null> {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
       }
     });
     
