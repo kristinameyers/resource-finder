@@ -73,53 +73,61 @@ export async function searchResourcesByTaxonomy(
   try {
     console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
     
-    const queryParams = new URLSearchParams();
-    
-    // Add taxonomy code (we can search by parent code) - use TaxonomyCode with capital letters as per API docs
-    queryParams.append('TaxonomyCode', taxonomyCode);
+    // Based on API documentation, we need to use POST with a JSON payload
+    // Build the request body according to the sample provided
+    const requestBody: any = {
+      "search": taxonomyCode,
+      "skip": offset,
+      "size": limit,
+      "includeTotalCount": true,
+      "filters": [],
+      "orderbys": [],
+      "facets": [],
+      "searchFields": [],
+      "selectFields": [],
+      "searchMode": "All",
+      "keywordIsTaxonomyCode": true,
+      "keywordIsTaxonomyTerm": false,
+      "orderByDistance": true,
+      "resultsAdvanced": false
+    };
     
     // Add location parameters if provided
     if (zipCode) {
       console.log(`Adding zip code filter: ${zipCode}`);
-      queryParams.append('Location', zipCode); // Use Location parameter as per API docs
+      requestBody.location = zipCode;
+      requestBody.locationMode = "near";
+      requestBody.distance = 30; // 30 miles radius
     } else if (latitude !== undefined && longitude !== undefined) {
       console.log(`Adding coordinates filter: ${latitude}, ${longitude}`);
-      // Format coordinates as "latitude,longitude" string for the Location parameter
-      queryParams.append('Location', `${latitude},${longitude}`);
-      // Add a reasonable distance (in miles)
-      queryParams.append('Distance', '20');
+      // Format as "latitude,longitude"
+      requestBody.location = `${latitude},${longitude}`;
+      requestBody.locationMode = "near";
+      requestBody.distance = 30; // 30 miles radius
     }
     
-    // Add pagination - use Skip and Top as per API docs
-    queryParams.append('Skip', offset.toString());
-    queryParams.append('Top', limit.toString());
-    
-    // Also try adding subscription key as a query parameter
-    queryParams.append('subscription-key', SUBSCRIPTION_KEY);
-    
     // Build the full URL - ensure no double slashes
-    // The API URL might already include a trailing slash
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
     
-    // Use the Guided endpoint as per API documentation
-    const requestUrl = `${baseUrl}/Guided?${queryParams.toString()}`;
+    // Use the Search/Keyword endpoint as per API documentation
+    const requestUrl = `${baseUrl}/Search/Keyword`;
     console.log(`Making 211 API request to: ${requestUrl}`);
+    console.log(`With request body: ${JSON.stringify(requestBody)}`);
     
-    // Try different header approaches for the subscription key
+    // Set headers with subscription key
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
-      // Alternative ways to send the subscription key
-      'subscription-key': SUBSCRIPTION_KEY,
-      'api-key': SUBSCRIPTION_KEY,
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
     };
     
     console.log('Sending request with headers:', JSON.stringify(headers));
     
     // Make the API request
     const response = await fetch(requestUrl, {
-      method: 'GET',
-      headers
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody)
     });
     
     if (!response.ok) {
@@ -154,29 +162,29 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     // Fix URL formatting to prevent double slashes
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
     
-    // For resource details, construct URL with query parameters including subscription key
-    const queryParams = new URLSearchParams();
-    queryParams.append('Id', id);
-    queryParams.append('subscription-key', SUBSCRIPTION_KEY);
+    // As recommended by API docs, use the Resources/ServiceAtLocation endpoint
+    const requestUrl = `${baseUrl}/Resources/ServiceAtLocation`;
+    console.log(`Making 211 API request to: ${requestUrl} for resource ${id}`);
     
-    const requestUrl = `${baseUrl}/Resource/Details?${queryParams.toString()}`;
-    console.log(`Making 211 API request to: ${requestUrl}`);
-    
-    // Try different header approaches for the subscription key
+    // Set headers with subscription key
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
-      // Alternative ways to send the subscription key
-      'subscription-key': SUBSCRIPTION_KEY,
-      'api-key': SUBSCRIPTION_KEY,
+      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
     };
     
-    console.log('Sending detail request with headers:', JSON.stringify(headers));
+    // Prepare request body
+    const requestBody = {
+      id: id
+    };
+    
+    console.log('Sending detail request with body:', JSON.stringify(requestBody));
     
     // Make the API request
     const response = await fetch(requestUrl, {
-      method: 'GET',
-      headers
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody)
     });
     
     if (!response.ok) {
