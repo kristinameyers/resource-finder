@@ -106,29 +106,29 @@ export async function searchResourcesByTaxonomy(
       requestBody.distance = 30; // 30 miles radius
     }
     
-    // Build the full URL - ensure no double slashes
+    // Build the full URL - trying the Guided endpoint
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
     
-    // Use the Search/Keyword endpoint as per API documentation
-    const requestUrl = `${baseUrl}/Search/Keyword`;
-    console.log(`Making 211 API request to: ${requestUrl}`);
-    console.log(`With request body: ${JSON.stringify(requestBody)}`);
+    // Try the Guided endpoint with GET parameters as suggested
+    const taxonomyParam = `TaxonomyCode=${taxonomyCode}`;
+    const locationParam = zipCode ? `&Location=${zipCode}` : '';
     
-    // Set headers with subscription key
+    const requestUrl = `${baseUrl}/Search/Guided?${taxonomyParam}${locationParam}`;
+    console.log(`Making 211 API request to: ${requestUrl}`);
+    
+    // Set headers with subscription key - experiment with different formatting
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
     };
     
     console.log('Sending request with headers:', JSON.stringify(headers));
     
     try {
-      // Make the API request
+      // Make the API request using GET method 
       const response = await fetch(requestUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody)
+        method: 'GET',
+        headers
       });
       
       if (!response.ok) {
@@ -190,29 +190,22 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     // Fix URL formatting to prevent double slashes
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
     
-    // As recommended by API docs, use the Resources/ServiceAtLocation endpoint
-    const requestUrl = `${baseUrl}/Resources/ServiceAtLocation`;
+    // Try the Guided endpoint with resource ID parameter
+    const requestUrl = `${baseUrl}/Resources/Detail?Id=${id}`;
     console.log(`Making 211 API request to: ${requestUrl} for resource ${id}`);
     
     // Set headers with subscription key
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
     };
     
-    // Prepare request body
-    const requestBody = {
-      id: id
-    };
+    console.log('Sending detail request with headers:', JSON.stringify(headers));
     
-    console.log('Sending detail request with body:', JSON.stringify(requestBody));
-    
-    // Make the API request
+    // Make the API request as a GET
     const response = await fetch(requestUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody)
+      method: 'GET',
+      headers
     });
     
     if (!response.ok) {
