@@ -44,20 +44,18 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-const API_URL = process.env.NATIONAL_211_API_URL;
+// According to the transcript, we should be using Search V2 API
+const API_URL = "https://api.211.org/search/v2/api";  // Updated to V2 endpoint
+// const API_URL = process.env.NATIONAL_211_API_URL;  // Keep as fallback if needed
 
 // Subscription key for the 211 API - provided by user
 const SUBSCRIPTION_KEY = 'd0b38b7a580b46a0a14c993849bde8c0';
 // Backup subscription key if needed
 const BACKUP_SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545';
 
-if (!API_URL) {
-  console.error('Missing 211 API configuration. Please set NATIONAL_211_API_URL environment variable.');
-} else {
-  console.log('211 API configuration found');
-  console.log(`API URL: ${API_URL}`);
-  console.log('Using subscription key authentication');
-}
+console.log('211 API V2 configuration set up');
+console.log(`API URL: ${API_URL}`);
+console.log('Using subscription key authentication with Ocp-Apim-Subscription-Key header');
 
 /**
  * Searches for resources by taxonomy code
@@ -73,50 +71,44 @@ export async function searchResourcesByTaxonomy(
   try {
     console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
     
-    // Based on API documentation, we need to use POST with a JSON payload
-    // Build the request body according to the sample provided
-    const requestBody: any = {
-      "search": taxonomyCode,
-      "skip": offset,
-      "size": limit,
-      "includeTotalCount": true,
-      "filters": [],
-      "orderbys": [],
-      "facets": [],
-      "searchFields": [],
-      "selectFields": [],
-      "searchMode": "All",
-      "keywordIsTaxonomyCode": true,
-      "keywordIsTaxonomyTerm": false,
-      "orderByDistance": true,
-      "resultsAdvanced": false
-    };
+    // Build the full URL based on the transcript - using V2 API GET keyword search
+    const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
+    
+    // From the transcript: Construct a GET request to the keyword search with taxonomyCode parameter
+    let queryParams = [
+      `search=${taxonomyCode}`,
+      'keywordIsTaxonomyCode=true'  // Indicate that our search is a taxonomy code
+    ];
     
     // Add location parameters if provided
     if (zipCode) {
-      console.log(`Adding zip code filter: ${zipCode}`);
-      requestBody.location = zipCode;
-      requestBody.locationMode = "near";
-      requestBody.distance = 30; // 30 miles radius
+      queryParams.push(`location=${zipCode}`);
+      queryParams.push('locationMode=near');
+      queryParams.push('distance=30');  // 30 miles radius
     } else if (latitude !== undefined && longitude !== undefined) {
-      console.log(`Adding coordinates filter: ${latitude}, ${longitude}`);
-      // Format as "latitude,longitude"
-      requestBody.location = `${latitude},${longitude}`;
-      requestBody.locationMode = "near";
-      requestBody.distance = 30; // 30 miles radius
+      queryParams.push(`location=${latitude},${longitude}`);
+      queryParams.push('locationMode=near');
+      queryParams.push('distance=30');  // 30 miles radius
     }
     
-    // Build the full URL - trying the Guided endpoint
-    const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
+    // Add paging parameters
+    queryParams.push(`size=${limit}`);
+    queryParams.push(`skip=${offset}`);
     
-    // Try the Guided endpoint with GET parameters as suggested
-    const taxonomyParam = `TaxonomyCode=${taxonomyCode}`;
-    const locationParam = zipCode ? `&Location=${zipCode}` : '';
+    // SearchMode=all to require all terms
+    queryParams.push('searchMode=all');
     
-    const requestUrl = `${baseUrl}/Search/Guided?${taxonomyParam}${locationParam}`;
-    console.log(`Making 211 API request to: ${requestUrl}`);
+    // Order by distance
+    queryParams.push('orderByDistance=true');
     
-    // Set headers with subscription key - experiment with different formatting
+    // Join the parameters with &
+    const queryString = queryParams.join('&');
+    
+    // Final URL (using the keyword search endpoint from V2 API)
+    const requestUrl = `${baseUrl}/Search/Keyword?${queryString}`;
+    console.log(`Making 211 API V2 request to: ${requestUrl}`);
+    
+    // Set headers with subscription key as per the transcript
     const headers: HeadersInit = {
       'Accept': 'application/json',
       'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
@@ -125,7 +117,7 @@ export async function searchResourcesByTaxonomy(
     console.log('Sending request with headers:', JSON.stringify(headers));
     
     try {
-      // Make the API request using GET method 
+      // Make the API request using GET method as shown in transcript
       const response = await fetch(requestUrl, {
         method: 'GET',
         headers
@@ -190,9 +182,9 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     // Fix URL formatting to prevent double slashes
     const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
     
-    // Try the Guided endpoint with resource ID parameter
-    const requestUrl = `${baseUrl}/Resources/Detail?Id=${id}`;
-    console.log(`Making 211 API request to: ${requestUrl} for resource ${id}`);
+    // Based on transcript - use the Resources/Detail endpoint from V2 API
+    const requestUrl = `${baseUrl}/Resources/Detail?id=${id}`;
+    console.log(`Making 211 API V2 request to: ${requestUrl} for resource ${id}`);
     
     // Set headers with subscription key
     const headers: HeadersInit = {
