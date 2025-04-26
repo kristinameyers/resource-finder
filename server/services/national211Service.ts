@@ -123,29 +123,57 @@ export async function searchResourcesByTaxonomy(
     
     console.log('Sending request with headers:', JSON.stringify(headers));
     
-    // Make the API request
-    const response = await fetch(requestUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(requestBody)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`211 API Error: ${response.status}`, errorText);
-      throw new Error(`211 API Error: ${response.status} - ${errorText}`);
+    try {
+      // Make the API request
+      const response = await fetch(requestUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`211 API Error: ${response.status}`, errorText);
+        throw new Error(`211 API Error: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json() as SearchResourcesResponse;
+      console.log(`Received ${data.resources?.length || 0} resources from 211 API`);
+      
+      // Transform the 211 resource format to our app's resource format
+      const transformedResources = data.resources?.map(transformResource) || [];
+      
+      return {
+        resources: transformedResources,
+        total: data.total || transformedResources.length,
+      };
+    } catch (apiError) {
+      console.error('API Integration Error:', apiError);
+      console.log('⚠️ API Integration still in progress, returning placeholder notice');
+      
+      // Create a notice resource
+      const noticeResource: Resource = {
+        id: "api-notice-" + taxonomyCode,
+        name: "API Integration In Progress",
+        description: "We're currently working on connecting to the National 211 API using your subscription key. For now, please use the 'Local Data' option to view example resources.",
+        categoryId: taxonomyCode,
+        subcategoryId: undefined,
+        location: "Information",
+        zipCode: zipCode,
+        url: undefined,
+        phone: undefined,
+        email: undefined,
+        address: undefined,
+        schedules: undefined,
+        accessibility: undefined,
+        languages: [],
+      };
+      
+      return {
+        resources: [noticeResource],
+        total: 1
+      };
     }
-    
-    const data = await response.json() as SearchResourcesResponse;
-    console.log(`Received ${data.resources?.length || 0} resources from 211 API`);
-    
-    // Transform the 211 resource format to our app's resource format
-    const transformedResources = data.resources?.map(transformResource) || [];
-    
-    return {
-      resources: transformedResources,
-      total: data.total || transformedResources.length,
-    };
   } catch (error) {
     console.error('Error searching resources by taxonomy:', error);
     throw error;

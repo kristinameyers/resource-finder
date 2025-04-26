@@ -45,6 +45,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const categories = await storage.getCategories();
           const category = categories.find(c => c.id === categoryId);
           
+          console.log(`Selected category: ${categoryId}, Taxonomy Code: ${category?.taxonomyCode}`);
+          console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
+          console.log(`Using 211 API: ${useApi}`);
+          
           if (category && category.taxonomyCode) {
             // Use the 211 API to search by taxonomy code
             const result = await searchResourcesByTaxonomy(
@@ -54,11 +58,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               longitude
             );
             
+            console.log(`API response received with ${result.resources.length} resources`);
+            
             return res.status(200).json({
               resources: result.resources,
               total: result.total,
               source: '211 API'
             });
+          } else {
+            console.log(`Cannot use API: Missing taxonomy code for category ${categoryId}`);
           }
         } catch (apiError) {
           console.error("Error fetching from 211 API:", apiError);
