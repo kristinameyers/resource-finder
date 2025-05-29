@@ -10,12 +10,18 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Resources related methods
-  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number): Promise<Resource[]>;
+  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string): Promise<Resource[]>;
   getCategories(): Promise<Category[]>;
   getSubcategories(categoryId: string): Promise<Subcategory[]>;
   getLocations(): Promise<Location[]>;
   getLocationByZipCode(zipCode: string): Promise<Location | undefined>;
   getLocationByCoordinates(latitude: number, longitude: number): Promise<Location | undefined>;
+  
+  // Rating related methods
+  getRatings(resourceId: string): Promise<{ thumbsUp: number; thumbsDown: number }>;
+  getUserVote(resourceId: string, sessionId: string): Promise<'up' | 'down' | null>;
+  submitVote(resourceId: string, sessionId: string, vote: 'up' | 'down'): Promise<void>;
+  removeVote(resourceId: string, sessionId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -24,6 +30,7 @@ export class MemStorage implements IStorage {
   private categories: Category[];
   private subcategories: Subcategory[];
   private locations: Location[];
+  private ratings: Map<string, { thumbsUp: number; thumbsDown: number; votes: Map<string, 'up' | 'down'> }> = new Map();
   currentId: number;
 
   constructor() {
@@ -183,7 +190,7 @@ export class MemStorage implements IStorage {
     return user;
   }
   
-  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number): Promise<Resource[]> {
+  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string): Promise<Resource[]> {
     // Here we would normally fetch from an external API
     // For testing, we'll generate mock resources if none exist yet
     if (this.resources.length === 0) {
@@ -243,7 +250,22 @@ export class MemStorage implements IStorage {
       console.log(`Filtering by coordinates: ${latitude}, ${longitude}`);
     }
     
-    return filteredResources;
+    // Add rating information to each resource
+    const resourcesWithRatings = await Promise.all(
+      filteredResources.map(async (resource) => {
+        const ratings = await this.getRatings(resource.id);
+        const userVote = sessionId ? await this.getUserVote(resource.id, sessionId) : null;
+        
+        return {
+          ...resource,
+          thumbsUp: ratings.thumbsUp,
+          thumbsDown: ratings.thumbsDown,
+          userVote
+        };
+      })
+    );
+    
+    return resourcesWithRatings;
   }
   
   async getCategories(): Promise<Category[]> {
@@ -271,6 +293,45 @@ export class MemStorage implements IStorage {
     // For now, we'll just return the first location since this is a mock implementation
     console.log(`Finding location by coordinates: ${latitude}, ${longitude}`);
     return this.locations[0];
+  }
+
+  async getRatings(resourceId: string): Promise<{ thumbsUp: number; thumbsDown: number }> {
+    const rating = this.ratings.get(resourceId);
+    return rating ? { thumbsUp: rating.thumbsUp, thumbsDown: rating.thumbsDown } : { thumbsUp: 0, thumbsDown: 0 };
+  }
+
+  async getUserVote(resourceId: string, sessionId: string): Promise<'up' | 'down' | null> {
+    const rating = this.ratings.get(resourceId);
+    return rating?.votes.get(sessionId) || null;
+  }
+
+  async submitVote(resourceId: string, sessionId: string, vote: 'up' | 'down'): Promise<void> {
+    let rating = this.ratings.get(resourceId);
+    if (!rating) {
+      rating = { thumbsUp: 0, thumbsDown: 0, votes: new Map() };
+      this.ratings.set(resourceId, rating);
+    }
+
+    // Remove previous vote if exists
+    const previousVote = rating.votes.get(sessionId);
+    if (previousVote === 'up') rating.thumbsUp--;
+    if (previousVote === 'down') rating.thumbsDown--;
+
+    // Add new vote
+    rating.votes.set(sessionId, vote);
+    if (vote === 'up') rating.thumbsUp++;
+    if (vote === 'down') rating.thumbsDown++;
+  }
+
+  async removeVote(resourceId: string, sessionId: string): Promise<void> {
+    const rating = this.ratings.get(resourceId);
+    if (!rating) return;
+
+    const previousVote = rating.votes.get(sessionId);
+    if (previousVote === 'up') rating.thumbsUp--;
+    if (previousVote === 'down') rating.thumbsDown--;
+    
+    rating.votes.delete(sessionId);
   }
 }
 

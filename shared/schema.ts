@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -13,8 +13,27 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
 });
 
+export const ratings = pgTable("ratings", {
+  id: serial("id").primaryKey(),
+  resourceId: text("resource_id").notNull(),
+  sessionId: text("session_id").notNull(), // Use session ID instead of user ID for anonymous voting
+  vote: text("vote").notNull(), // 'up' or 'down'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  // Ensure one vote per session per resource
+  uniqueSessionResource: unique().on(table.sessionId, table.resourceId),
+}));
+
+export const insertRatingSchema = createInsertSchema(ratings).pick({
+  resourceId: true,
+  sessionId: true,
+  vote: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertRating = z.infer<typeof insertRatingSchema>;
+export type Rating = typeof ratings.$inferSelect;
 
 // Resource schema definition
 export interface Category {
@@ -53,6 +72,9 @@ export interface Resource {
   schedules?: string;
   accessibility?: string;
   languages?: string[];
+  thumbsUp?: number; // Number of thumbs up votes
+  thumbsDown?: number; // Number of thumbs down votes
+  userVote?: 'up' | 'down' | null; // Current user's vote for this resource
 }
 
 export const resourceSchema = z.object({

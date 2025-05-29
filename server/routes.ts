@@ -246,7 +246,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Fallback to local storage
-      const resources = await storage.getResources();
+      const sessionId = req.headers['x-session-id'] as string || 'anonymous';
+      const resources = await storage.getResources(undefined, undefined, undefined, undefined, undefined, sessionId);
       const resource = resources.find(r => r.id === id);
       
       if (!resource) {
@@ -265,6 +266,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Error fetching resource",
         error: (error as Error).message,
       });
+    }
+  });
+
+  // Rating routes
+  app.post("/api/resources/:id/vote", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { vote } = req.body; // 'up' or 'down'
+      const sessionId = req.headers['x-session-id'] as string || 'anonymous';
+      
+      if (!vote || (vote !== 'up' && vote !== 'down')) {
+        return res.status(400).json({ error: 'Vote must be "up" or "down"' });
+      }
+      
+      await storage.submitVote(id, sessionId, vote);
+      const ratings = await storage.getRatings(id);
+      
+      res.json({ 
+        thumbsUp: ratings.thumbsUp, 
+        thumbsDown: ratings.thumbsDown,
+        userVote: vote
+      });
+    } catch (error) {
+      console.error("Error submitting vote:", error);
+      res.status(500).json({ error: "Failed to submit vote" });
+    }
+  });
+
+  app.delete("/api/resources/:id/vote", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const sessionId = req.headers['x-session-id'] as string || 'anonymous';
+      
+      await storage.removeVote(id, sessionId);
+      const ratings = await storage.getRatings(id);
+      
+      res.json({ 
+        thumbsUp: ratings.thumbsUp, 
+        thumbsDown: ratings.thumbsDown,
+        userVote: null
+      });
+    } catch (error) {
+      console.error("Error removing vote:", error);
+      res.status(500).json({ error: "Failed to remove vote" });
     }
   });
 

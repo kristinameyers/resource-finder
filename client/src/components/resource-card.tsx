@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, MapPin, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import RatingComponent from "./rating-component";
 
 interface ResourceCardProps {
   resource: Resource;
@@ -60,6 +61,18 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
           )}
         </CardContent>
       </Link>
+      
+      {/* Rating component outside the link to prevent navigation conflicts */}
+      <div className="px-6 pb-2">
+        <RatingComponent 
+          resourceId={resource.id}
+          thumbsUp={resource.thumbsUp || 0}
+          thumbsDown={resource.thumbsDown || 0}
+          userVote={resource.userVote}
+          className="text-sm"
+        />
+      </div>
+      
       <CardFooter className="pt-2 flex gap-2">
         <Button 
           variant="default" 

@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { fetchResourceById, fetchCategories, fetchSubcategories } from '@/lib/api';
+import RatingComponent from '@/components/rating-component';
 
 export default function ResourceDetail() {
   const { id } = useParams();
@@ -123,6 +124,21 @@ export default function ResourceDetail() {
           )}
         </div>
       </div>
+      
+      {/* Rating Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Rate this Resource</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RatingComponent 
+            resourceId={resource.id}
+            thumbsUp={resource.thumbsUp || 0}
+            thumbsDown={resource.thumbsDown || 0}
+            userVote={resource.userVote}
+          />
+        </CardContent>
+      </Card>
       
       {/* Description */}
       <Card className="mb-6">
