@@ -321,6 +321,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to view vote data (for debugging/monitoring)
+  app.get("/api/admin/votes", async (req: Request, res: Response) => {
+    try {
+      const { resourceId } = req.query;
+      const { collection, getDocs, query, where } = await import('firebase/firestore');
+      const { db } = await import('./firebase');
+      
+      const votesRef = collection(db, 'votes');
+      let votesQuery;
+      
+      if (resourceId && typeof resourceId === 'string') {
+        votesQuery = query(votesRef, where('resourceId', '==', resourceId));
+      } else {
+        votesQuery = votesRef;
+      }
+      
+      const snapshot = await getDocs(votesQuery);
+      const votes: any[] = [];
+      
+      snapshot.forEach((doc) => {
+        votes.push({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate?.() || doc.data().createdAt
+        });
+      });
+      
+      res.json({
+        totalVotes: votes.length,
+        votes: votes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      });
+    } catch (error) {
+      console.error("Error fetching votes:", error);
+      res.status(500).json({ error: "Failed to fetch votes" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
