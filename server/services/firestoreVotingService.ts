@@ -14,6 +14,7 @@ import { db } from '../firebase';
 export interface VoteData {
   resourceId: string;
   sessionId: string;
+  ipAddress: string;
   vote: 'up' | 'down';
   createdAt: Date;
 }
@@ -54,9 +55,9 @@ export async function getVoteStats(resourceId: string): Promise<VoteStats> {
 /**
  * Get user's vote for a specific resource
  */
-export async function getUserVote(resourceId: string, sessionId: string): Promise<'up' | 'down' | null> {
+export async function getUserVote(resourceId: string, sessionId: string, ipAddress: string): Promise<'up' | 'down' | null> {
   try {
-    const voteId = `${resourceId}_${sessionId}`;
+    const voteId = `${resourceId}_${sessionId}_${ipAddress}`;
     const voteDoc = doc(db, 'votes', voteId);
     const snapshot = await getDoc(voteDoc);
     
@@ -74,14 +75,15 @@ export async function getUserVote(resourceId: string, sessionId: string): Promis
 /**
  * Submit a vote for a resource
  */
-export async function submitVote(resourceId: string, sessionId: string, vote: 'up' | 'down'): Promise<void> {
+export async function submitVote(resourceId: string, sessionId: string, ipAddress: string, vote: 'up' | 'down'): Promise<void> {
   try {
-    const voteId = `${resourceId}_${sessionId}`;
+    const voteId = `${resourceId}_${sessionId}_${ipAddress}`;
     const voteDoc = doc(db, 'votes', voteId);
     
     const voteData: VoteData = {
       resourceId,
       sessionId,
+      ipAddress,
       vote,
       createdAt: new Date()
     };
@@ -96,9 +98,9 @@ export async function submitVote(resourceId: string, sessionId: string, vote: 'u
 /**
  * Remove a vote for a resource
  */
-export async function removeVote(resourceId: string, sessionId: string): Promise<void> {
+export async function removeVote(resourceId: string, sessionId: string, ipAddress: string): Promise<void> {
   try {
-    const voteId = `${resourceId}_${sessionId}`;
+    const voteId = `${resourceId}_${sessionId}_${ipAddress}`;
     const voteDoc = doc(db, 'votes', voteId);
     await deleteDoc(voteDoc);
   } catch (error) {
@@ -110,7 +112,7 @@ export async function removeVote(resourceId: string, sessionId: string): Promise
 /**
  * Get vote stats and user vote in a single call for efficiency
  */
-export async function getVoteStatsWithUserVote(resourceId: string, sessionId: string): Promise<{
+export async function getVoteStatsWithUserVote(resourceId: string, sessionId: string, ipAddress: string): Promise<{
   thumbsUp: number;
   thumbsDown: number;
   userVote: 'up' | 'down' | null;
@@ -118,7 +120,7 @@ export async function getVoteStatsWithUserVote(resourceId: string, sessionId: st
   try {
     const [stats, userVote] = await Promise.all([
       getVoteStats(resourceId),
-      getUserVote(resourceId, sessionId)
+      getUserVote(resourceId, sessionId, ipAddress)
     ]);
     
     return {

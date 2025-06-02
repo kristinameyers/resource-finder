@@ -19,9 +19,9 @@ export interface IStorage {
   
   // Rating related methods (now using Firebase Firestore)
   getRatings(resourceId: string): Promise<{ thumbsUp: number; thumbsDown: number }>;
-  getUserVote(resourceId: string, sessionId: string): Promise<'up' | 'down' | null>;
-  submitVote(resourceId: string, sessionId: string, vote: 'up' | 'down'): Promise<void>;
-  removeVote(resourceId: string, sessionId: string): Promise<void>;
+  getUserVote(resourceId: string, sessionId: string, ipAddress: string): Promise<'up' | 'down' | null>;
+  submitVote(resourceId: string, sessionId: string, ipAddress: string, vote: 'up' | 'down'): Promise<void>;
+  removeVote(resourceId: string, sessionId: string, ipAddress: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -300,19 +300,19 @@ export class MemStorage implements IStorage {
     return await getVoteStats(resourceId);
   }
 
-  async getUserVote(resourceId: string, sessionId: string): Promise<'up' | 'down' | null> {
+  async getUserVote(resourceId: string, sessionId: string, ipAddress: string): Promise<'up' | 'down' | null> {
     const { getUserVote } = await import('./services/firestoreVotingService');
-    return await getUserVote(resourceId, sessionId);
+    return await getUserVote(resourceId, sessionId, ipAddress);
   }
 
-  async submitVote(resourceId: string, sessionId: string, vote: 'up' | 'down'): Promise<void> {
+  async submitVote(resourceId: string, sessionId: string, ipAddress: string, vote: 'up' | 'down'): Promise<void> {
     const { submitVote } = await import('./services/firestoreVotingService');
-    await submitVote(resourceId, sessionId, vote);
+    await submitVote(resourceId, sessionId, ipAddress, vote);
   }
 
-  async removeVote(resourceId: string, sessionId: string): Promise<void> {
+  async removeVote(resourceId: string, sessionId: string, ipAddress: string): Promise<void> {
     const { removeVote } = await import('./services/firestoreVotingService');
-    await removeVote(resourceId, sessionId);
+    await removeVote(resourceId, sessionId, ipAddress);
   }
 }
 

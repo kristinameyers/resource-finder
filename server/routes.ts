@@ -275,12 +275,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { vote } = req.body; // 'up' or 'down'
       const sessionId = req.headers['x-session-id'] as string || 'anonymous';
+      const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] as string || 'unknown';
       
       if (!vote || (vote !== 'up' && vote !== 'down')) {
         return res.status(400).json({ error: 'Vote must be "up" or "down"' });
       }
       
-      await storage.submitVote(id, sessionId, vote);
+      await storage.submitVote(id, sessionId, ipAddress, vote);
       const ratings = await storage.getRatings(id);
       
       res.json({ 
