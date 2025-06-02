@@ -10,7 +10,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Resources related methods
-  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string): Promise<Resource[]>;
+  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string): Promise<Resource[]>;
   getCategories(): Promise<Category[]>;
   getSubcategories(categoryId: string): Promise<Subcategory[]>;
   getLocations(): Promise<Location[]>;
@@ -190,7 +190,7 @@ export class MemStorage implements IStorage {
     return user;
   }
   
-  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string): Promise<Resource[]> {
+  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string): Promise<Resource[]> {
     // Here we would normally fetch from an external API
     // For testing, we'll generate mock resources if none exist yet
     if (this.resources.length === 0) {
@@ -254,7 +254,7 @@ export class MemStorage implements IStorage {
     const resourcesWithRatings = await Promise.all(
       filteredResources.map(async (resource) => {
         const ratings = await this.getRatings(resource.id);
-        const userVote = sessionId ? await this.getUserVote(resource.id, sessionId) : null;
+        const userVote = sessionId && ipAddress ? await this.getUserVote(resource.id, sessionId, ipAddress) : null;
         
         return {
           ...resource,

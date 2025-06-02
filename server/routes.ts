@@ -75,12 +75,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Fallback to local storage if not using API or if the API failed
+      const sessionId = req.headers['x-session-id'] as string || 'anonymous';
+      const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] as string || 'unknown';
+      
       const resources = await storage.getResources(
         categoryId,
         subcategoryId,
         zipCode,
         latitude,
-        longitude
+        longitude,
+        sessionId,
+        ipAddress
       );
 
       return res.status(200).json({
@@ -247,7 +252,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Fallback to local storage
       const sessionId = req.headers['x-session-id'] as string || 'anonymous';
-      const resources = await storage.getResources(undefined, undefined, undefined, undefined, undefined, sessionId);
+      const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] as string || 'unknown';
+      const resources = await storage.getResources(undefined, undefined, undefined, undefined, undefined, sessionId, ipAddress);
       const resource = resources.find(r => r.id === id);
       
       if (!resource) {
@@ -299,8 +305,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const sessionId = req.headers['x-session-id'] as string || 'anonymous';
+      const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] as string || 'unknown';
       
-      await storage.removeVote(id, sessionId);
+      await storage.removeVote(id, sessionId, ipAddress);
       const ratings = await storage.getRatings(id);
       
       res.json({ 
