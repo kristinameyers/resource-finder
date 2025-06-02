@@ -17,7 +17,7 @@ export interface IStorage {
   getLocationByZipCode(zipCode: string): Promise<Location | undefined>;
   getLocationByCoordinates(latitude: number, longitude: number): Promise<Location | undefined>;
   
-  // Rating related methods
+  // Rating related methods (now using Firebase Firestore)
   getRatings(resourceId: string): Promise<{ thumbsUp: number; thumbsDown: number }>;
   getUserVote(resourceId: string, sessionId: string): Promise<'up' | 'down' | null>;
   submitVote(resourceId: string, sessionId: string, vote: 'up' | 'down'): Promise<void>;
@@ -30,7 +30,7 @@ export class MemStorage implements IStorage {
   private categories: Category[];
   private subcategories: Subcategory[];
   private locations: Location[];
-  private ratings: Map<string, { thumbsUp: number; thumbsDown: number; votes: Map<string, 'up' | 'down'> }> = new Map();
+
   currentId: number;
 
   constructor() {
@@ -296,42 +296,23 @@ export class MemStorage implements IStorage {
   }
 
   async getRatings(resourceId: string): Promise<{ thumbsUp: number; thumbsDown: number }> {
-    const rating = this.ratings.get(resourceId);
-    return rating ? { thumbsUp: rating.thumbsUp, thumbsDown: rating.thumbsDown } : { thumbsUp: 0, thumbsDown: 0 };
+    const { getVoteStats } = await import('./services/firestoreVotingService');
+    return await getVoteStats(resourceId);
   }
 
   async getUserVote(resourceId: string, sessionId: string): Promise<'up' | 'down' | null> {
-    const rating = this.ratings.get(resourceId);
-    return rating?.votes.get(sessionId) || null;
+    const { getUserVote } = await import('./services/firestoreVotingService');
+    return await getUserVote(resourceId, sessionId);
   }
 
   async submitVote(resourceId: string, sessionId: string, vote: 'up' | 'down'): Promise<void> {
-    let rating = this.ratings.get(resourceId);
-    if (!rating) {
-      rating = { thumbsUp: 0, thumbsDown: 0, votes: new Map() };
-      this.ratings.set(resourceId, rating);
-    }
-
-    // Remove previous vote if exists
-    const previousVote = rating.votes.get(sessionId);
-    if (previousVote === 'up') rating.thumbsUp--;
-    if (previousVote === 'down') rating.thumbsDown--;
-
-    // Add new vote
-    rating.votes.set(sessionId, vote);
-    if (vote === 'up') rating.thumbsUp++;
-    if (vote === 'down') rating.thumbsDown++;
+    const { submitVote } = await import('./services/firestoreVotingService');
+    await submitVote(resourceId, sessionId, vote);
   }
 
   async removeVote(resourceId: string, sessionId: string): Promise<void> {
-    const rating = this.ratings.get(resourceId);
-    if (!rating) return;
-
-    const previousVote = rating.votes.get(sessionId);
-    if (previousVote === 'up') rating.thumbsUp--;
-    if (previousVote === 'down') rating.thumbsDown--;
-    
-    rating.votes.delete(sessionId);
+    const { removeVote } = await import('./services/firestoreVotingService');
+    await removeVote(resourceId, sessionId);
   }
 }
 
