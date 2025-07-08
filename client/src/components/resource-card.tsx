@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, MapPin, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
-import RatingComponent from "./rating-component";
+import FavoriteButton from "./favorite-button";
 
 interface ResourceCardProps {
   resource: Resource;
@@ -62,13 +62,10 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
         </CardContent>
       </Link>
       
-      {/* Rating component outside the link to prevent navigation conflicts */}
+      {/* Favorite button outside the link to prevent navigation conflicts */}
       <div className="px-6 pb-2">
-        <RatingComponent 
+        <FavoriteButton 
           resourceId={resource.id}
-          thumbsUp={resource.thumbsUp || 0}
-          thumbsDown={resource.thumbsDown || 0}
-          userVote={resource.userVote}
           className="text-sm"
         />
       </div>

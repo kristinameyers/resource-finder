@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { fetchResourceById, fetchCategories, fetchSubcategories } from '@/lib/api';
-import RatingComponent from '@/components/rating-component';
+import FavoriteButton from '@/components/favorite-button';
 
 export default function ResourceDetail() {
   const { id } = useParams();
@@ -125,17 +125,15 @@ export default function ResourceDetail() {
         </div>
       </div>
       
-      {/* Rating Section */}
+      {/* Favorites Section */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Rate this Resource</CardTitle>
+          <CardTitle>Save to Favorites</CardTitle>
         </CardHeader>
         <CardContent>
-          <RatingComponent 
+          <FavoriteButton 
             resourceId={resource.id}
-            thumbsUp={resource.thumbsUp || 0}
-            thumbsDown={resource.thumbsDown || 0}
-            userVote={resource.userVote}
+            showText={true}
           />
         </CardContent>
       </Card>
