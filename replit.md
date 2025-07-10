@@ -113,3 +113,24 @@ The application prioritizes user experience with fast loading times, anonymous a
 - **Categories/Subcategories**: Defined in application code
 
 The app now uses a hybrid approach: favorites stored locally on device, resource data from 211 API, no external database dependencies for core functionality.
+
+## API Integration Status
+
+### Authentication Progress ✓
+- API key authentication is working correctly
+- Getting 400 validation errors instead of 401 authentication errors
+- Successfully connecting to https://api.211.org/resources/v2/search/keyword endpoint
+
+### Parameter Configuration Challenge ❌
+The locationMode parameter validation is blocking successful API calls despite testing multiple combinations:
+- Tried: "Near", "zipcode", "postal", "coordinates", "geo"
+- Tested both POST form data and GET URL parameters
+- Added distanceUnit parameter for completeness
+- API consistently reports "locationMode field is required" even when parameter is present
+
+### Next Steps
+1. Consult official API documentation at apiportal.211.org for exact parameter specifications
+2. May need to contact 211 support for parameter format clarification
+3. Consider using API testing tools within the developer portal for validation
+
+The integration foundation is solid - authentication works and the data transformation layer is ready for when the correct parameter format is identified.

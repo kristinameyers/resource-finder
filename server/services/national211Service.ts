@@ -95,12 +95,14 @@ export async function searchResourcesByTaxonomy(
     // Add location parameters if provided
     if (zipCode) {
       queryParams.push(`location=${zipCode}`);
-      queryParams.push('locationMode=near'); // Required parameter
+      queryParams.push('locationMode=postal'); // Match the POST data
       queryParams.push('distance=25'); // Search radius in miles
+      queryParams.push('distanceUnit=miles'); // Add distance unit
     } else if (latitude !== undefined && longitude !== undefined) {
       queryParams.push(`location=${latitude},${longitude}`);
-      queryParams.push('locationMode=near');
+      queryParams.push('locationMode=geo'); // Match the POST data
       queryParams.push('distance=25');
+      queryParams.push('distanceUnit=miles');
     }
     
     // Join the parameters with &
@@ -122,11 +124,41 @@ export async function searchResourcesByTaxonomy(
     console.log('Sending request with headers:', JSON.stringify(headers));
     
     try {
-      // Make the API request using GET method as shown in transcript
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers
+      // Try POST method with form data, as some APIs expect POST for search with parameters
+      const formData = new URLSearchParams();
+      formData.append('keywords', keyword);
+      if (zipCode) {
+        formData.append('location', zipCode);
+        formData.append('locationMode', 'postal'); // Try postal for zip codes
+        formData.append('distance', '25');
+        formData.append('distanceUnit', 'miles'); // Add distance unit
+      } else if (latitude !== undefined && longitude !== undefined) {
+        formData.append('location', `${latitude},${longitude}`);
+        formData.append('locationMode', 'geo'); // Try geo for coordinates
+        formData.append('distance', '25');
+        formData.append('distanceUnit', 'miles');
+      }
+
+      console.log('Trying POST method with form data:', formData.toString());
+      
+      // Try POST first
+      let response = await fetch(`${API_BASE_URL}/keyword`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData
       });
+      
+      // If POST fails, try GET with URL parameters
+      if (!response.ok) {
+        console.log('POST failed, trying GET method...');
+        response = await fetch(requestUrl, {
+          method: 'GET',
+          headers
+        });
+      }
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -148,21 +180,21 @@ export async function searchResourcesByTaxonomy(
       console.error('API Integration Error:', apiError);
       console.log('⚠️ API Integration still in progress, returning placeholder notice');
       
-      // Create a notice resource
+      // Create a detailed notice resource with troubleshooting information
       const noticeResource: Resource = {
         id: "api-notice-" + taxonomyCode,
-        name: "API Integration In Progress",
-        description: "We're currently working on connecting to the National 211 API using your subscription key. For now, please use the 'Local Data' option to view example resources.",
+        name: "211 API Parameter Configuration Issue",
+        description: `Authentication with your API key is successful! The API is responding but requires specific locationMode parameter values. We've tested: "Near", "zipcode", "postal", "coordinates", "geo" with both POST and GET methods. The API documentation at apiportal.211.org may have the correct parameter specifications. Current request: keywords=${keyword}, location=${zipCode || 'coordinates'}, locationMode=postal, distance=25.`,
         categoryId: taxonomyCode,
         subcategoryId: undefined,
-        location: "Information",
+        location: "API Configuration Status",
         zipCode: zipCode,
-        url: undefined,
+        url: "https://apiportal.211.org/",
         phone: undefined,
         email: undefined,
-        address: undefined,
-        schedules: undefined,
-        accessibility: undefined,
+        address: "Check API documentation for correct locationMode values",
+        schedules: "Authentication: ✓ Working | Parameter Format: ❌ Needs adjustment",
+        accessibility: "API responds with 400 validation error instead of 401 authentication error",
         languages: [],
       };
       
