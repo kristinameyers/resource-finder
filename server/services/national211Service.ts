@@ -44,17 +44,14 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// According to the transcript, we should be using Search V2 API
-const API_URL = "https://api.211.org/search/v2/api";  // Updated to V2 endpoint
-// const API_URL = process.env.NATIONAL_211_API_URL;  // Keep as fallback if needed
+// Using the correct 211 V2 API endpoint structure
+const API_BASE_URL = "https://api.211.org/resources/v2/search";  // Correct V2 endpoint
 
-// Subscription key for the 211 API - provided by user
-const SUBSCRIPTION_KEY = 'd0b38b7a580b46a0a14c993849bde8c0';
-// Backup subscription key if needed
-const BACKUP_SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545';
+// Get API key from environment variables
+const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY || 'd0b38b7a580b46a0a14c993849bde8c0';
 
 console.log('211 API V2 configuration set up');
-console.log(`API URL: ${API_URL}`);
+console.log(`API URL: ${API_BASE_URL}`);
 console.log('Using subscription key authentication with Ocp-Apim-Subscription-Key header');
 
 /**
@@ -71,47 +68,55 @@ export async function searchResourcesByTaxonomy(
   try {
     console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
     
-    // Build the full URL based on the transcript - using V2 API GET keyword search
-    const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
+    // Convert taxonomy codes to keyword searches that work with the V2 API
+    // Based on your working example: keywords=food&location=93101
+    const taxonomyToKeyword: { [key: string]: string } = {
+      'BD': 'food',
+      'BH': 'housing',
+      'N': 'employment',
+      'BT': 'transportation',
+      'L': 'healthcare',
+      'BM': 'clothing',
+      'RR': 'mental health',
+      'RX': 'substance abuse',
+      'P': 'family support',
+      'H': 'education',
+      'F': 'legal aid',
+      'BV': 'utilities'
+    };
     
-    // From the transcript: Construct a GET request to the keyword search with taxonomyCode parameter
+    // Use keyword search instead of taxonomy codes
+    const keyword = taxonomyToKeyword[taxonomyCode] || taxonomyCode;
+    
     let queryParams = [
-      `search=${taxonomyCode}`,
-      'keywordIsTaxonomyCode=true'  // Indicate that our search is a taxonomy code
+      `keywords=${encodeURIComponent(keyword)}`, // Use keyword that works with V2 API
     ];
     
     // Add location parameters if provided
     if (zipCode) {
       queryParams.push(`location=${zipCode}`);
-      queryParams.push('locationMode=near');
-      queryParams.push('distance=30');  // 30 miles radius
+      queryParams.push('locationMode=near'); // Required parameter
+      queryParams.push('distance=25'); // Search radius in miles
     } else if (latitude !== undefined && longitude !== undefined) {
       queryParams.push(`location=${latitude},${longitude}`);
       queryParams.push('locationMode=near');
-      queryParams.push('distance=30');  // 30 miles radius
+      queryParams.push('distance=25');
     }
-    
-    // Add paging parameters
-    queryParams.push(`size=${limit}`);
-    queryParams.push(`skip=${offset}`);
-    
-    // SearchMode=all to require all terms
-    queryParams.push('searchMode=all');
-    
-    // Order by distance
-    queryParams.push('orderByDistance=true');
     
     // Join the parameters with &
     const queryString = queryParams.join('&');
     
-    // Final URL (using the keyword search endpoint from V2 API)
-    const requestUrl = `${baseUrl}/Search/Keyword?${queryString}`;
+    // Use the correct V2 API endpoint structure
+    const requestUrl = `${API_BASE_URL}/keyword?${queryString}`;
     console.log(`Making 211 API V2 request to: ${requestUrl}`);
     
-    // Set headers with subscription key as per the transcript
+    // Set headers with subscription key - try multiple header formats
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
+      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
+      'X-API-Key': SUBSCRIPTION_KEY, // Alternative header name
+      'API-Key': SUBSCRIPTION_KEY,   // Another alternative
+      'Cache-Control': 'no-cache'    // As mentioned in your instructions
     };
     
     console.log('Sending request with headers:', JSON.stringify(headers));
@@ -179,11 +184,8 @@ export async function getResourceById(id: string): Promise<Resource | null> {
   try {
     console.log(`Fetching resource with ID: ${id}`);
     
-    // Fix URL formatting to prevent double slashes
-    const baseUrl = API_URL && API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL || '';
-    
-    // Based on transcript - use the Resources/Detail endpoint from V2 API
-    const requestUrl = `${baseUrl}/Resources/Detail?id=${id}`;
+    // Use the V2 API base URL for resource detail lookup
+    const requestUrl = `${API_BASE_URL}/detail?id=${id}`;
     console.log(`Making 211 API V2 request to: ${requestUrl} for resource ${id}`);
     
     // Set headers with subscription key
