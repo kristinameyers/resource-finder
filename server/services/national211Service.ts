@@ -240,19 +240,22 @@ export async function searchResourcesByTaxonomy(
       // Create a notice resource with current API status
       const noticeResource: Resource = {
         id: "api-notice-" + taxonomyCode,
-        name: "211 API Integration Status",
-        description: `API connection is working! Authentication successful and endpoint responding. The service is now properly connected to the 211 National Data Platform. If you're seeing this message, it means the API is working but may need fine-tuning for the specific search criteria. Try different categories or locations to see live data from 211 providers across the country.`,
-        categoryId: taxonomyCode,
+        name: "211 API Access Required",
+        description: `The 211 National Data Platform V2 APIs are currently in preview and require proper registration through the official developer portal. To access real community resource data, please register at https://apiportal.211.org/ for API access. For immediate assistance, call 2-1-1 directly.`,
+        categoryId: getCategoryIdFromTaxonomy(taxonomyCode),
         subcategoryId: undefined,
-        location: "API Status: Connected",
+        location: "Available Nationwide",
         zipCode: zipCode,
-        url: "https://api.211.org/",
-        phone: undefined,
+        url: "https://apiportal.211.org/",
+        phone: "2-1-1",
         email: undefined,
         address: "211 National Data Platform",
-        schedules: "Authentication: ✓ Working | Endpoint: ✓ Connected",
-        accessibility: "API integration active and responding",
-        languages: [],
+        schedules: "24/7 phone service available",
+        accessibility: "Call 2-1-1 for immediate assistance",
+        languages: ["English", "Spanish", "Many others"],
+        thumbsUp: 0,
+        thumbsDown: 0,
+        userVote: null
       };
       
       return {

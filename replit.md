@@ -137,12 +137,18 @@ The locationMode parameter validation is blocking successful API calls despite t
 - **Data Retrieval**: ✓ Successfully retrieving real resource data from 211 providers
 - **Issue**: RESOLVED - API is now working correctly
 
-### Breakthrough Achievement (January 2025)
-The 211 API integration is now successfully working! Key findings:
-- **Correct Authentication**: Must use "Api-Key" header instead of "Ocp-Apim-Subscription-Key"
-- **Working Endpoint**: `https://api.211.org/resources/v2/search/keyword`
-- **Parameter Structure**: Query parameters for keywords/location, headers for other settings
-- **Real Data**: Successfully retrieving live resource data from 211 providers nationwide
-- **Testing Results**: Confirmed working with food searches in Santa Barbara (93101) returning 75+ resources
+### Current API Status (January 2025)
+The 211 API integration analysis reveals:
+- **Authentication**: Correct "Api-Key" header format identified
+- **Endpoint Structure**: `https://api.211.org/resources/v2/search/keyword` endpoint confirmed
+- **Registration Requirement**: V2 APIs are in preview and require proper registration through https://apiportal.211.org/
+- **Current Issue**: API returning 404 errors indicating key may need re-registration through official portal
+- **Fallback System**: Implemented helpful notice resources directing users to proper registration process
 
-The integration is now ready for production use with real community resource data.
+### Next Steps for API Integration
+1. Register for proper API access through https://apiportal.211.org/
+2. Obtain valid V2 API key from official developer portal
+3. Test with properly registered credentials
+4. The application framework is ready for real data once API access is properly configured
+
+The application provides helpful guidance to users about 211 services while API access is being resolved.
