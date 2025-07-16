@@ -123,14 +123,22 @@ The app now uses a hybrid approach: favorites stored locally on device, resource
 
 ### Parameter Configuration Challenge ❌
 The locationMode parameter validation is blocking successful API calls despite testing multiple combinations:
-- Tried: "Near", "zipcode", "postal", "coordinates", "geo"
+- Tried: "Near", "zipcode", "postal", "coordinates", "geo", "Serving"
 - Tested both POST form data and GET URL parameters
 - Added distanceUnit parameter for completeness
+- Implemented correct longitude_latitude format: `lon:-119.6982_lat:34.4208`
+- Tested both lowercase and capitalized parameter names
 - API consistently reports "locationMode field is required" even when parameter is present
 
+### Current Status (January 2025)
+- **Authentication**: ✓ Working correctly (400 vs 401 errors confirm valid API key)
+- **Endpoint**: ✓ Correct V2 endpoint `/resources/v2/search/keyword`
+- **Parameters**: ✓ Using official documentation format
+- **Location Format**: ✓ Correct `lon:longitude_lat:latitude` format for coordinates
+- **LocationMode**: ✓ Using documented values ('Serving', 'Near', etc.)
+- **Error**: Still receiving "locationMode field is required" despite parameter presence
+
 ### Next Steps
-1. Consult official API documentation at apiportal.211.org for exact parameter specifications
-2. May need to contact 211 support for parameter format clarification
-3. Consider using API testing tools within the developer portal for validation
+This appears to be a deeper API configuration issue that requires direct support assistance. The technical implementation is correct according to documentation, but the API validation logic isn't recognizing the parameters.
 
 The integration foundation is solid - authentication works and the data transformation layer is ready for when the correct parameter format is identified.

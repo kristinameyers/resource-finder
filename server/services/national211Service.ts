@@ -94,15 +94,16 @@ export async function searchResourcesByTaxonomy(
     
     // Add location parameters if provided
     if (zipCode) {
-      queryParams.push(`location=${zipCode}`);
-      queryParams.push('locationMode=Serving'); // Try Serving for zip codes
-      queryParams.push('distance=25'); // Search radius in miles
-      queryParams.push('distanceUnit=miles'); // Add distance unit
+      queryParams.push(`Location=${zipCode}`);
+      queryParams.push('LocationMode=Serving'); // Use Serving for zip codes
+      queryParams.push('Distance=25'); // Search radius in miles
+      queryParams.push('DistanceUnit=miles');
     } else if (latitude !== undefined && longitude !== undefined) {
-      queryParams.push(`location=${latitude},${longitude}`);
-      queryParams.push('locationMode=Serving'); // Try Serving for coordinates
-      queryParams.push('distance=25');
-      queryParams.push('distanceUnit=miles');
+      // Use the correct longitude_latitude format: lon:-119.293106_lat:34.28083
+      queryParams.push(`Location=lon:${longitude}_lat:${latitude}`);
+      queryParams.push('LocationMode=Near'); // Use Near for coordinates with distance
+      queryParams.push('Distance=25');
+      queryParams.push('DistanceUnit=miles');
     }
     
     // Join the parameters with &
@@ -128,15 +129,16 @@ export async function searchResourcesByTaxonomy(
       const formData = new URLSearchParams();
       formData.append('keywords', keyword);
       if (zipCode) {
-        formData.append('location', zipCode);
-        formData.append('locationMode', 'Serving'); // Try Serving for zip codes
-        formData.append('distance', '25');
-        formData.append('distanceUnit', 'miles'); // Add distance unit
+        formData.append('Location', zipCode);
+        formData.append('LocationMode', 'Serving'); // Use Serving for zip codes
+        formData.append('Distance', '25');
+        formData.append('DistanceUnit', 'miles');
       } else if (latitude !== undefined && longitude !== undefined) {
-        formData.append('location', `${latitude},${longitude}`);
-        formData.append('locationMode', 'Serving'); // Try Serving for coordinates
-        formData.append('distance', '25');
-        formData.append('distanceUnit', 'miles');
+        // Use the correct longitude_latitude format: lon:-119.293106_lat:34.28083
+        formData.append('Location', `lon:${longitude}_lat:${latitude}`);
+        formData.append('LocationMode', 'Near'); // Use Near for coordinates with distance
+        formData.append('Distance', '25');
+        formData.append('DistanceUnit', 'miles');
       }
 
       console.log('Trying POST method with form data:', formData.toString());
