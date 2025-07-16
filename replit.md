@@ -131,14 +131,16 @@ The locationMode parameter validation is blocking successful API calls despite t
 - API consistently reports "locationMode field is required" even when parameter is present
 
 ### Current Status (January 2025)
-- **Authentication**: ✓ Working correctly (400 vs 401 errors confirm valid API key)
-- **Endpoint**: ✓ Correct V2 endpoint `/resources/v2/search/keyword`
-- **Parameters**: ✓ Using official documentation format
-- **Location Format**: ✓ Correct `lon:longitude_lat:latitude` format for coordinates
-- **LocationMode**: ✓ Using documented values ('Serving', 'Near', etc.)
-- **Error**: Still receiving "locationMode field is required" despite parameter presence
+- **Authentication**: ✓ API key is valid and server responds
+- **Endpoint Access**: ❌ All Search V2 endpoints return 404 "Resource not found"
+- **Taxonomy Implementation**: ✓ Updated to use proper taxonomy codes (BD=food, BH=housing, etc.)
+- **Headers**: ✓ Using keywordIsTaxonomyCode=true and taxonomyCodes headers
+- **Issue**: API endpoints return 404 despite valid authentication - possible API key permission issue
 
 ### Next Steps
-This appears to be a deeper API configuration issue that requires direct support assistance. The technical implementation is correct according to documentation, but the API validation logic isn't recognizing the parameters.
+The issue has shifted from parameter validation to endpoint access. All tested endpoints return 404 errors:
+- `/resources/v2/search/keyword`
+- `/resources/v2/keyword` 
+- `/resources/v2/search/search/keyword`
 
-The integration foundation is solid - authentication works and the data transformation layer is ready for when the correct parameter format is identified.
+This suggests the API key may not have permissions for Search V2 endpoints, or the endpoint structure differs from documentation. The user should verify API key permissions at apiportal.211.org or contact 211 support for endpoint access.

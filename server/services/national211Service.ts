@@ -112,40 +112,46 @@ export async function searchResourcesByTaxonomy(
     console.log('Sending request with headers:', JSON.stringify(headers));
     
     try {
-      // Try POST method with form data, as some APIs expect POST for search with parameters
-      const formData = new URLSearchParams();
-      formData.append('keywords', searchTerm);
-      if (zipCode) {
-        formData.append('Location', zipCode);
-        formData.append('LocationMode', 'Serving'); // Use Serving for zip codes
-        formData.append('Distance', '25');
-        formData.append('DistanceUnit', 'miles');
-      } else if (latitude !== undefined && longitude !== undefined) {
-        // Use the correct longitude_latitude format: lon:-119.293106_lat:34.28083
-        formData.append('Location', `lon:${longitude}_lat:${latitude}`);
-        formData.append('LocationMode', 'Near'); // Use Near for coordinates with distance
-        formData.append('Distance', '25');
-        formData.append('DistanceUnit', 'miles');
-      }
-
-      console.log('Trying POST method with form data:', formData.toString());
+      // Try GET method first with minimal headers
+      const minimalHeaders: HeadersInit = {
+        'Accept': 'application/json',
+        'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
+        'Cache-Control': 'no-cache'
+      };
       
-      // Try POST first
-      let response = await fetch(`${API_BASE_URL}/keyword`, {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData
+      console.log('Trying GET method with minimal headers first...');
+      let response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: minimalHeaders
       });
       
-      // If POST fails, try GET with URL parameters
+      // If GET fails, try POST with form data
       if (!response.ok) {
-        console.log('POST failed, trying GET method...');
-        response = await fetch(requestUrl, {
-          method: 'GET',
-          headers
+        console.log('GET failed, trying POST method with form data...');
+        const formData = new URLSearchParams();
+        formData.append('keywords', searchTerm);
+        if (zipCode) {
+          formData.append('Location', zipCode);
+          formData.append('LocationMode', 'Serving'); // Use Serving for zip codes
+          formData.append('Distance', '25');
+          formData.append('DistanceUnit', 'miles');
+        } else if (latitude !== undefined && longitude !== undefined) {
+          // Use the correct longitude_latitude format: lon:-119.293106_lat:34.28083
+          formData.append('Location', `lon:${longitude}_lat:${latitude}`);
+          formData.append('LocationMode', 'Near'); // Use Near for coordinates with distance
+          formData.append('Distance', '25');
+          formData.append('DistanceUnit', 'miles');
+        }
+
+        console.log('Trying POST method with form data:', formData.toString());
+        
+        response = await fetch(`${API_BASE_URL}/keyword`, {
+          method: 'POST',
+          headers: {
+            ...headers,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
         });
       }
       
@@ -172,18 +178,18 @@ export async function searchResourcesByTaxonomy(
       // Create a detailed notice resource with troubleshooting information
       const noticeResource: Resource = {
         id: "api-notice-" + taxonomyCode,
-        name: "211 API Parameter Configuration Issue",
-        description: `Authentication with your API key is successful! The API is responding but requires specific locationMode parameter values. We've tested: "Near", "zipcode", "postal", "coordinates", "geo" with both POST and GET methods. The API documentation at apiportal.211.org may have the correct parameter specifications. Current request: keywords=${searchTerm}, location=${zipCode || 'coordinates'}, locationMode=postal, distance=25.`,
+        name: "211 API Endpoint Access Issue",
+        description: `The API key is valid and the server is responding, but all endpoints are returning 404 "Resource not found" errors. This suggests either: 1) The API key doesn't have permissions for the Search V2 endpoints, 2) The endpoint structure is different from the documentation, or 3) The API might require additional setup. Please check your API key permissions at apiportal.211.org or contact 211 support. Tested endpoints: /resources/v2/search/keyword, /resources/v2/keyword, /resources/v2/search/search/keyword - all return 404.`,
         categoryId: taxonomyCode,
         subcategoryId: undefined,
-        location: "API Configuration Status",
+        location: "API Access Status",
         zipCode: zipCode,
         url: "https://apiportal.211.org/",
         phone: undefined,
         email: undefined,
-        address: "Check API documentation for correct locationMode values",
-        schedules: "Authentication: ✓ Working | Parameter Format: ❌ Needs adjustment",
-        accessibility: "API responds with 400 validation error instead of 401 authentication error",
+        address: "Check API key permissions for Search V2 endpoints",
+        schedules: "Authentication: ✓ Valid | Endpoint Access: ❌ 404 Not Found",
+        accessibility: "All Search V2 endpoints return 404 - may need API key permission upgrade",
         languages: [],
       };
       
