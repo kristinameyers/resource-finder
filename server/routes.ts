@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { resourceSchema } from "@shared/schema";
-import { searchResourcesByTaxonomy, getResourceById } from "./services/national211Service";
+import { searchResourcesByTaxonomy, searchResourcesByKeyword, getResourceById } from "./services/national211Service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -49,20 +49,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
           console.log(`Using 211 API: ${useApi}`);
           
-          if (category && category.taxonomyCode) {
-            // Use the 211 API to search by taxonomy code
-            const result = await searchResourcesByTaxonomy(
-              category.taxonomyCode,
+          if (category) {
+            // Test with keyword search first (as requested by user)
+            const keyword = category.name.toLowerCase(); // Use category name as keyword
+            const resources = await searchResourcesByKeyword(
+              keyword,
               zipCode,
               latitude,
               longitude
             );
             
-            console.log(`API response received with ${result.resources.length} resources`);
+            console.log(`API response received with ${resources.length} resources`);
             
             return res.status(200).json({
-              resources: result.resources,
-              total: result.total,
+              resources: resources,
+              total: resources.length,
               source: '211 API'
             });
           } else {

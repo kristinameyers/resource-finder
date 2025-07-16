@@ -45,7 +45,7 @@ interface SearchResourcesResponse {
 }
 
 // Using the correct 211 API endpoint structure 
-const API_BASE_URL = "https://api.211.org/resources/search";  // Try the simpler endpoint
+const API_BASE_URL = "https://api.211.org/resources/v2/search/keyword";  // Back to keyword endpoint
 
 // Get API key from environment variables  
 const SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545'; // Use your latest API key directly
@@ -54,6 +54,65 @@ console.log('211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
 console.log('Using API key authentication with Api-Key header');
 console.log(`API Key: ${SUBSCRIPTION_KEY.substring(0, 8)}...${SUBSCRIPTION_KEY.substring(SUBSCRIPTION_KEY.length - 8)}`);
+
+/**
+ * Searches for resources by keyword (simple search test)
+ */
+export async function searchResourcesByKeyword(
+  keyword: string,
+  zipCode?: string,
+  latitude?: number,
+  longitude?: number
+): Promise<Resource[]> {
+  try {
+    console.log(`Searching for resources with keyword: ${keyword}`);
+    
+    // Use POST method with JSON body based on API requirements
+    const postBody: any = {
+      search: keyword,
+      input: keyword,
+      locationMode: 'Serving',
+      distance: 25
+    };
+    
+    if (zipCode) {
+      postBody.location = zipCode;
+    } else if (latitude !== undefined && longitude !== undefined) {
+      postBody.longitude_latitude = `lon:${longitude}_lat:${latitude}`;
+    }
+    
+    console.log(`Making 211 API keyword request with POST method`);
+    console.log(`Request body:`, JSON.stringify(postBody));
+    
+    const response = await fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Api-Key': SUBSCRIPTION_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postBody)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`211 API Error: ${response.status} ${errorText}`);
+      throw new Error(`211 API Error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json() as SearchResourcesResponse;
+    console.log(`API response received with ${data.resources?.length || 0} resources`);
+    
+    if (!data.resources || data.resources.length === 0) {
+      return [];
+    }
+    
+    return data.resources.map(transformResource);
+  } catch (error) {
+    console.error('Error searching resources by keyword:', error);
+    throw error;
+  }
+}
 
 /**
  * Searches for resources by taxonomy code
