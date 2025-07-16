@@ -47,8 +47,8 @@ interface SearchResourcesResponse {
 // Using the correct 211 V2 API endpoint structure 
 const API_BASE_URL = "https://api.211.org/resources/v2/search";  // V2 endpoint without /keyword
 
-// Get API key from environment variables
-const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY || '535f3ff3321744c79fd85f4110b09545';
+// Get API key from environment variables  
+const SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545'; // Use your latest API key directly
 
 console.log('211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
@@ -130,10 +130,12 @@ export async function searchResourcesByTaxonomy(
       if (!response.ok) {
         console.log('GET failed, trying POST method with JSON body...');
         
-        // Build POST body according to OpenAPI 3.0.1 spec (search and location are direct fields)
+        // Build POST body with correct API structure
         // Using taxonomy code directly as search term
         const postBody: any = {
           search: taxonomyCode,
+          input: taxonomyCode, // Required field based on validation error
+          keywordIsTaxonomyCode: true,
           skip: 0,
           size: 20,
           includeTotalCount: true
