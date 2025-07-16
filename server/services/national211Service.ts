@@ -44,8 +44,8 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// Using the correct 211 V2 API endpoint structure 
-const API_BASE_URL = "https://api.211.org/resources/v2/search";  // V2 endpoint without /keyword
+// Using the correct 211 API endpoint structure 
+const API_BASE_URL = "https://api.211.org/resources/search";  // Try the simpler endpoint
 
 // Get API key from environment variables  
 const SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545'; // Use your latest API key directly
@@ -167,7 +167,7 @@ export async function searchResourcesByTaxonomy(
 
         console.log('Trying POST method with JSON body:', JSON.stringify(postBody));
         
-        response = await fetch(`${API_BASE_URL}/keyword`, {
+        response = await fetch(`${API_BASE_URL}`, {
           method: 'POST',
           headers: postHeaders,
           body: JSON.stringify(postBody)
