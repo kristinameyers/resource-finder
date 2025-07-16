@@ -45,14 +45,14 @@ interface SearchResourcesResponse {
 }
 
 // Using the correct 211 V2 API endpoint structure 
-const API_BASE_URL = "https://api.211.org/resources/v2/search";  // V2 endpoint
+const API_BASE_URL = "https://api.211.org/resources/v2/search";  // V2 endpoint without /keyword
 
 // Get API key from environment variables
 const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY || '0b49fd58c6ba4f17836bd9a350c72fb4';
 
 console.log('211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
-console.log('Using API key authentication with Ocp-Apim-Subscription-Key header');
+console.log('Using API key authentication with Api-Key header');
 console.log(`API Key: ${SUBSCRIPTION_KEY.substring(0, 8)}...${SUBSCRIPTION_KEY.substring(SUBSCRIPTION_KEY.length - 8)}`);
 
 /**
@@ -90,15 +90,15 @@ export async function searchResourcesByTaxonomy(
     // Join the parameters with &
     const queryString = queryParams.join('&');
     
-    // Use the correct V2 API endpoint structure
-    const requestUrl = `${API_BASE_URL}/keyword?${queryString}`;
+    // Use the correct V2 API endpoint structure (without /keyword path)
+    const requestUrl = `${API_BASE_URL}?${queryString}`;
     console.log(`Making 211 API V2 request to: ${requestUrl}`);
     
     // Set headers with subscription key and search configuration
     // According to OpenAPI 3.0.1 docs, these parameters go in headers
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY, // Use Azure API Management header
+      'Api-Key': SUBSCRIPTION_KEY, // Use Api-Key header (this worked before)
       'Cache-Control': 'no-cache',
       'keywordIsTaxonomyCode': 'true', // Enable taxonomy code search
       'searchMode': 'All' // Use 'All' for exact matches
@@ -119,7 +119,7 @@ export async function searchResourcesByTaxonomy(
       // Try GET method first with minimal headers
       const minimalHeaders: HeadersInit = {
         'Accept': 'application/json',
-        'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY, // Use Azure API Management header
+        'Api-Key': SUBSCRIPTION_KEY, // Use Api-Key header (this worked before)
         'Cache-Control': 'no-cache'
       };
       
@@ -160,7 +160,7 @@ export async function searchResourcesByTaxonomy(
         // Add headers for taxonomy code search
         const postHeaders = {
           'Accept': 'application/json',
-          'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
+          'Api-Key': SUBSCRIPTION_KEY,
           'Content-Type': 'application/json',
           'keywordIsTaxonomyCode': 'true',
           'searchMode': 'All'

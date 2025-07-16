@@ -139,16 +139,21 @@ The locationMode parameter validation is blocking successful API calls despite t
 
 ### Current API Status (January 2025)
 The 211 API integration analysis reveals:
-- **Authentication**: Correct "Api-Key" header format identified
-- **Endpoint Structure**: `https://api.211.org/resources/v2/search/keyword` endpoint confirmed
-- **Registration Requirement**: V2 APIs are in preview and require proper registration through https://apiportal.211.org/
-- **Current Issue**: API returning 404 errors indicating key may need re-registration through official portal
-- **Fallback System**: Implemented helpful notice resources directing users to proper registration process
+- **Previous Success**: API was working with "Api-Key" header returning 75+ food resources
+- **Current Challenge**: API returning 404 errors despite correct authentication header format
+- **Key Change**: Switching from "Ocp-Apim-Subscription-Key" back to "Api-Key" (which worked before)
+- **Endpoint Testing**: Tried multiple endpoint variations (`/keyword`, without `/keyword`, different base URLs)
+- **Authentication Progress**: Getting proper 401/404 responses instead of generic errors
+
+### API Configuration History
+- **Working Version**: Used "Api-Key" header with successful resource retrieval
+- **Failed Attempt**: "Ocp-Apim-Subscription-Key" caused 401 authentication errors  
+- **Current Status**: Reverted to "Api-Key" but endpoints returning 404
 
 ### Next Steps for API Integration
-1. Register for proper API access through https://apiportal.211.org/
-2. Obtain valid V2 API key from official developer portal
-3. Test with properly registered credentials
-4. The application framework is ready for real data once API access is properly configured
+1. Verify correct API endpoint structure with current 211 API documentation
+2. Test alternative endpoint formats that may have changed
+3. Confirm API key is still active and properly subscribed to V2 search services
+4. The application framework is ready for real data once endpoint access is resolved
 
-The application provides helpful guidance to users about 211 services while API access is being resolved.
+The application maintains robust error handling while API access is being restored to working configuration.
