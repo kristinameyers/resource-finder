@@ -70,6 +70,7 @@ export async function searchResourcesByTaxonomy(
     
     // Use taxonomy codes directly as per the API documentation
     // The API supports searching by taxonomy codes with keywordIsTaxonomyCode=true
+    // First try with taxonomy code, then fall back to keyword search if needed
     const searchTerm = taxonomyCode;
     
     // Build query parameters (only keywords and location go in query string)
@@ -127,35 +128,91 @@ export async function searchResourcesByTaxonomy(
         headers: minimalHeaders
       });
       
-      // If GET fails, try POST with JSON body
+      // If GET fails with taxonomy code, try with keyword search
       if (!response.ok) {
-        console.log('GET failed, trying POST method with JSON body...');
+        console.log('GET failed with taxonomy code, trying keyword search...');
         
-        // Build POST body according to OpenAPI 3.0.1 spec
+        // Try GET with keyword search instead of taxonomy code
+        const keywordMapping = {
+          'BD': 'food',
+          'BH': 'housing',
+          'RX': 'health',
+          'JF': 'employment',
+          'LH': 'legal',
+          'BM': 'clothing',
+          'BT': 'transportation',
+          'RP': 'disability',
+          'YD': 'family',
+          'YE': 'youth',
+          'PH': 'seniors',
+          'LV': 'utilities'
+        };
+        
+        const keywordTerm = keywordMapping[taxonomyCode] || taxonomyCode;
+        const keywordUrl = `${API_BASE_URL}/keyword?keywords=${encodeURIComponent(keywordTerm)}`;
+        
+        let keywordQueryParams = [];
+        if (zipCode) {
+          keywordQueryParams.push(`&location=${zipCode}`);
+        } else if (latitude !== undefined && longitude !== undefined) {
+          keywordQueryParams.push(`&location=lon:${longitude}_lat:${latitude}`);
+        }
+        
+        const keywordRequestUrl = keywordUrl + keywordQueryParams.join('');
+        console.log(`Trying keyword search: ${keywordRequestUrl}`);
+        
+        response = await fetch(keywordRequestUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Api-Key': SUBSCRIPTION_KEY,
+            'Cache-Control': 'no-cache',
+            'locationMode': zipCode ? 'Serving' : 'Near',
+            'distance': '25'
+          }
+        });
+      }
+      
+      // If keyword search also fails, try POST with JSON body
+      if (!response.ok) {
+        console.log('Keyword search failed, trying POST method with JSON body...');
+        
+        // Build POST body according to OpenAPI 3.0.1 spec (search and location are direct fields)
         const postBody = {
-          keywords: searchTerm,
-          keywordIsTaxonomyCode: true,
-          searchMode: 'All'
+          search: searchTerm,
+          skip: 0,
+          size: 20,
+          includeTotalCount: true
         };
         
         if (zipCode) {
           postBody.location = zipCode;
-          postBody.locationMode = 'Serving';
           postBody.distance = 25;
+          postBody.locationMode = 'Serving';
         } else if (latitude !== undefined && longitude !== undefined) {
           postBody.location = `lon:${longitude}_lat:${latitude}`;
-          postBody.locationMode = 'Near';
           postBody.distance = 25;
+          postBody.locationMode = 'Near';
+        } else {
+          // Provide default location if none specified
+          postBody.location = 'United States';
+          postBody.distance = 5000;
+          postBody.locationMode = 'Serving';
         }
+        
+        // Add headers for taxonomy code search
+        const postHeaders = {
+          ...headers,
+          'Content-Type': 'application/json',
+          'keywordIsTaxonomyCode': 'true',
+          'searchMode': 'All'
+        };
 
         console.log('Trying POST method with JSON body:', JSON.stringify(postBody));
         
         response = await fetch(`${API_BASE_URL}/keyword`, {
           method: 'POST',
-          headers: {
-            ...headers,
-            'Content-Type': 'application/json'
-          },
+          headers: postHeaders,
           body: JSON.stringify(postBody)
         });
       }

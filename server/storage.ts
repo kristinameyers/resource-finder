@@ -170,6 +170,9 @@ export class MemStorage implements IStorage {
       { id: 'chicago', name: 'Chicago, IL', zipCode: '60601', latitude: 41.8781, longitude: -87.6298 },
       { id: 'houston', name: 'Houston, TX', zipCode: '77001', latitude: 29.7604, longitude: -95.3698 },
       { id: 'phoenix', name: 'Phoenix, AZ', zipCode: '85001', latitude: 33.4484, longitude: -112.0740 },
+      { id: 'santa-barbara', name: 'Santa Barbara, CA', zipCode: '93101', latitude: 34.4217, longitude: -119.7026 },
+      { id: 'san-francisco', name: 'San Francisco, CA', zipCode: '94102', latitude: 37.7749, longitude: -122.4194 },
+      { id: 'seattle', name: 'Seattle, WA', zipCode: '98101', latitude: 47.6062, longitude: -122.3321 },
     ];
   }
 
@@ -285,7 +288,25 @@ export class MemStorage implements IStorage {
   
   async getLocationByZipCode(zipCode: string): Promise<Location | undefined> {
     // Find location by zip code
-    return this.locations.find(loc => loc.zipCode === zipCode);
+    const existingLocation = this.locations.find(loc => loc.zipCode === zipCode);
+    if (existingLocation) {
+      return existingLocation;
+    }
+    
+    // For common zip codes that might not be in our static list, create a basic location
+    if (zipCode && zipCode.length === 5 && /^\d+$/.test(zipCode)) {
+      const newLocation: Location = {
+        id: `zip-${zipCode}`,
+        name: `Zip Code ${zipCode}`,
+        zipCode: zipCode,
+        latitude: undefined,
+        longitude: undefined
+      };
+      this.locations.push(newLocation);
+      return newLocation;
+    }
+    
+    return undefined;
   }
   
   async getLocationByCoordinates(latitude: number, longitude: number): Promise<Location | undefined> {
