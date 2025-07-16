@@ -48,7 +48,7 @@ interface SearchResourcesResponse {
 const API_BASE_URL = "https://api.211.org/resources/v2/search";  // V2 endpoint without /keyword
 
 // Get API key from environment variables
-const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY || '0b49fd58c6ba4f17836bd9a350c72fb4';
+const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY || '535f3ff3321744c79fd85f4110b09545';
 
 console.log('211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
@@ -90,8 +90,8 @@ export async function searchResourcesByTaxonomy(
     // Join the parameters with &
     const queryString = queryParams.join('&');
     
-    // Use the correct V2 API endpoint structure (without /keyword path)
-    const requestUrl = `${API_BASE_URL}?${queryString}`;
+    // Use the correct V2 API endpoint structure (with /keyword path)
+    const requestUrl = `${API_BASE_URL}/keyword?${queryString}`;
     console.log(`Making 211 API V2 request to: ${requestUrl}`);
     
     // Set headers with subscription key and search configuration
@@ -105,12 +105,9 @@ export async function searchResourcesByTaxonomy(
     };
     
     // Add location mode and distance headers if location is provided
-    if (zipCode) {
-      headers['locationMode'] = 'Serving'; // Use Serving for zip codes
+    if (zipCode || (latitude !== undefined && longitude !== undefined)) {
+      headers['locationMode'] = 'Serving'; // Use Serving for both zip codes and coordinates
       headers['distance'] = '25'; // Search radius in miles
-    } else if (latitude !== undefined && longitude !== undefined) {
-      headers['locationMode'] = 'Near'; // Use Near for coordinates with distance
-      headers['distance'] = '25';
     }
     
     console.log('Sending request with headers:', JSON.stringify(headers));
