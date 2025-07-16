@@ -128,58 +128,14 @@ export async function searchResourcesByTaxonomy(
         headers: minimalHeaders
       });
       
-      // If GET fails with taxonomy code, try with keyword search
+      // If GET fails, try POST with JSON body (keeping taxonomy code approach)
       if (!response.ok) {
-        console.log('GET failed with taxonomy code, trying keyword search...');
-        
-        // Try GET with keyword search instead of taxonomy code
-        const keywordMapping = {
-          'BD': 'food',
-          'BH': 'housing',
-          'RX': 'health',
-          'JF': 'employment',
-          'LH': 'legal',
-          'BM': 'clothing',
-          'BT': 'transportation',
-          'RP': 'disability',
-          'YD': 'family',
-          'YE': 'youth',
-          'PH': 'seniors',
-          'LV': 'utilities'
-        };
-        
-        const keywordTerm = keywordMapping[taxonomyCode] || taxonomyCode;
-        const keywordUrl = `${API_BASE_URL}/keyword?keywords=${encodeURIComponent(keywordTerm)}`;
-        
-        let keywordQueryParams = [];
-        if (zipCode) {
-          keywordQueryParams.push(`&location=${zipCode}`);
-        } else if (latitude !== undefined && longitude !== undefined) {
-          keywordQueryParams.push(`&location=lon:${longitude}_lat:${latitude}`);
-        }
-        
-        const keywordRequestUrl = keywordUrl + keywordQueryParams.join('');
-        console.log(`Trying keyword search: ${keywordRequestUrl}`);
-        
-        response = await fetch(keywordRequestUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Api-Key': SUBSCRIPTION_KEY,
-            'Cache-Control': 'no-cache',
-            'locationMode': zipCode ? 'Serving' : 'Near',
-            'distance': '25'
-          }
-        });
-      }
-      
-      // If keyword search also fails, try POST with JSON body
-      if (!response.ok) {
-        console.log('Keyword search failed, trying POST method with JSON body...');
+        console.log('GET failed, trying POST method with JSON body...');
         
         // Build POST body according to OpenAPI 3.0.1 spec (search and location are direct fields)
+        // Using taxonomy code directly as search term
         const postBody = {
-          search: searchTerm,
+          search: taxonomyCode,
           skip: 0,
           size: 20,
           includeTotalCount: true
@@ -235,32 +191,12 @@ export async function searchResourcesByTaxonomy(
       };
     } catch (apiError) {
       console.error('API Integration Error:', apiError);
-      console.log('⚠️ API Integration still in progress, returning placeholder notice');
+      console.log('API request failed, returning empty result for now');
       
-      // Create a notice resource with current API status
-      const noticeResource: Resource = {
-        id: "api-notice-" + taxonomyCode,
-        name: "211 API Access Required",
-        description: `The 211 National Data Platform V2 APIs are currently in preview and require proper registration through the official developer portal. To access real community resource data, please register at https://apiportal.211.org/ for API access. For immediate assistance, call 2-1-1 directly.`,
-        categoryId: getCategoryIdFromTaxonomy(taxonomyCode),
-        subcategoryId: undefined,
-        location: "Available Nationwide",
-        zipCode: zipCode,
-        url: "https://apiportal.211.org/",
-        phone: "2-1-1",
-        email: undefined,
-        address: "211 National Data Platform",
-        schedules: "24/7 phone service available",
-        accessibility: "Call 2-1-1 for immediate assistance",
-        languages: ["English", "Spanish", "Many others"],
-        thumbsUp: 0,
-        thumbsDown: 0,
-        userVote: null
-      };
-      
+      // Return empty results when API fails - this allows for better debugging
       return {
-        resources: [noticeResource],
-        total: 1
+        resources: [],
+        total: 0
       };
     }
   } catch (error) {
