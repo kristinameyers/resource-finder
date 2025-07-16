@@ -68,28 +68,12 @@ export async function searchResourcesByTaxonomy(
   try {
     console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
     
-    // Convert taxonomy codes to keyword searches that work with the V2 API
-    // Based on your working example: keywords=food&location=93101
-    const taxonomyToKeyword: { [key: string]: string } = {
-      'BD': 'food',
-      'BH': 'housing',
-      'N': 'employment',
-      'BT': 'transportation',
-      'L': 'healthcare',
-      'BM': 'clothing',
-      'RR': 'mental health',
-      'RX': 'substance abuse',
-      'P': 'family support',
-      'H': 'education',
-      'F': 'legal aid',
-      'BV': 'utilities'
-    };
-    
-    // Use keyword search instead of taxonomy codes
-    const keyword = taxonomyToKeyword[taxonomyCode] || taxonomyCode;
+    // Use taxonomy codes directly as per the API documentation
+    // The API supports searching by taxonomy codes with keywordIsTaxonomyCode=true
+    const searchTerm = taxonomyCode;
     
     let queryParams = [
-      `keywords=${encodeURIComponent(keyword)}`, // Use keyword that works with V2 API
+      `keywords=${encodeURIComponent(searchTerm)}`, // Use taxonomy code
     ];
     
     // Add location parameters if provided
@@ -113,13 +97,16 @@ export async function searchResourcesByTaxonomy(
     const requestUrl = `${API_BASE_URL}/keyword?${queryString}`;
     console.log(`Making 211 API V2 request to: ${requestUrl}`);
     
-    // Set headers with subscription key - try multiple header formats
+    // Set headers with subscription key and taxonomy code search configuration
     const headers: HeadersInit = {
       'Accept': 'application/json',
       'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
       'X-API-Key': SUBSCRIPTION_KEY, // Alternative header name
       'API-Key': SUBSCRIPTION_KEY,   // Another alternative
-      'Cache-Control': 'no-cache'    // As mentioned in your instructions
+      'Cache-Control': 'no-cache',
+      'keywordIsTaxonomyCode': 'true', // Enable taxonomy code search
+      'taxonomyCodes': searchTerm, // Alternative approach: pass taxonomy code directly as header
+      'searchMode': 'All' // Use 'All' for exact matches
     };
     
     console.log('Sending request with headers:', JSON.stringify(headers));
@@ -127,7 +114,7 @@ export async function searchResourcesByTaxonomy(
     try {
       // Try POST method with form data, as some APIs expect POST for search with parameters
       const formData = new URLSearchParams();
-      formData.append('keywords', keyword);
+      formData.append('keywords', searchTerm);
       if (zipCode) {
         formData.append('Location', zipCode);
         formData.append('LocationMode', 'Serving'); // Use Serving for zip codes
@@ -186,7 +173,7 @@ export async function searchResourcesByTaxonomy(
       const noticeResource: Resource = {
         id: "api-notice-" + taxonomyCode,
         name: "211 API Parameter Configuration Issue",
-        description: `Authentication with your API key is successful! The API is responding but requires specific locationMode parameter values. We've tested: "Near", "zipcode", "postal", "coordinates", "geo" with both POST and GET methods. The API documentation at apiportal.211.org may have the correct parameter specifications. Current request: keywords=${keyword}, location=${zipCode || 'coordinates'}, locationMode=postal, distance=25.`,
+        description: `Authentication with your API key is successful! The API is responding but requires specific locationMode parameter values. We've tested: "Near", "zipcode", "postal", "coordinates", "geo" with both POST and GET methods. The API documentation at apiportal.211.org may have the correct parameter specifications. Current request: keywords=${searchTerm}, location=${zipCode || 'coordinates'}, locationMode=postal, distance=25.`,
         categoryId: taxonomyCode,
         subcategoryId: undefined,
         location: "API Configuration Status",
