@@ -72,13 +72,13 @@ export async function searchResourcesByKeyword(
       search: keyword,
       input: keyword,
       locationMode: 'Serving',
-      distance: 25
+      distance: 25,
+      location: zipCode || '90210' // Default location if none provided (API requires this)
     };
     
-    if (zipCode) {
-      postBody.location = zipCode;
-    } else if (latitude !== undefined && longitude !== undefined) {
+    if (latitude !== undefined && longitude !== undefined) {
       postBody.longitude_latitude = `lon:${longitude}_lat:${latitude}`;
+      delete postBody.location; // Use coordinates instead of location
     }
     
     console.log(`Making 211 API keyword request with POST method`);
@@ -100,14 +100,14 @@ export async function searchResourcesByKeyword(
       throw new Error(`211 API Error: ${response.status} - ${errorText}`);
     }
     
-    const data = await response.json() as SearchResourcesResponse;
-    console.log(`API response received with ${data.resources?.length || 0} resources`);
+    const data: any = await response.json();
+    console.log(`API response received with ${data.results?.length || 0} resources`);
     
-    if (!data.resources || data.resources.length === 0) {
+    if (!data.results || data.results.length === 0) {
       return [];
     }
     
-    return data.resources.map(transformResource);
+    return data.results.map(transformResource);
   } catch (error) {
     console.error('Error searching resources by keyword:', error);
     throw error;
@@ -352,51 +352,50 @@ function getCategoryIdFromTaxonomy(taxonomyCode?: string): string {
 /**
  * Transforms a 211 resource into our application's resource format
  */
-function transformResource(apiResource: National211Resource): Resource {
-  // Extract the first phone number if available
-  const phone = apiResource.phone && apiResource.phone.length > 0 
-    ? apiResource.phone[0].number 
-    : undefined;
+function transformResource(apiResource: any): Resource {
+  const address = apiResource.address || {};
+  const taxonomy = apiResource.taxonomy?.[0] || {};
   
-  // Extract the schedules if available
-  const schedules = apiResource.schedule 
-    ? apiResource.schedule.map(s => {
-        const days = s.days_of_week ? s.days_of_week.join(', ') : '';
-        const hours = s.opens_at && s.closes_at ? `${s.opens_at} - ${s.closes_at}` : '';
-        const desc = s.description || '';
-        return [days, hours, desc].filter(Boolean).join(' ');
-      }).join('\n') 
-    : undefined;
-  
-  // Extract address
-  const location = apiResource.location;
-  const address = location 
-    ? [
-        location.address_1,
-        location.address_2,
-        [location.city, location.state_province].filter(Boolean).join(', ')
-      ].filter(Boolean).join('\n')
-    : undefined;
+  // Clean HTML from description
+  const cleanDescription = (apiResource.descriptionService || apiResource.description || 'No description available')
+    .replace(/<[^>]*>/g, '').trim();
   
   // Map taxonomy code to category ID
-  const categoryId = getCategoryIdFromTaxonomy(apiResource.taxonomy_code);
-  console.log(`Mapping taxonomy code ${apiResource.taxonomy_code} to category ID ${categoryId}`);
+  const categoryId = getCategoryIdFromTaxonomy(taxonomy.taxonomyCode);
+  console.log(`Mapping taxonomy code ${taxonomy.taxonomyCode} to category ID ${categoryId}`);
   
   // Create the transformed resource
   return {
-    id: apiResource.id,
-    name: apiResource.name,
-    description: apiResource.description || 'No description available',
+    id: apiResource.idServiceAtLocation || apiResource.id,
+    name: apiResource.nameService || apiResource.nameServiceAtLocation || apiResource.name || 'Unnamed Service',
+    description: cleanDescription,
     categoryId,
-    subcategoryId: apiResource.taxonomy_name ? apiResource.taxonomy_name.toLowerCase().replace(/\s+/g, '-') : undefined,
-    location: location?.name || 'Unknown location',
-    zipCode: location?.postal_code,
+    subcategoryId: taxonomy.taxonomyTerm ? taxonomy.taxonomyTerm.toLowerCase().replace(/\s+/g, '-') : undefined,
+    location: apiResource.nameLocation || address.city || 'Unknown location',
+    zipCode: address.postalCode,
     url: apiResource.url,
-    phone,
-    email: apiResource.email,
-    address,
-    schedules,
-    accessibility: apiResource.accessibility?.join(', '),
-    languages: apiResource.languages || [],
+    phone: extractPhoneFromDescription(apiResource.descriptionService),
+    email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
+    address: [
+      address.streetAddress,
+      address.city,
+      address.stateProvince,
+      address.postalCode
+    ].filter(Boolean).join(', '),
+    schedules: 'Contact for hours',
+    accessibility: 'Contact for accessibility information',
+    languages: apiResource.languages || ['English'],
   };
+}
+
+function extractPhoneFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  const phoneMatch = description.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+  return phoneMatch?.[0];
+}
+
+function extractEmailFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  const emailMatch = description.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  return emailMatch?.[0];
 }

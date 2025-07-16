@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FilterSection from "@/components/filter-section";
 import CategoryGrid from "@/components/category-grid";
 import ResultsSection from "@/components/results-section";
@@ -20,6 +20,13 @@ export default function Home() {
   // Category & location hooks
   const { locationState, requestCurrentLocation, setLocationByZipCode, clearLocation } = useLocation();
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  
+  // Set a default location for testing the 211 API
+  useEffect(() => {
+    if (locationState.type === 'none') {
+      setLocationByZipCode('91303'); // West Hills, CA for testing
+    }
+  }, [locationState.type, setLocationByZipCode]);
   
   // State for API data source
   const [useNational211Api, setUseNational211Api] = useState<boolean>(true);
