@@ -95,12 +95,12 @@ export async function searchResourcesByTaxonomy(
     // Add location parameters if provided
     if (zipCode) {
       queryParams.push(`location=${zipCode}`);
-      queryParams.push('locationMode=postal'); // Match the POST data
+      queryParams.push('locationMode=Serving'); // Try Serving for zip codes
       queryParams.push('distance=25'); // Search radius in miles
       queryParams.push('distanceUnit=miles'); // Add distance unit
     } else if (latitude !== undefined && longitude !== undefined) {
       queryParams.push(`location=${latitude},${longitude}`);
-      queryParams.push('locationMode=geo'); // Match the POST data
+      queryParams.push('locationMode=Serving'); // Try Serving for coordinates
       queryParams.push('distance=25');
       queryParams.push('distanceUnit=miles');
     }
@@ -129,12 +129,12 @@ export async function searchResourcesByTaxonomy(
       formData.append('keywords', keyword);
       if (zipCode) {
         formData.append('location', zipCode);
-        formData.append('locationMode', 'postal'); // Try postal for zip codes
+        formData.append('locationMode', 'Serving'); // Try Serving for zip codes
         formData.append('distance', '25');
         formData.append('distanceUnit', 'miles'); // Add distance unit
       } else if (latitude !== undefined && longitude !== undefined) {
         formData.append('location', `${latitude},${longitude}`);
-        formData.append('locationMode', 'geo'); // Try geo for coordinates
+        formData.append('locationMode', 'Serving'); // Try Serving for coordinates
         formData.append('distance', '25');
         formData.append('distanceUnit', 'miles');
       }
