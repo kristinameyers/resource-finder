@@ -44,15 +44,16 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// Using the correct 211 V2 API endpoint structure
-const API_BASE_URL = "https://api.211.org/resources/v2/search";  // Correct V2 endpoint
+// Using the correct 211 V2 API endpoint structure 
+const API_BASE_URL = "https://api.211.org/resources/v2/search";  // V2 endpoint
 
 // Get API key from environment variables
-const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY || 'd0b38b7a580b46a0a14c993849bde8c0';
+const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY || '0b49fd58c6ba4f17836bd9a350c72fb4';
 
 console.log('211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
-console.log('Using API key authentication with Api-Key header');
+console.log('Using API key authentication with Ocp-Apim-Subscription-Key header');
+console.log(`API Key: ${SUBSCRIPTION_KEY.substring(0, 8)}...${SUBSCRIPTION_KEY.substring(SUBSCRIPTION_KEY.length - 8)}`);
 
 /**
  * Searches for resources by taxonomy code
@@ -97,7 +98,7 @@ export async function searchResourcesByTaxonomy(
     // According to OpenAPI 3.0.1 docs, these parameters go in headers
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Api-Key': SUBSCRIPTION_KEY, // Use Api-Key header as shown in 401 error
+      'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY, // Use Azure API Management header
       'Cache-Control': 'no-cache',
       'keywordIsTaxonomyCode': 'true', // Enable taxonomy code search
       'searchMode': 'All' // Use 'All' for exact matches
@@ -118,7 +119,7 @@ export async function searchResourcesByTaxonomy(
       // Try GET method first with minimal headers
       const minimalHeaders: HeadersInit = {
         'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY, // Use Api-Key header as shown in 401 error
+        'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY, // Use Azure API Management header
         'Cache-Control': 'no-cache'
       };
       
@@ -134,7 +135,7 @@ export async function searchResourcesByTaxonomy(
         
         // Build POST body according to OpenAPI 3.0.1 spec (search and location are direct fields)
         // Using taxonomy code directly as search term
-        const postBody = {
+        const postBody: any = {
           search: taxonomyCode,
           skip: 0,
           size: 20,
@@ -158,7 +159,8 @@ export async function searchResourcesByTaxonomy(
         
         // Add headers for taxonomy code search
         const postHeaders = {
-          ...headers,
+          'Accept': 'application/json',
+          'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY,
           'Content-Type': 'application/json',
           'keywordIsTaxonomyCode': 'true',
           'searchMode': 'All'
