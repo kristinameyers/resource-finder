@@ -56,7 +56,7 @@ console.log('Using API key authentication with Api-Key header');
 console.log(`API Key: ${SUBSCRIPTION_KEY.substring(0, 8)}...${SUBSCRIPTION_KEY.substring(SUBSCRIPTION_KEY.length - 8)}`);
 
 /**
- * Searches for resources by keyword (simple search test)
+ * Searches for resources by keyword (fallback for compatibility)
  */
 export async function searchResourcesByKeyword(
   keyword: string,
@@ -115,9 +115,9 @@ export async function searchResourcesByKeyword(
 }
 
 /**
- * Searches for resources by taxonomy code
+ * Searches for resources by taxonomy code (primary method)
  */
-export async function searchResourcesByTaxonomy(
+export async function searchResourcesByTaxonomyCode(
   taxonomyCode: string,
   zipCode?: string,
   latitude?: number,

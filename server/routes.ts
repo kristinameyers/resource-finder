@@ -49,9 +49,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
           console.log(`Using 211 API: ${useApi}`);
           
-          if (category) {
-            // Test with keyword search first (as requested by user)
-            const keyword = category.name.toLowerCase(); // Use category name as keyword
+          if (category?.taxonomyCode) {
+            // Use the proven working keyword search method with category name
+            console.log(`Searching 211 API for category: ${category.name} (taxonomy: ${category.taxonomyCode})`);
+            
+            const keyword = category.name.toLowerCase();
             const resources = await searchResourcesByKeyword(
               keyword,
               zipCode,
@@ -59,12 +61,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               longitude
             );
             
-            console.log(`API response received with ${resources.length} resources`);
+            console.log(`211 API returned ${resources.length} resources for ${category.name}`);
             
             return res.status(200).json({
               resources: resources,
               total: resources.length,
-              source: '211 API'
+              source: '211_API'
             });
           } else {
             console.log(`Cannot use API: Missing taxonomy code for category ${categoryId}`);
