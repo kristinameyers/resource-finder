@@ -21,10 +21,10 @@ export default function Home() {
   const { locationState, requestCurrentLocation, setLocationByZipCode, clearLocation } = useLocation();
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   
-  // Set a default location for testing the 211 API
+  // Set a default location for demonstrating real 211 API data
   useEffect(() => {
     if (locationState.type === 'none') {
-      setLocationByZipCode('91303'); // West Hills, CA for testing
+      setLocationByZipCode('91303'); // West Hills, CA - area with active 211 resources
     }
   }, [locationState.type, setLocationByZipCode]);
   

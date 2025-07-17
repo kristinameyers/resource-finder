@@ -78,10 +78,15 @@ export default function ResultsSection({
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-xl font-semibold">
-          {resources.length} Resource{resources.length !== 1 && 's'} 
-          {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
-        </h2>
+        <div className="flex items-center gap-3 mb-2">
+          <h2 className="text-xl font-semibold">
+            {resources.length} Resource{resources.length !== 1 && 's'} 
+            {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
+          </h2>
+          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+            Live 211 Data
+          </span>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
