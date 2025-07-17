@@ -28,12 +28,25 @@ export default function ResourceDetail() {
   const { id } = useParams();
   const { toast } = useToast();
   
-  // Fetch the resource directly by ID using the 211 API
+  // For 211 API resources, we need to get all resources since individual lookups don't work
+  // Store the current category and resources in localStorage for navigation
   const resourceQuery = useQuery({
     queryKey: ['/api/resources', id],
     queryFn: async () => {
       if (!id) throw new Error('Resource ID is required');
-      return await fetchResourceById(id, true); // true to use 211 API
+      
+      // Try to get resource from localStorage first (from recent search results)
+      const storedResources = localStorage.getItem('recentResources');
+      if (storedResources) {
+        const resources = JSON.parse(storedResources);
+        const foundResource = resources.find((r: any) => r.id === id);
+        if (foundResource) {
+          return foundResource;
+        }
+      }
+      
+      // Fallback to API call
+      return await fetchResourceById(id, true);
     },
     enabled: !!id
   });

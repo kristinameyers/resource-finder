@@ -62,6 +62,11 @@ export function useResources(
         );
       }
       
+      // Store resources in localStorage for resource detail page access
+      if (result.resources && result.resources.length > 0) {
+        localStorage.setItem('recentResources', JSON.stringify(result.resources));
+      }
+      
       return result;
     },
     enabled: true,

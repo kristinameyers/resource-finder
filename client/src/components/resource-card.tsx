@@ -21,91 +21,44 @@ interface ResourceCardProps {
 }
 
 export default function ResourceCard({ resource, category, subcategory }: ResourceCardProps) {
-  const isApiResource = resource.id.includes('211santaba');
-  
   return (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-200">
-      {isApiResource ? (
-        // For API resources, no clickable link since detail pages aren't available
-        <>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start gap-2">
-              <CardTitle className="text-lg sm:text-xl">{resource.name}</CardTitle>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {category && (
-                <Badge 
-                  variant="outline" 
-                  className="bg-primary/10 highlight border-primary/20"
-                >
-                  {category.name}
-                </Badge>
-              )}
-              {subcategory && (
-                <Badge 
-                  variant="outline" 
-                  className="bg-secondary/10 text-secondary border-secondary/20"
-                >
-                  {subcategory.name}
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="py-2 flex-grow">
-            <CardDescription className="text-sm text-muted-foreground mb-2 line-clamp-3">
-              {resource.description}
-            </CardDescription>
-            
-            {resource.location && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-4">
-                <MapPin className="h-4 w-4" />
-                <span>{resource.location}</span>
-                {resource.zipCode && <span className="text-xs">({resource.zipCode})</span>}
-              </div>
-            )}
-          </CardContent>
-        </>
-      ) : (
-        // For local resources, keep the clickable link
-        <Link href={`/resources/${resource.id}`} className="cursor-pointer">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start gap-2">
-              <CardTitle className="text-lg sm:text-xl">{resource.name}</CardTitle>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {category && (
-                <Badge 
-                  variant="outline" 
-                  className="bg-primary/10 highlight border-primary/20"
-                >
-                  {category.name}
-                </Badge>
-              )}
-              {subcategory && (
-                <Badge 
-                  variant="outline" 
-                  className="bg-secondary/10 text-secondary border-secondary/20"
-                >
-                  {subcategory.name}
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="py-2 flex-grow">
-            <CardDescription className="text-sm text-muted-foreground mb-2 line-clamp-3">
-              {resource.description}
-            </CardDescription>
-            
-            {resource.location && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mt-4">
-                <MapPin className="h-4 w-4" />
-                <span>{resource.location}</span>
-                {resource.zipCode && <span className="text-xs">({resource.zipCode})</span>}
-              </div>
-            )}
-          </CardContent>
-        </Link>
-      )}
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start gap-2">
+          <CardTitle className="text-lg sm:text-xl">{resource.name}</CardTitle>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {category && (
+            <Badge 
+              variant="outline" 
+              className="bg-primary/10 highlight border-primary/20"
+            >
+              {category.name}
+            </Badge>
+          )}
+          {subcategory && (
+            <Badge 
+              variant="outline" 
+              className="bg-secondary/10 text-secondary border-secondary/20"
+            >
+              {subcategory.name}
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="py-2 flex-grow">
+        <CardDescription className="text-sm text-muted-foreground mb-2 line-clamp-3">
+          {resource.description}
+        </CardDescription>
+        
+        {resource.location && (
+          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-4">
+            <MapPin className="h-4 w-4" />
+            <span>{resource.location}</span>
+            {resource.zipCode && <span className="text-xs">({resource.zipCode})</span>}
+          </div>
+        )}
+      </CardContent>
       
       {/* Favorite button outside the link to prevent navigation conflicts */}
       <div className="px-6 pb-2">
@@ -116,20 +69,17 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
       </div>
       
       <CardFooter className="pt-2 flex gap-2">
-        {/* Only show View Details for non-211 API resources */}
-        {!resource.id.includes('211santaba') && (
-          <Button 
-            variant="default" 
-            className="flex-1 btn-highlight" 
-            size="sm"
-            asChild
-          >
-            <Link href={`/resources/${resource.id}`}>
-              <Info className="h-4 w-4 mr-2" /> 
-              View Details
-            </Link>
-          </Button>
-        )}
+        <Button 
+          variant="default" 
+          className="flex-1 btn-highlight" 
+          size="sm"
+          asChild
+        >
+          <Link href={`/resources/${resource.id}`}>
+            <Info className="h-4 w-4 mr-2" /> 
+            View Details
+          </Link>
+        </Button>
         
         {resource.url && (
           <Button 

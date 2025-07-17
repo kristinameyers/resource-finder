@@ -236,14 +236,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // For 211 API resources, we can't fetch individual resources reliably
-      // The 211 API doesn't have a working detail endpoint for these IDs
-      // So we'll disable individual resource pages for 211 resources
+      // For 211 API resources, try to find them in recent searches
+      // The 211 API doesn't have reliable individual resource endpoints
       if (useApi && id.includes('211santaba')) {
-        console.log(`211 API resource ${id} requested - these are only available through search`);
-        return res.status(404).json({
-          message: "Resource details are not available",
-          suggestion: "Resource information is available in the search results",
+        console.log(`211 API resource ${id} requested - checking local storage`);
+        // Return a message indicating this should be handled client-side
+        return res.status(200).json({
+          message: "Resource should be available from recent search results",
+          useLocalStorage: true,
           id
         });
       }
