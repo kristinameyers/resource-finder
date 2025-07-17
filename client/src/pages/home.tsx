@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import FilterSection from "@/components/filter-section";
+import FilterSectionSkeleton from "@/components/filter-section-skeleton";
 import CategoryGrid from "@/components/category-grid";
+import CategoryGridSkeleton from "@/components/category-grid-skeleton";
 import ResultsSection from "@/components/results-section";
 import { useResources } from "@/hooks/use-resources";
 import { useSubcategories } from "@/hooks/use-subcategories";
@@ -200,20 +202,24 @@ export default function Home() {
           )}
         </div>
         
-        <FilterSection 
-          categories={categories}
-          selectedCategoryId={selectedCategoryId}
-          onCategoryChange={handleCategoryChange}
-          subcategories={subcategories}
-          selectedSubcategoryId={selectedSubcategoryId}
-          onSubcategoryChange={handleSubcategoryChange}
-          locationState={locationState}
-          onUseMyLocation={handleUseMyLocation}
-          onZipCodeChange={handleZipCodeChange}
-          onClearLocation={clearLocation}
-          isLoadingSubcategories={isLoadingSubcategories}
-          isLoadingLocation={isLocationLoading}
-        />
+        {isLoadingCategories ? (
+          <FilterSectionSkeleton />
+        ) : (
+          <FilterSection 
+            categories={categories}
+            selectedCategoryId={selectedCategoryId}
+            onCategoryChange={handleCategoryChange}
+            subcategories={subcategories}
+            selectedSubcategoryId={selectedSubcategoryId}
+            onSubcategoryChange={handleSubcategoryChange}
+            locationState={locationState}
+            onUseMyLocation={handleUseMyLocation}
+            onZipCodeChange={handleZipCodeChange}
+            onClearLocation={clearLocation}
+            isLoadingSubcategories={isLoadingSubcategories}
+            isLoadingLocation={isLocationLoading}
+          />
+        )}
         
         {selectedCategoryId ? (
           // Show results when a category is selected
@@ -242,11 +248,15 @@ export default function Home() {
           </>
         ) : (
           // Show category grid when no category is selected
-          <CategoryGrid 
-            categories={categories}
-            onCategorySelect={handleCategorySelect}
-            selectedCategoryId={selectedCategoryId}
-          />
+          isLoadingCategories ? (
+            <CategoryGridSkeleton />
+          ) : (
+            <CategoryGrid 
+              categories={categories}
+              onCategorySelect={handleCategorySelect}
+              selectedCategoryId={selectedCategoryId}
+            />
+          )
         )}
       </main>
       

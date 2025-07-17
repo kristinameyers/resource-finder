@@ -1,5 +1,6 @@
 import { Resource, Category, Subcategory } from "@shared/schema";
 import ResourceCard from "./resource-card";
+import ResourceCardSkeleton from "./resource-card-skeleton";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
@@ -34,12 +35,19 @@ export default function ResultsSection({
     return subcategories.find(s => s.id === subcategoryId);
   };
 
-  // Loading state
+  // Loading state - show skeleton cards
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-        <p className="text-muted-foreground">Loading resources...</p>
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Loader2 className="h-5 w-5 text-primary animate-spin" />
+          <h2 className="text-xl font-semibold">Loading resources...</h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <ResourceCardSkeleton key={index} />
+          ))}
+        </div>
       </div>
     );
   }
