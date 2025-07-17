@@ -236,7 +236,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // If useApi=true, attempt to get the resource from the 211 API
+      // For 211 API resources, we can't fetch individual resources reliably
+      // The 211 API doesn't have a working detail endpoint for these IDs
+      // So we'll disable individual resource pages for 211 resources
+      if (useApi && id.includes('211santaba')) {
+        console.log(`211 API resource ${id} requested - these are only available through search`);
+        return res.status(404).json({
+          message: "Resource details are not available",
+          suggestion: "Resource information is available in the search results",
+          id
+        });
+      }
+      
+      // For other resources, try the 211 API if enabled
       if (useApi) {
         try {
           const resource = await getResourceById(id);
