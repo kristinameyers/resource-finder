@@ -76,6 +76,12 @@ export default function FilterSection({
     }
   };
 
+  // Handle clearing location - also clear the zip code input
+  const handleClearLocation = () => {
+    setZipCode(""); // Clear the local zip code state
+    onClearLocation(); // Call the parent's clear function
+  };
+
   // Get icon component for a category
   const getCategoryIcon = (category: Category) => {
     if (category.icon && typeof category.icon === 'string') {
@@ -193,7 +199,7 @@ export default function FilterSection({
                 variant="ghost" 
                 size="sm"
                 className="ml-auto" 
-                onClick={onClearLocation}
+                onClick={handleClearLocation}
               >
                 Clear
               </Button>
@@ -216,7 +222,7 @@ export default function FilterSection({
                 variant="ghost" 
                 size="sm"
                 className="ml-auto" 
-                onClick={onClearLocation}
+                onClick={handleClearLocation}
               >
                 Clear
               </Button>
