@@ -75,6 +75,7 @@ export interface Resource {
   thumbsUp?: number; // Number of thumbs up votes
   thumbsDown?: number; // Number of thumbs down votes
   userVote?: 'up' | 'down' | null; // Current user's vote for this resource
+  distanceMiles?: number; // Distance from user's location in miles
 }
 
 export const resourceSchema = z.object({

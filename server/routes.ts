@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { resourceSchema } from "@shared/schema";
-import { searchResourcesByTaxonomy, searchResourcesByKeyword, getResourceById } from "./services/national211Service";
+import { searchResourcesByTaxonomyCode, searchResourcesByKeyword, getResourceById } from "./services/national211Service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -37,6 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : undefined;
         
       const useApi = req.query.useApi === 'true';
+      const sortBy = req.query.sortBy as 'relevance' | 'distance' | 'name' || 'relevance';
 
       // If useApi flag is true and we have a categoryId, use the 211 API
       if (useApi && categoryId) {
@@ -54,12 +55,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`Searching 211 API for category: ${category.name} (taxonomy: ${category.taxonomyCode})`);
             
             const keyword = category.name.toLowerCase();
-            const resources = await searchResourcesByKeyword(
+            let resources = await searchResourcesByKeyword(
               keyword,
               zipCode,
               latitude,
               longitude
             );
+            
+            // Calculate distances and sort if needed
+            if (zipCode && resources.length > 0) {
+              const { calculateDistanceFromZipCodes } = await import('./data/zipCodes');
+              
+              // Add distance to each resource
+              resources = resources.map(resource => {
+                let distanceMiles: number | undefined = undefined;
+                if (resource.zipCode) {
+                  const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
+                  if (distance !== null) {
+                    distanceMiles = distance;
+                  }
+                }
+                return { ...resource, distanceMiles };
+              });
+              
+              // Sort by distance if requested
+              if (sortBy === 'distance') {
+                resources.sort((a, b) => {
+                  if (a.distanceMiles === undefined && b.distanceMiles === undefined) return 0;
+                  if (a.distanceMiles === undefined) return 1;
+                  if (b.distanceMiles === undefined) return -1;
+                  return a.distanceMiles - b.distanceMiles;
+                });
+              } else if (sortBy === 'name') {
+                resources.sort((a, b) => a.name.localeCompare(b.name));
+              }
+            }
             
             console.log(`211 API returned ${resources.length} resources for ${category.name}`);
             
@@ -88,7 +118,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         latitude,
         longitude,
         sessionId,
-        ipAddress
+        ipAddress,
+        sortBy
       );
 
       return res.status(200).json({

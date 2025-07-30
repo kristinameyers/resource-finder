@@ -1,6 +1,7 @@
 import { Resource, Category, Subcategory } from "@shared/schema";
 import ResourceCard from "./resource-card";
 import ResourceCardSkeleton from "./resource-card-skeleton";
+import SortControl from "./sort-control";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
@@ -13,6 +14,9 @@ interface ResultsSectionProps {
   onRetry: () => void;
   onClearFilters: () => void;
   selectedCategoryId?: string | null;
+  sortBy: 'relevance' | 'distance' | 'name';
+  onSortChange: (value: 'relevance' | 'distance' | 'name') => void;
+  hasLocation: boolean;
 }
 
 export default function ResultsSection({
@@ -23,7 +27,10 @@ export default function ResultsSection({
   error,
   onRetry,
   onClearFilters,
-  selectedCategoryId
+  selectedCategoryId,
+  sortBy,
+  onSortChange,
+  hasLocation
 }: ResultsSectionProps) {
   // Find category and subcategory objects for a resource
   const getCategoryForResource = (categoryId: string) => {
@@ -86,14 +93,28 @@ export default function ResultsSection({
   return (
     <div>
       <div className="mb-4">
-        <div className="flex items-center gap-3 mb-2">
-          <h2 className="text-xl font-semibold">
-            {resources.length} Resource{resources.length !== 1 && 's'} 
-            {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
-          </h2>
-          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-            Live 211 Data
-          </span>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold">
+              {resources.length} Resource{resources.length !== 1 && 's'} 
+              {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
+            </h2>
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+              Live 211 Data
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <SortControl 
+              value={sortBy}
+              onValueChange={onSortChange}
+              hasLocation={hasLocation}
+            />
+            {selectedCategoryId && (
+              <Button variant="outline" onClick={onClearFilters}>
+                Clear Filters
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       

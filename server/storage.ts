@@ -1,5 +1,6 @@
 import { users, type User, type InsertUser, type Resource, type Category, type Subcategory, type Location } from "@shared/schema";
 import fetch from "node-fetch";
+import { calculateDistanceFromZipCodes } from "./data/zipCodes";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -10,7 +11,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Resources related methods
-  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string): Promise<Resource[]>;
+  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string, sortBy?: 'relevance' | 'distance' | 'name'): Promise<Resource[]>;
   getCategories(): Promise<Category[]>;
   getSubcategories(categoryId: string): Promise<Subcategory[]>;
   getLocations(): Promise<Location[]>;
@@ -191,7 +192,7 @@ export class MemStorage implements IStorage {
     return user;
   }
   
-  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string): Promise<Resource[]> {
+  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string, sortBy?: 'relevance' | 'distance' | 'name'): Promise<Resource[]> {
     // Here we would normally fetch from an external API
     // For testing, we'll generate mock resources if none exist yet
     if (this.resources.length === 0) {
@@ -251,20 +252,45 @@ export class MemStorage implements IStorage {
       console.log(`Filtering by coordinates: ${latitude}, ${longitude}`);
     }
     
-    // Add rating information to each resource
+    // Add rating information and distance calculations to each resource
     const resourcesWithRatings = await Promise.all(
       filteredResources.map(async (resource) => {
         const ratings = await this.getRatings(resource.id);
         const userVote = sessionId && ipAddress ? await this.getUserVote(resource.id, sessionId, ipAddress) : null;
         
+        // Calculate distance if user zip code and resource zip code are available
+        let distanceMiles: number | undefined = undefined;
+        if (zipCode && resource.zipCode) {
+          const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
+          if (distance !== null) {
+            distanceMiles = distance;
+          }
+        }
+        
         return {
           ...resource,
           thumbsUp: ratings.thumbsUp,
           thumbsDown: ratings.thumbsDown,
-          userVote
+          userVote,
+          distanceMiles
         };
       })
     );
+    
+    // Sort resources based on sortBy parameter
+    if (sortBy === 'distance' && zipCode) {
+      // Sort by distance (closest first), with resources without distance at the end
+      resourcesWithRatings.sort((a, b) => {
+        if (a.distanceMiles === undefined && b.distanceMiles === undefined) return 0;
+        if (a.distanceMiles === undefined) return 1;
+        if (b.distanceMiles === undefined) return -1;
+        return a.distanceMiles - b.distanceMiles;
+      });
+    } else if (sortBy === 'name') {
+      // Sort alphabetically by name
+      resourcesWithRatings.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    // Default is 'relevance' - no sorting needed as API returns relevant results first
     
     return resourcesWithRatings;
   }

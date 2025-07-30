@@ -90,6 +90,9 @@ export default function Home() {
     return null;
   };
   
+  // State for sorting
+  const [sortBy, setSortBy] = useState<'relevance' | 'distance' | 'name'>('relevance');
+  
   // Fetch resources based on current filters
   const {
     resources,
@@ -101,7 +104,8 @@ export default function Home() {
     selectedCategoryId,
     selectedSubcategoryId,
     getLocationParam(),
-    useNational211Api
+    useNational211Api,
+    sortBy
   );
   
   // Category change handler
@@ -244,6 +248,9 @@ export default function Home() {
               onRetry={refetchResources}
               onClearFilters={handleClearFilters}
               selectedCategoryId={selectedCategoryId}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              hasLocation={locationState.type !== 'none'}
             />
           </>
         ) : (

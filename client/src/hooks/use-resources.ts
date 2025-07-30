@@ -11,7 +11,8 @@ export function useResources(
   categoryId: string | null, 
   subcategoryId: string | null, 
   location: { type: 'zipCode', value: string } | { type: 'coordinates', latitude: number, longitude: number } | null,
-  useApi: boolean = true
+  useApi: boolean = true,
+  sortBy: 'relevance' | 'distance' | 'name' = 'relevance'
 ) {
   // Query key that depends on filters
   const queryKey = [
@@ -20,7 +21,8 @@ export function useResources(
       categoryId, 
       subcategoryId,
       location: location ? JSON.stringify(location) : null,
-      useApi
+      useApi,
+      sortBy
     }
   ];
   
@@ -41,7 +43,8 @@ export function useResources(
             subcategoryId || undefined, 
             location.value,
             undefined,
-            useApi
+            useApi,
+            sortBy
           );
         } else {
           result = await fetchResources(
@@ -49,7 +52,8 @@ export function useResources(
             subcategoryId || undefined, 
             undefined, 
             { latitude: location.latitude, longitude: location.longitude },
-            useApi
+            useApi,
+            sortBy
           );
         }
       } else {
@@ -58,7 +62,8 @@ export function useResources(
           subcategoryId || undefined,
           undefined,
           undefined,
-          useApi
+          useApi,
+          sortBy
         );
       }
       

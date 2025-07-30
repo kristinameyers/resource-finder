@@ -27,7 +27,8 @@ export async function fetchResources(
   subcategoryId?: string,
   zipCode?: string,
   coordinates?: { latitude: number; longitude: number },
-  useApi: boolean = true
+  useApi: boolean = true,
+  sortBy: 'relevance' | 'distance' | 'name' = 'relevance'
 ): Promise<{resources: Resource[], source: string}> {
   const queryParams = new URLSearchParams();
   
@@ -51,6 +52,9 @@ export async function fetchResources(
   
   // Add parameter to use National 211 API
   queryParams.append('useApi', useApi.toString());
+  
+  // Add sort parameter
+  queryParams.append('sortBy', sortBy);
   
   const url = `/api/resources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   
