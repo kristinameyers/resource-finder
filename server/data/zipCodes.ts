@@ -24,10 +24,12 @@ export async function loadZipCodeData() {
     const sampleZipCodes: ZipCodeData[] = [
       // Santa Barbara County
       { zip: "93101", lat: 34.41889, lng: -119.69810, city: "Santa Barbara", state: "CA" },
+      { zip: "93103", lat: 34.41333, lng: -119.69222, city: "Santa Barbara", state: "CA" },
       { zip: "93105", lat: 34.43611, lng: -119.76972, city: "Santa Barbara", state: "CA" },
       { zip: "93110", lat: 34.45833, lng: -119.71667, city: "Santa Barbara", state: "CA" },
       { zip: "93111", lat: 34.46389, lng: -119.78750, city: "Goleta", state: "CA" },
       { zip: "93117", lat: 34.44167, lng: -119.84444, city: "Goleta", state: "CA" },
+      { zip: "93013", lat: 34.39889, lng: -119.51750, city: "Carpinteria", state: "CA" },
       { zip: "93454", lat: 34.61639, lng: -120.41417, city: "Santa Maria", state: "CA" },
       
       // Los Angeles County
