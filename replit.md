@@ -94,6 +94,16 @@ The application prioritizes user experience with fast loading times, anonymous a
 
 ## Recent Changes (January 2025)
 
+### Official 211 Taxonomy Integration COMPLETED ✅ (January 30, 2025)
+- **Data Source**: Imported official Santa Barbara 211 taxonomy data from CSV files
+- **Taxonomy Structure**: 12 main categories with 223+ detailed subcategories and taxonomy codes
+- **Code Architecture**: 
+  - Created `server/data/taxonomy.ts` with complete taxonomy mapping
+  - Updated `searchResources()` to use specific taxonomy codes for subcategories
+  - Enhanced subcategory display with real 211 taxonomy structure
+- **API Enhancement**: Now using precise taxonomy codes (e.g., "BD-1800.1000" for Groceries, "BH-1800.8500" for Homeless Shelters)
+- **User Experience**: Users now see authentic 211 subcategories for each main category
+
 ### 211 API Integration COMPLETED ✅ (January 17, 2025)
 - **Status**: Fully functional real-time data integration with all categories
 - **Authentication**: Working with Api-Key header (535f3ff3321744c79fd85f4110b09545)

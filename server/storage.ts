@@ -43,23 +43,21 @@ export class MemStorage implements IStorage {
     this.subcategories = [];
     this.locations = [];
     
-    // Populate default categories with icons and 211 taxonomy codes
+    // Populate categories with official 211 taxonomy codes
     this.categories = [
       { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH' },
       { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'N' },
       { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD' },
       { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT' },
       { id: 'healthcare', name: 'Health Care', icon: 'stethoscope', taxonomyCode: 'L' },
-      { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower', taxonomyCode: 'BM-3000' },
-      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'RR' },
+      { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower' },
+      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'R' },
       { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX' },
       { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'P' },
       { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'YB-9000' },
       { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'H' },
-      { id: 'seniors-caregivers', name: 'Seniors & Caregivers', icon: 'user-nurse', taxonomyCode: 'YB-8000' },
       { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel', taxonomyCode: 'F' },
       { id: 'utilities', name: 'Utilities', icon: 'bolt', taxonomyCode: 'BV' },
-      { id: 'reentry', name: 'Reentry', icon: 'door-open', taxonomyCode: 'TJ-6500' },
     ];
     
     // Populate subcategories for each category
@@ -277,8 +275,17 @@ export class MemStorage implements IStorage {
   }
   
   async getSubcategories(categoryId: string): Promise<Subcategory[]> {
-    // Filter subcategories by category ID
-    return this.subcategories.filter(sub => sub.categoryId === categoryId);
+    // Import taxonomy data and use it to generate subcategories
+    const { getSubcategoriesForCategory } = await import('./data/taxonomy');
+    const taxonomySubcategories = getSubcategoriesForCategory(categoryId);
+    
+    // Convert taxonomy subcategories to our schema format
+    return taxonomySubcategories.map(sub => ({
+      id: sub.id,
+      name: sub.name,
+      categoryId,
+      icon: undefined // Could be added later
+    }));
   }
   
   async getLocations(): Promise<Location[]> {

@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
+import { getCategoryTaxonomyCode, getSubcategoryTaxonomyCode } from '../data/taxonomy';
 
 // Define interfaces for the 211 API responses
 interface National211Resource {
@@ -398,4 +399,56 @@ function extractEmailFromDescription(description: string): string | undefined {
   if (!description) return undefined;
   const emailMatch = description.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
   return emailMatch?.[0];
+}
+
+/**
+ * Main searchResources function - uses proper taxonomy codes
+ */
+export async function searchResources(
+  category: string | null, 
+  subcategory: string | null,
+  zipCode?: string,
+  latitude?: number,
+  longitude?: number,
+  use211Api: boolean = true
+): Promise<{ resources: Resource[], total: number }> {
+  console.log(`Selected category: ${category}, Subcategory: ${subcategory}`);
+  console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
+  console.log(`Using 211 API: ${use211Api}`);
+  
+  if (!use211Api) {
+    return { resources: [], total: 0 };
+  }
+  
+  if (!category) {
+    console.log('No category specified for 211 API search');
+    return { resources: [], total: 0 };
+  }
+
+  // Get the proper taxonomy code using our imported taxonomy data
+  let taxonomyCode: string;
+  
+  // If we have a subcategory, use its specific taxonomy code
+  if (subcategory) {
+    taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
+    if (taxonomyCode) {
+      console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
+    } else {
+      // Fallback to category taxonomy if subcategory not found
+      taxonomyCode = getCategoryTaxonomyCode(category);
+      console.log(`Subcategory not found, using category taxonomy code: ${taxonomyCode} for ${category}`);
+    }
+  } else {
+    // Use the main category taxonomy code
+    taxonomyCode = getCategoryTaxonomyCode(category);
+    console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
+  }
+
+  if (!taxonomyCode) {
+    console.log(`No taxonomy code found for category: ${category}`);
+    return { resources: [], total: 0 };
+  }
+
+  // Use the taxonomy-based search function
+  return await searchResourcesByTaxonomyCode(taxonomyCode, zipCode, latitude, longitude);
 }

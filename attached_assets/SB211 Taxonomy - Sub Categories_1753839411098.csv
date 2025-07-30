@@ -1,0 +1,223 @@
+Main Category,Sub Category Title,Sub Category Tax Code
+Housing,Domestic Violence Shelters,BH-1800.1500-100
+Housing,Homeless Shelters,BH-1800.8500
+Housing,Maternity Homes,LJ-5000.5000
+Housing,Senior Housing,BH-8500.8000
+Housing,Sexual Assault Shelters,BH-1800.1500-800
+Housing,Supervised Living for Older Youth,PH-6300.8000
+Housing,Youth Shelters,BH-1800.1500-960
+Housing,Appliances,BM-3000.0500
+Housing,Clothing,BM-6500.1500
+Housing,Furniture,BM-3000.2000*
+Housing,Home Maintenance & Minor Repair Services,PH-3300.2750
+Housing,Utility Payment Assistance,BV-8900.9300
+Housing,Energy Efficient Home Improvement Assistance,NL-6000.9500
+Housing,Housing Discrimination,FT-1800.3000
+Housing,Low Income Rental Housing,BH-7000.4600
+Housing,Rent Payment Assistance,BH-3800.7000
+Housing,Section 8 Voucher / Housing Authority,BH-8300.3000
+Housing,Bathing Facilities,BH-1800.3500
+Housing,Temporary Mailing Address,BM-6500.6500-850
+Housing,Meals,BD-5000
+Housing,Animal Shelters,PD-7600.0600
+Housing,Animal Licenses,PD-0700.0600
+Finance & Employment,Career Counseling,HL-2500.8035
+Finance & Employment,Job Assistance Centers,ND-1500
+Finance & Employment,Employment Discrimination Assistance,FT-1800.1850
+Finance & Employment,Vocational Rehabilitation,ND-9000
+Finance & Employment,Technical/Trade Schools,HD-6000.9000
+Finance & Employment,CalWorks,NL-1000.8500*
+Finance & Employment,General Relief,NL-1000.2500
+Finance & Employment,Cash Assistance Program for Immigrants,NL-1000.2400-150
+Finance & Employment,Veteran Benefits Assistance,FT-1000.9000
+Finance & Employment,CalAIM,BD-5000.3500
+Finance & Employment,CalFresh (formerly Food Stamps),NL-6000.2000
+Finance & Employment,Medicaid,NL-5000.5000
+Finance & Employment,"Women, Infants, & Children",NL-6000.9500
+Finance & Employment,Medicare,NS-8000.5000
+Finance & Employment,Credit Counseling,DM-1500.1500
+Finance & Employment,VITA Programs,DT-8800.9300
+Finance & Employment,Utility Payment Assistance,BV-8900.9300
+Finance & Employment,Well Animal Checkups,PD-9000.9700
+Finance & Employment,Pet Food,PD-6250.6600
+Food,CalFresh (formerly Food Stamps),NL-6000.2000
+Food,Groceries,BD-1800.1000
+Food,Post Disaster Food Services,TH-2600.6450
+Food,"Women, Infants, & Children",NL-6000.9500
+Food,Home Delivery Meals,BD-5000.3500
+Food,Meals,BD-5000
+Food,Nutrition Education,LH-2700.6000
+Transportation,Bus Services,BT-4500.4700
+Transportation,Travel Directions/Trip Planning,BT-8750.8600
+Transportation,Rail Transportation,BT-4800.7000
+Transportation,Disability Related Transportation,BT-4500.6500-170
+Transportation,Medical Transportation,LD-1500
+Transportation,Senior Ride Programs,BT-4500.6500-800
+Transportation,General Paratransit/Community Ride Programs,BT-4500.6500-280
+Transportation,Parking Permits People With Disabilities/Health Conditions,DF-7000.6550*YJ-8750
+Health Care,Clinics & Urgent Care,LN
+Health Care,Hospitals,LL-3000
+Health Care,Psychiatric hospitals,RM-3300.6500
+Health Care,Affordable Care Act Information & Counseling,LH-3500.0200
+Health Care,Medicaid,NL-5000.5000
+Health Care,Medicare,NS-8000.5000
+Health Care,Patient Rights Assistance,FT-6200
+Health Care,Prescription Drug Patient Assistance Programs,LH-6700.6300
+Health Care,Cancer Clinics,LT-1750.1500
+Health Care,Eye Screening,LF-4900.2000
+Health Care,General Dentistry,LV-1600.2400
+Health Care,General Physical Examinations,LF-7100.2500
+Health Care,Hearing Screening,LF-4900.2150
+Health Care,Immunizations,LT-3400
+Health Care,Mammograms,LF-4900.1500-500
+Health Care,Newborn Care,YB-9500.6000
+Health Care,Physical Therapy,LR-6600
+Health Care,Postpartum Depression,RP-1400.8000-655
+Health Care,Tattoo Removal,LT-8500
+Health Care,Abortion Services,LJ-2000.0100
+Health Care,Birth Control,LJ-2000.1000
+Health Care,General Sexuality/Reproductive Health Education,LJ-8000.2500
+Health Care,Pregnancy Testing,LJ-2000.6750
+Health Care,Sexually Transmitted Infection Screening,LF-4900.8000
+Health Care,Teen Pregnancy Prevention,LJ-8000.8500
+Health Care,Prenatal Care,LJ-5000.6600
+Health Care,Early Intervention for Children with Disabilities/Delays,LR-1700
+Health Care,Prosthetic Devices,LH-0600.6500-700
+Health Care,Independent Living Skills Instruction,LR-3200
+Health Care,Occupational Therapy,LR-6200
+Health Care,Errand Running/Shopping Assistance Disabilities Issues,PH-3300.1800*YZ-1700
+Health Care,Disability Related Sports,PL-7000.3150
+Health Care,Social Security Disability Insurance,NS-1800.8000
+Health Care,Adult In Home Respite Care,PH-7000.3300-040
+Health Care,Home Nursing,LT-2800.3100
+Health Care,In Home Supportive Services Subsidies,NL-3000.3300
+Health Care,Newborn Care,YB-9500.6000
+Health Care,Hospice Care,LT-3000
+Health Care,Medical Transportation,LD-1500
+Health Care,Disability Related Transportation,BT-4500.6500-170
+Health Care,Health Statistics Public Health Issues,TJ-8000.3000*YZ-6910
+Health Care,Poison Control,LH-2700.6500
+Hygiene & Household,Disaster Related Clothing & Emergency Supplies,TH-2600.1550
+Hygiene & Household,Grooming Supplies,TI-1800.6700
+Hygiene & Household,Household Hazardous Materials Information,JR-8200.3000-300
+Hygiene & Household,Animal Control,PD-0700.0400
+Mental Wellness,Adoption Counseling and Support,PH-0300.0300
+Mental Wellness,Bereavement and Grief Counseling,RP-1400.8000-100
+Mental Wellness,Child Abuse Counseling,RP-1400.8000-020.15
+Mental Wellness,Divorce Counseling,RP-1400.8000-175
+Mental Wellness,Domestic Violence Support Groups,PN-8100.0200-180
+Mental Wellness,General,RP-1400.2500
+Mental Wellness,Geriatric Counseling,RP-1400.8000-270
+Mental Wellness,Health/Disability Related,PN-8100.3000
+Mental Wellness,Human Trafficking Counseling,RP-1400.8000-327
+Mental Wellness,LGBTQ2+ Community Centers,TC-5500.4000
+Mental Wellness,Marriage Counseling,RP-1400.8000-500
+Mental Wellness,Parent Child Interactive Therapy,RP-1400.8000-645
+Mental Wellness,Postpartum Depression,RP-1400.8000-655
+Mental Wellness,Sexual Assault,LT-1750.7935
+Mental Wellness,Suicide Counseling,RP-1400.8000-825
+Mental Wellness,Adolescent/Youth Counseling,RP-1400.8000-050
+Mental Wellness,Domestic Violence Hotlines,RP-1500.1400-200
+Mental Wellness,General Crisis Intervention Hotlines,RP-1500.1400-250
+Mental Wellness,LGBTQ2+ Helplines,RP-1500.1400-400
+Mental Wellness,Psychiatric Response Hotline,RP-1500.3400-650
+Mental Wellness,Sexual Assault Hotlines,RP-1500.1400-750
+Mental Wellness,Suicide Prevention Hotlines,RP-1500.1400-800
+Mental Wellness,Veterans Suicide Prevention Hotline,RP-1400.8000-900
+Mental Wellness,RP-1500.3350*YT-2400,RP-1500.3350*YT-2400
+Mental Wellness,Mental Wellness Evaluation,RP-5000
+Mental Wellness,Mental Wellness Information & Education,RP-1400.8000-850
+Mental Wellness,Alcohol Support Groups,PN-8100.0500-070
+Mental Wellness,Caregiver/Care Receiver Support Groups,PN-8100.4500-120*
+Mental Wellness,Health/Disability Related,PN-8100.3000*
+Mental Wellness,Mental Health Related,PN-8100.5000
+Mental Wellness,Parent Support Groups,PN-8100.6500-650
+Mental Wellness,Terminal Illness,PN-8100.8600
+Substance Use,Alcohol Detoxification,RX-1700.0500
+Substance Use,Alcohol Support Groups,PN-8100.0500-070
+Substance Use,Alcoholism Counseling,RX-8450.8000-050
+Substance Use,Sober Living Homes,RX-8500.8000
+Substance Use,Drug Detoxification,RX-1700.1700
+Substance Use,Drug Abuse Counseling,RX-8450.8000-180
+Substance Use,Drug Support Groups,PN-8100.0500-180
+Substance Use,Smoking Prevention,RX-8450.7900
+Substance Use,Sober Living Homes for Recovering Drug Abusers,RX-8450.3300-350
+Substance Use,Alcohol Abuse Education & Prevention,RX-8250.0500
+Substance Use,Drug & Alcohol Testing,RX-0400.1850
+Children & Family,Family Law Courts,FC-8200.8100-200
+Children & Family,Child Custody,FT-3000.1500
+Children & Family,Child Support,FT-3000.1600
+Children & Family,Foster Care Legal Services,FT-3000.2100
+Children & Family,Child Abuse Prevention,FN-1500.1900-150
+Children & Family,Child Abuse Reporting,PH-6500.1500-140
+Children & Family,Safe Surrender for Newborns,LJ-5000.8000
+Children & Family,Child Care Provider Referrals,PH-2400.1500
+Children & Family,Head Start,HD-1800.3000
+Children & Family,Breastfeeding Support Programs,LJ-5000.1000
+Children & Family,Expecting & New Parent Programs,PH-6100.1800
+Children & Family,Recreation,PL-7000.4360
+Children & Family,Computer Literacy Training Programs,PL-7400.1500
+Children & Family,Family Support Centers,PH-2360.2400
+Children & Family,Hearing Screening,LF-4900.2150
+Children & Family,Immunizations,LT-3400
+Children & Family,Early Intervention for Children with Disabilities/Delays,LR-1700
+Children & Family,Newborn Care,YB-9500.6000
+Children & Family,Speech Therapy,LR-8000.8000-820
+Children & Family,Eye Screening,LF-4900.2000
+Children & Family,Foster Homes for Dependent Children,PH-6300.2000
+Children & Family,Foster Home Licensing,DF-4500.2000-200
+Children & Family,Military Family Support Center,TM-5100
+Children & Family,Childbirth Education,LJ-5000.1500
+Young Adults,Drop Out Prevention,HH-1600.1600
+Young Adults,Gang Prevention,FN-2300
+Young Adults,Youth Violence Prevention,FN-1500.9700
+Young Adults,Child & Youth Mentoring Programs,PH-1400.5000-100
+Young Adults,Physical Activity and Fitness Education,LH-2700.6450
+Young Adults,Recreational Clubs,PL-6400.6750
+Young Adults,Youth Development,PS-9800
+Young Adults,Teen Pregnancy Prevention,LJ-8000.8500
+Education,Adult Literacy,HH-4500.0500
+Education,Computer Literacy Training Programs,PL-7400.1500
+Education,GED,YG-1700.3000
+Education,English as a Second Language,HL-2000.0550
+Education,Technical/Trade Schools,HD-6000.9000
+Education,Parent/Family Involvement in Education,HL-3010.6500
+Education,School Readiness Programs,HD-1800.8000
+Education,Student Financial Aid,HL-8000
+Education,Tutoring,HL-8700
+Education,Citizenship Education,HH-0500.1500
+Legal Assistance,Criminal State Trial Courts,FC-8200.1550
+Legal Assistance,Juvenile Justice Courts,FC-8200.3500-350
+Legal Assistance,Mental Health Courts,FC-8200.8100-500
+Legal Assistance,Small Claims Courts,FC-8200.8100-800
+Legal Assistance,Traffic Courts,FC-8200.8100-900
+Legal Assistance,Veterans Courts,FC-8200.8100-920
+Legal Assistance,General Legal Aid,FT-3200
+Legal Assistance,Lawyers Referral Services,FT-4800
+Legal Assistance,Immigration/ Naturalization Legal Services,FT-3600
+Legal Assistance,Immigration/ Naturalization Adjucaation Services,FT-3550
+Legal Assistance,Birth Certificates,DF-7000.1200
+Legal Assistance,Business Registration/Licensing,DF-4500.1000
+Legal Assistance,Court Records,DF-7000.1550
+Legal Assistance,Death Certificates,DF-7000.1700-300
+Legal Assistance,Divorce Records,DF-7000.1800
+Legal Assistance,Identification Cards,DF-7000.3300
+Legal Assistance,Marriage Certificates,DF-7000.4950
+Legal Assistance,Land Records,DF-7000.4550)
+Legal Assistance,Social Security Numbers,DF-7000.8250
+Legal Assistance,Voter Registration Offices,TQ-1800.9000
+Legal Assistance,Passports,DF-7000.6650
+Legal Assistance,Crime Victim Assistance,FN-1900.2500
+Legal Assistance,Domestic Violence Legal Services,FT-3000.1750
+Legal Assistance,Employment Discrimination,FT-1800.1850
+Legal Assistance,Housing Discrimination,FT-1800.3000
+Legal Assistance,Landlord/Tenant Dispute,FT-4500.4600
+Legal Assistance,Patient Rights,FT-6200
+Legal Assistance,Restraining Orders,FT-6940
+Legal Assistance,Social Security Fraud Reporting,FN-1700.7800
+Legal Assistance,Welfare Rights,FT-1000.9500
+Utilities,Electric Service Payment Assistance,BV-8900.9300-180
+Utilities,Gas Service Payment Assistance,BV-8900.9300-250
+Utilities,Internet Provider,BV-9000.3300
+Utilities,Utility Payment Assistance,BV-8900.9300
+Utilities,Energy Efficient Home Improvement Assistance,BV-8900.9300-180
