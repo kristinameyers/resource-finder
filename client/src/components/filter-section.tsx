@@ -281,6 +281,12 @@ export default function FilterSection({
                     size="sm"
                     className="ml-2 btn-highlight"
                     disabled={!zipCode.trim() || isLoadingLocation}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (zipCode.trim()) {
+                        onZipCodeChange(zipCode);
+                      }
+                    }}
                   >
                     {isLoadingLocation ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
