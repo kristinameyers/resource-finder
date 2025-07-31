@@ -247,53 +247,51 @@ export default function FilterSection({
             </div>
           )}
           
-          {/* Location controls */}
-          {(locationState.type === 'none' || locationState.type === 'error') && (
-            <div className="space-y-2">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full btn-highlight"
-                  onClick={onUseMyLocation}
-                  disabled={isLoadingLocation}
-                >
-                  {isLoadingLocation ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <MapPin className="h-4 w-4 mr-2" />
-                  )}
-                  Use My Location
-                </Button>
-                
-                <div className="relative w-full flex items-center">
-                  <form onSubmit={handleZipCodeSubmit} className="w-full flex">
-                    <Input
-                      type="text"
-                      placeholder="Enter zip code"
-                      value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value)}
-                      disabled={isLoadingLocation}
-                      className="w-full"
-                    />
-                    <Button
-                      type="submit"
-                      variant="outline"
-                      size="sm"
-                      className="ml-2 btn-highlight"
-                      disabled={!zipCode.trim() || isLoadingLocation}
-                    >
-                      {isLoadingLocation ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Check className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </form>
-                </div>
+          {/* Location controls - always show */}
+          <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full btn-highlight"
+                onClick={onUseMyLocation}
+                disabled={isLoadingLocation}
+              >
+                {isLoadingLocation ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <MapPin className="h-4 w-4 mr-2" />
+                )}
+                Use My Location
+              </Button>
+              
+              <div className="relative w-full flex items-center">
+                <form onSubmit={handleZipCodeSubmit} className="w-full flex">
+                  <Input
+                    type="text"
+                    placeholder="Enter zip code"
+                    value={zipCode}
+                    onChange={(e) => setZipCode(e.target.value)}
+                    disabled={isLoadingLocation}
+                    className="w-full"
+                  />
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    size="sm"
+                    className="ml-2 btn-highlight"
+                    disabled={!zipCode.trim() || isLoadingLocation}
+                  >
+                    {isLoadingLocation ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </Button>
+                </form>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>
