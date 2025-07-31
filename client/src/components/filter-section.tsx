@@ -61,7 +61,8 @@ export default function FilterSection({
   useEffect(() => {
     if (locationState.type === 'zipCode') {
       setZipCode(locationState.zipCode);
-    } else if (locationState.type === 'none' || locationState.type === 'coordinates') {
+    } else {
+      // Clear zip code for any non-zipCode state (none, coordinates, error, loading)
       setZipCode("");
     }
   }, [locationState]);
@@ -87,8 +88,8 @@ export default function FilterSection({
 
   // Handle clearing location - also clear the zip code input
   const handleClearLocation = () => {
-    setZipCode(""); // Clear the local zip code state
-    onClearLocation(); // Call the parent's clear function
+    onClearLocation(); // Call the parent's clear function first
+    // The useEffect will handle clearing the local zip code state
   };
 
   // Get icon component for a category
