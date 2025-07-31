@@ -1,5 +1,4 @@
-import { useState } from "react";
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { Category, Subcategory, Location } from "@shared/schema";
 import { 
   Card, 
@@ -59,7 +58,7 @@ export default function FilterSection({
   const [zipCode, setZipCode] = useState("");
   
   // Keep local zip code state in sync with location state
-  React.useEffect(() => {
+  useEffect(() => {
     if (locationState.type === 'zipCode') {
       setZipCode(locationState.zipCode);
     } else if (locationState.type === 'none' || locationState.type === 'coordinates') {
