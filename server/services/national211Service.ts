@@ -512,7 +512,7 @@ function transformResource(apiResource: any): Resource {
     categoryId,
     subcategoryId: taxonomy.taxonomyTerm ? taxonomy.taxonomyTerm.toLowerCase().replace(/\s+/g, '-') : undefined,
     location: apiResource.nameLocation || address.city || 'Unknown location',
-    zipCode: address.postalCode,
+    zipCode: address.postalCode || extractZipCodeFromAddress(address.streetAddress || '') || extractZipCodeFromDescription(apiResource.descriptionService),
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
     phone: phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
@@ -677,6 +677,22 @@ function extractServicesFromDescription(description: string): string | undefined
   }
   
   return undefined;
+}
+
+function extractZipCodeFromAddress(addressText: string): string | undefined {
+  if (!addressText) return undefined;
+  
+  // Look for 5-digit zip codes
+  const zipMatch = addressText.match(/\b\d{5}(-\d{4})?\b/);
+  return zipMatch?.[0]?.split('-')[0]; // Return just the 5-digit part
+}
+
+function extractZipCodeFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  
+  // Look for 5-digit zip codes in description
+  const zipMatch = description.match(/\b\d{5}(-\d{4})?\b/);
+  return zipMatch?.[0]?.split('-')[0]; // Return just the 5-digit part
 }
 
 function formatSchedules(schedules: any[]): string | undefined {

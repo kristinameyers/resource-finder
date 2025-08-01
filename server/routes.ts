@@ -62,19 +62,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
               longitude
             );
             
-            // Calculate distances and sort if needed
-            if (zipCode && resources.length > 0) {
+            // Calculate distances for all resources, even without userZipCode
+            if (resources.length > 0) {
               const { calculateDistanceFromZipCodes } = await import('./data/zipCodes');
               
               // Add distance to each resource
               resources = resources.map(resource => {
                 let distanceMiles: number | undefined = undefined;
-                if (resource.zipCode) {
+                
+                // Try distance calculation if we have user location and resource location
+                if (zipCode && resource.zipCode) {
                   const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
                   if (distance !== null) {
                     distanceMiles = distance;
+                    console.log(`Distance calculated: ${resource.name} is ${distanceMiles} miles from ${zipCode}`);
+                  } else {
+                    console.log(`Distance calculation failed for ${resource.name} (${resource.zipCode}) from ${zipCode}`);
                   }
+                } else {
+                  console.log(`Distance calculation skipped for ${resource.name}: userZip=${zipCode}, resourceZip=${resource.zipCode}`);
                 }
+                
                 return { ...resource, distanceMiles };
               });
               
@@ -89,6 +97,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               } else if (sortBy === 'name') {
                 resources.sort((a, b) => a.name.localeCompare(b.name));
               }
+              
+              console.log(`Distance calculation complete. Resources with distances: ${resources.filter(r => r.distanceMiles !== undefined).length}/${resources.length}`);
             }
             
             console.log(`211 API returned ${resources.length} resources for ${category.name}`);
