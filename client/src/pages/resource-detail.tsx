@@ -168,63 +168,63 @@ export default function ResourceDetail() {
       
       {/* Application Process, Documents, and Fees */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {resource.applicationProcess && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <CheckCircle className="h-5 w-5 mr-2 text-primary" />
-                Application Process
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-line text-sm">{resource.applicationProcess}</p>
-            </CardContent>
-          </Card>
-        )}
-        
-        {resource.documents && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-primary" />
-                Documents
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-line text-sm">{resource.documents}</p>
-            </CardContent>
-          </Card>
-        )}
-        
-        {resource.fees && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <DollarSign className="h-5 w-5 mr-2 text-primary" />
-                Fees
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-line text-sm">{resource.fees}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-      
-      {/* Service Areas */}
-      {resource.serviceAreas && (
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Users className="h-5 w-5 mr-2 text-primary" />
-              Service Areas
+              <CheckCircle className="h-5 w-5 mr-2 text-primary" />
+              Application Process
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-line">{resource.serviceAreas}</p>
+            <p className="whitespace-pre-line text-sm">
+              {resource.applicationProcess || "Contact the organization directly for application information"}
+            </p>
           </CardContent>
         </Card>
-      )}
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <FileText className="h-5 w-5 mr-2 text-primary" />
+              Documents
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-line text-sm">
+              {resource.documents || "Contact the organization for required documentation"}
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <DollarSign className="h-5 w-5 mr-2 text-primary" />
+              Fees
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-line text-sm">
+              {resource.fees || "Contact the organization for fee information"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Service Areas */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Users className="h-5 w-5 mr-2 text-primary" />
+            Service Areas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="whitespace-pre-line">
+            {resource.serviceAreas || "Contact the organization for service area information"}
+          </p>
+        </CardContent>
+      </Card>
       
       {/* Contact information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -277,21 +277,23 @@ export default function ResourceDetail() {
             )}
             
             {/* Hours of Operation */}
-            {resource.hoursOfOperation && (
-              <div className="flex items-start">
-                <Clock className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Hours of Operation</p>
-                  <div className="text-muted-foreground whitespace-pre-line">
-                    {resource.hoursOfOperation.split('\n').map((line: string, index: number) => (
+            <div className="flex items-start">
+              <Clock className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Hours of Operation</p>
+                <div className="text-muted-foreground whitespace-pre-line">
+                  {resource.hoursOfOperation ? (
+                    resource.hoursOfOperation.split('\n').map((line: string, index: number) => (
                       <div key={index} className="flex justify-between">
                         <span>{line}</span>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <span>Contact the organization for hours of operation</span>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
             
             {resource.email && (
               <div className="flex items-start">
@@ -331,26 +333,28 @@ export default function ResourceDetail() {
             )}
             
             {/* Languages */}
-            {(resource.languages && resource.languages.length > 0) || (resource.additionalLanguages && resource.additionalLanguages.length > 0) && (
-              <div className="flex items-start">
-                <Languages className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Languages</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {resource.languages?.map((language: string) => (
+            <div className="flex items-start">
+              <Languages className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Languages</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {resource.languages && resource.languages.length > 0 ? (
+                    resource.languages.map((language: string) => (
                       <Badge key={language} variant="secondary" className="text-xs">
                         {language}
                       </Badge>
-                    ))}
-                    {resource.additionalLanguages?.map((language: string) => (
-                      <Badge key={language} variant="outline" className="text-xs">
-                        {language}
-                      </Badge>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <Badge variant="secondary" className="text-xs">English</Badge>
+                  )}
+                  {resource.additionalLanguages?.map((language: string) => (
+                    <Badge key={language} variant="outline" className="text-xs">
+                      {language}
+                    </Badge>
+                  ))}
                 </div>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
         
@@ -359,25 +363,36 @@ export default function ResourceDetail() {
             <CardTitle>Service Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {resource.schedules && (
-              <div className="flex items-start">
-                <Calendar className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Schedule</p>
-                  <p className="text-muted-foreground whitespace-pre-line">{resource.schedules}</p>
-                </div>
+            {/* Eligibility */}
+            <div className="flex items-start">
+              <Users className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Eligibility</p>
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {resource.eligibility || "Contact the organization for eligibility information"}
+                </p>
               </div>
-            )}
+            </div>
             
-            {resource.accessibility && (
-              <div className="flex items-start">
-                <Accessibility className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Accessibility</p>
-                  <p className="text-muted-foreground">{resource.accessibility}</p>
-                </div>
+            <div className="flex items-start">
+              <Calendar className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Schedule</p>
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {resource.schedules || "Contact for hours"}
+                </p>
               </div>
-            )}
+            </div>
+            
+            <div className="flex items-start">
+              <Accessibility className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Accessibility</p>
+                <p className="text-muted-foreground">
+                  {resource.accessibility || "Contact for accessibility information"}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
