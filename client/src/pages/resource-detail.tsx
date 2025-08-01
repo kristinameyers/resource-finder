@@ -16,7 +16,12 @@ import {
   Accessibility, 
   Languages, 
   ChevronLeft,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  DollarSign,
+  Clock,
+  Users,
+  CheckCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -161,6 +166,66 @@ export default function ResourceDetail() {
         </CardContent>
       </Card>
       
+      {/* Application Process, Documents, and Fees */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {resource.applicationProcess && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2 text-primary" />
+                Application Process
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-line text-sm">{resource.applicationProcess}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {resource.documents && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-primary" />
+                Documents
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-line text-sm">{resource.documents}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {resource.fees && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <DollarSign className="h-5 w-5 mr-2 text-primary" />
+                Fees
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-line text-sm">{resource.fees}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
+      {/* Service Areas */}
+      {resource.serviceAreas && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2 text-primary" />
+              Service Areas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-line">{resource.serviceAreas}</p>
+          </CardContent>
+        </Card>
+      )}
+      
       {/* Contact information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card>
@@ -168,12 +233,62 @@ export default function ResourceDetail() {
             <CardTitle>Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {resource.phone && (
+            {/* Main Phone Number */}
+            {(resource.phoneNumbers?.main || resource.phone) && (
               <div className="flex items-start">
                 <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium">Phone</p>
-                  <p className="text-muted-foreground">{resource.phone}</p>
+                  <p className="text-muted-foreground">{resource.phoneNumbers?.main || resource.phone}</p>
+                  <p className="text-xs text-muted-foreground">Main Phone Number</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Additional Phone Numbers */}
+            {resource.phoneNumbers?.fax && (
+              <div className="flex items-start">
+                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Fax</p>
+                  <p className="text-muted-foreground">{resource.phoneNumbers.fax}</p>
+                </div>
+              </div>
+            )}
+            
+            {resource.phoneNumbers?.tty && (
+              <div className="flex items-start">
+                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">TTY</p>
+                  <p className="text-muted-foreground">{resource.phoneNumbers.tty}</p>
+                </div>
+              </div>
+            )}
+            
+            {resource.phoneNumbers?.crisis && (
+              <div className="flex items-start">
+                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Crisis Line</p>
+                  <p className="text-muted-foreground">{resource.phoneNumbers.crisis}</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Hours of Operation */}
+            {resource.hoursOfOperation && (
+              <div className="flex items-start">
+                <Clock className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Hours of Operation</p>
+                  <div className="text-muted-foreground whitespace-pre-line">
+                    {resource.hoursOfOperation.split('\n').map((line: string, index: number) => (
+                      <div key={index} className="flex justify-between">
+                        <span>{line}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -214,6 +329,28 @@ export default function ResourceDetail() {
                 </div>
               </div>
             )}
+            
+            {/* Languages */}
+            {(resource.languages && resource.languages.length > 0) || (resource.additionalLanguages && resource.additionalLanguages.length > 0) && (
+              <div className="flex items-start">
+                <Languages className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Languages</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {resource.languages?.map((language: string) => (
+                      <Badge key={language} variant="secondary" className="text-xs">
+                        {language}
+                      </Badge>
+                    ))}
+                    {resource.additionalLanguages?.map((language: string) => (
+                      <Badge key={language} variant="outline" className="text-xs">
+                        {language}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
         
@@ -226,7 +363,7 @@ export default function ResourceDetail() {
               <div className="flex items-start">
                 <Calendar className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Hours of Operation</p>
+                  <p className="font-medium">Schedule</p>
                   <p className="text-muted-foreground whitespace-pre-line">{resource.schedules}</p>
                 </div>
               </div>
@@ -238,22 +375,6 @@ export default function ResourceDetail() {
                 <div>
                   <p className="font-medium">Accessibility</p>
                   <p className="text-muted-foreground">{resource.accessibility}</p>
-                </div>
-              </div>
-            )}
-            
-            {resource.languages && resource.languages.length > 0 && (
-              <div className="flex items-start">
-                <Languages className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Languages</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {resource.languages.map((language: string) => (
-                      <Badge key={language} variant="secondary" className="text-xs">
-                        {language}
-                      </Badge>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}

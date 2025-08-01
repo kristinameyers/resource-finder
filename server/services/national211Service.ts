@@ -365,6 +365,22 @@ function transformResource(apiResource: any): Resource {
   const categoryId = getCategoryIdFromTaxonomy(taxonomy.taxonomyCode);
   console.log(`Mapping taxonomy code ${taxonomy.taxonomyCode} to category ID ${categoryId}`);
   
+  // Extract additional iCarol API fields
+  const phoneNumbers = apiResource.phones ? {
+    main: apiResource.phones.find((p: any) => p.type === 'Main')?.number,
+    fax: apiResource.phones.find((p: any) => p.type === 'Fax')?.number,
+    tty: apiResource.phones.find((p: any) => p.type === 'TTY')?.number,
+    crisis: apiResource.phones.find((p: any) => p.type === 'Crisis')?.number,
+  } : undefined;
+
+  // Extract hours of operation with proper formatting
+  const hoursOfOperation = apiResource.schedules?.map((schedule: any) => {
+    const days = schedule.daysOfWeek || schedule.opensAt ? 
+      `${schedule.daysOfWeek || 'Monday-Friday'}: ${schedule.opensAt || '9am'}-${schedule.closesAt || '5pm'}` :
+      schedule.description;
+    return days;
+  }).join('\n');
+
   // Create the transformed resource
   return {
     id: apiResource.idServiceAtLocation || apiResource.id,
@@ -386,6 +402,18 @@ function transformResource(apiResource: any): Resource {
     schedules: 'Contact for hours',
     accessibility: 'Contact for accessibility information',
     languages: apiResource.languages || ['English'],
+    thumbsUp: 0,
+    thumbsDown: 0,
+    userVote: null,
+    
+    // Enhanced iCarol API fields
+    applicationProcess: apiResource.applicationProcess || apiResource.eligibility?.description || undefined,
+    documents: apiResource.documentsRequired || apiResource.requiredDocuments || undefined,
+    fees: apiResource.fees || apiResource.feeStructure || apiResource.cost || undefined,
+    serviceAreas: apiResource.serviceAreas?.map((area: any) => area.description || area.name).join(', ') || undefined,
+    hoursOfOperation: hoursOfOperation || undefined,
+    phoneNumbers: phoneNumbers,
+    additionalLanguages: apiResource.interpretationServices || []
   };
 }
 

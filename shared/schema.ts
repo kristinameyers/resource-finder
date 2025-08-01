@@ -76,6 +76,20 @@ export interface Resource {
   thumbsDown?: number; // Number of thumbs down votes
   userVote?: 'up' | 'down' | null; // Current user's vote for this resource
   distanceMiles?: number; // Distance from user's location in miles
+  
+  // Enhanced iCarol API fields
+  applicationProcess?: string; // How to apply for services
+  documents?: string; // Required documents
+  fees?: string; // Cost information
+  serviceAreas?: string; // Geographic areas served
+  hoursOfOperation?: string; // Detailed hours (different from schedules)
+  phoneNumbers?: {
+    main?: string;
+    fax?: string;
+    tty?: string;
+    crisis?: string;
+  };
+  additionalLanguages?: string[]; // More detailed language support
 }
 
 export const resourceSchema = z.object({
@@ -93,6 +107,20 @@ export const resourceSchema = z.object({
   schedules: z.string().optional(),
   accessibility: z.string().optional(),
   languages: z.array(z.string()).optional(),
+  
+  // Enhanced iCarol API fields
+  applicationProcess: z.string().optional(),
+  documents: z.string().optional(),
+  fees: z.string().optional(),
+  serviceAreas: z.string().optional(),
+  hoursOfOperation: z.string().optional(),
+  phoneNumbers: z.object({
+    main: z.string().optional(),
+    fax: z.string().optional(),
+    tty: z.string().optional(),
+    crisis: z.string().optional(),
+  }).optional(),
+  additionalLanguages: z.array(z.string()).optional(),
 });
 
 export const categorySchema = z.object({
