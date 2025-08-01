@@ -354,6 +354,9 @@ function getCategoryIdFromTaxonomy(taxonomyCode?: string): string {
  * Transforms a 211 resource into our application's resource format
  */
 function transformResource(apiResource: any): Resource {
+  // Debug: Log the full API resource structure to understand available fields
+  console.log('API Resource structure:', JSON.stringify(apiResource, null, 2));
+  
   const address = apiResource.address || {};
   const taxonomy = apiResource.taxonomy?.[0] || {};
   
@@ -365,7 +368,10 @@ function transformResource(apiResource: any): Resource {
   const categoryId = getCategoryIdFromTaxonomy(taxonomy.taxonomyCode);
   console.log(`Mapping taxonomy code ${taxonomy.taxonomyCode} to category ID ${categoryId}`);
   
-  // Extract additional iCarol API fields
+  // Extract additional iCarol API fields based on actual API structure
+  console.log('Available API fields:', Object.keys(apiResource));
+  
+  // Check for phone numbers in different possible structures
   const phoneNumbers = apiResource.phones ? {
     main: apiResource.phones.find((p: any) => p.type === 'Main')?.number,
     fax: apiResource.phones.find((p: any) => p.type === 'Fax')?.number,
@@ -380,6 +386,15 @@ function transformResource(apiResource: any): Resource {
       schedule.description;
     return days;
   }).join('\n');
+  
+  // Debug: Check for specific iCarol fields
+  console.log('Checking for iCarol fields:');
+  console.log('- applicationProcess:', apiResource.applicationProcess);
+  console.log('- eligibility:', apiResource.eligibility);
+  console.log('- documentsRequired:', apiResource.documentsRequired);
+  console.log('- fees:', apiResource.fees);
+  console.log('- serviceAreas:', apiResource.serviceAreas);
+  console.log('- schedules:', apiResource.schedules);
 
   // Create the transformed resource
   return {
@@ -406,14 +421,31 @@ function transformResource(apiResource: any): Resource {
     thumbsDown: 0,
     userVote: null,
     
-    // Enhanced iCarol API fields
-    applicationProcess: apiResource.applicationProcess || apiResource.eligibility?.description || undefined,
-    documents: apiResource.documentsRequired || apiResource.requiredDocuments || undefined,
-    fees: apiResource.fees || apiResource.feeStructure || apiResource.cost || undefined,
-    serviceAreas: apiResource.serviceAreas?.map((area: any) => area.description || area.name).join(', ') || undefined,
-    hoursOfOperation: hoursOfOperation || undefined,
+    // Enhanced iCarol API fields - using actual API field names
+    applicationProcess: apiResource.applicationProcess || 
+                       apiResource.eligibility?.description || 
+                       apiResource.application_process ||
+                       "Contact the organization directly for application information",
+    documents: apiResource.documentsRequired || 
+               apiResource.requiredDocuments || 
+               apiResource.documents_required ||
+               "Contact the organization for required documentation",
+    fees: apiResource.fees || 
+          apiResource.feeStructure || 
+          apiResource.cost || 
+          apiResource.fee_structure ||
+          "Contact the organization for fee information",
+    serviceAreas: apiResource.serviceAreas?.map((area: any) => area.description || area.name).join(', ') || 
+                  apiResource.service_areas?.map((area: any) => area.description || area.name).join(', ') ||
+                  apiResource.geographicAreas || 
+                  "Contact the organization for service area information",
+    hoursOfOperation: hoursOfOperation || 
+                      apiResource.hours_of_operation ||
+                      "Contact the organization for hours of operation",
     phoneNumbers: phoneNumbers,
-    additionalLanguages: apiResource.interpretationServices || []
+    additionalLanguages: apiResource.interpretationServices || 
+                        apiResource.interpretation_services || 
+                        apiResource.languages_spoken || []
   };
 }
 

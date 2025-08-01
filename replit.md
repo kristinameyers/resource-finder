@@ -94,6 +94,26 @@ The application prioritizes user experience with fast loading times, anonymous a
 
 ## Recent Changes (January 2025)
 
+### Enhanced iCarol API Information Integration COMPLETED ✅ (January 31, 2025)
+- **Resource Schema Enhancement**: Added comprehensive iCarol API fields to resource interface
+  - Application Process information with step-by-step instructions
+  - Required Documents section showing necessary paperwork
+  - Fees information with cost details and financial assistance options
+  - Service Areas showing geographic coverage and boundaries
+  - Enhanced Contact Information with multiple phone types (main, fax, TTY, crisis)
+  - Detailed Hours of Operation with structured formatting
+  - Additional Languages support beyond basic language display
+- **Resource Detail Page Redesign**: Organized comprehensive information sections
+  - Three-column layout for Application Process, Documents, and Fees
+  - Dedicated Service Areas section with geographic details
+  - Enhanced Contact Information card with multiple phone numbers and hours
+  - Language support with primary and additional language badges
+- **API Integration**: Enhanced 211 API service to extract additional iCarol fields
+  - Added debugging capabilities to understand API response structure
+  - Multiple field name variations to handle different API response formats
+  - Graceful fallbacks with helpful user guidance when data unavailable
+- **User Experience**: Users now see comprehensive resource information for informed decision-making
+
 ### Location Management Fixes COMPLETED ✅ (January 31, 2025)
 - **Zip Code Input**: Fixed zip code input field clearing functionality
 - **Clear Button**: Resolved issue where clear button was re-entering previous zip code
