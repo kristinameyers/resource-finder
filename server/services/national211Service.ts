@@ -288,18 +288,28 @@ async function getDetailedResourceInfo(organizationId: string): Promise<any | nu
     });
     
     if (!response.ok) {
-      console.log(`Query API returned ${response.status}, falling back to search data`);
+      console.log(`Query API returned ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      console.log('Error response:', errorText);
       return null;
     }
     
     const detailedData = await response.json() as any;
-    console.log('Detailed organization services data available:', !!detailedData);
-    console.log('Services count:', detailedData?.length || 0);
-    console.log('Raw detailed API response keys:', Object.keys(detailedData || {}));
-    console.log('Raw detailed API response sample:', JSON.stringify(detailedData, null, 2).substring(0, 500));
+    console.log('Services API response type:', Array.isArray(detailedData) ? 'array' : typeof detailedData);
+    console.log('Services count:', Array.isArray(detailedData) ? detailedData.length : 'not an array');
     
-    // Return the first service for now, or find matching service
-    return detailedData?.[0] || null;
+    if (Array.isArray(detailedData) && detailedData.length > 0) {
+      const firstService = detailedData[0];
+      console.log('First service keys:', Object.keys(firstService));
+      console.log('Service has phones:', !!firstService.phones);
+      console.log('Service has schedules:', !!firstService.schedules);
+      console.log('Service has applicationProcess:', !!firstService.applicationProcess);
+      console.log('Service has eligibility:', !!firstService.eligibility);
+      console.log('Service has fees:', !!firstService.fees);
+      return firstService;
+    }
+    
+    return null;
   } catch (error) {
     console.error('Error fetching detailed resource info:', error);
     return null;
@@ -406,10 +416,13 @@ function transformResource(apiResource: any): Resource {
   const taxonomy = apiResource.taxonomy?.[0] || {};
   const detailedService = apiResource.detailedService || {};
   
-  console.log('Enhanced service data available:', !!detailedService);
-  if (detailedService) {
+  console.log('Enhanced service data available:', !!detailedService && Object.keys(detailedService).length > 0);
+  if (detailedService && Object.keys(detailedService).length > 0) {
     console.log('Detailed service fields:', Object.keys(detailedService));
-    console.log('Detailed service sample data:', JSON.stringify(detailedService, null, 2).substring(0, 300));
+    console.log('Has phones:', !!detailedService.phones);
+    console.log('Has eligibility:', !!detailedService.eligibility);
+    console.log('Has applicationProcess:', !!detailedService.applicationProcess);
+    console.log('Has schedules:', !!detailedService.schedules);
   }
   
   // Clean HTML from description
@@ -423,12 +436,13 @@ function transformResource(apiResource: any): Resource {
   // Extract additional iCarol API fields based on actual API structure
   console.log('Available API fields:', Object.keys(apiResource));
   
-  // Check for phone numbers in different possible structures
-  const phoneNumbers = apiResource.phones ? {
-    main: apiResource.phones.find((p: any) => p.type === 'Main')?.number,
-    fax: apiResource.phones.find((p: any) => p.type === 'Fax')?.number,
-    tty: apiResource.phones.find((p: any) => p.type === 'TTY')?.number,
-    crisis: apiResource.phones.find((p: any) => p.type === 'Crisis')?.number,
+  // Check for phone numbers in both detailed service and base resource
+  const phones = detailedService.phones || apiResource.phones || [];
+  const phoneNumbers = phones.length > 0 ? {
+    main: phones.find((p: any) => p.isMain || p.type === 'Main')?.number || phones[0]?.number,
+    fax: phones.find((p: any) => p.type === 'Fax')?.number,
+    tty: phones.find((p: any) => p.type === 'TTY')?.number,
+    crisis: phones.find((p: any) => p.type === 'Crisis')?.number,
   } : undefined;
 
   // Extract hours of operation with proper formatting
@@ -457,7 +471,7 @@ function transformResource(apiResource: any): Resource {
     location: apiResource.nameLocation || address.city || 'Unknown location',
     zipCode: address.postalCode,
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
-    phone: detailedService.phones?.[0]?.number || apiResource.phone || apiResource.phoneNumber || extractPhoneFromDescription(apiResource.descriptionService),
+    phone: phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
     address: [
       address.streetAddress,
