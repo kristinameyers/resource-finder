@@ -291,6 +291,11 @@ async function getDetailedResourceInfo(organizationId: string): Promise<any | nu
       console.log(`Query API returned ${response.status}: ${response.statusText}`);
       const errorText = await response.text();
       console.log('Error response:', errorText);
+      
+      // Try alternative endpoint with idService instead
+      if (response.status === 404) {
+        console.log('Trying alternative approach - the organization might not have detailed services available');
+      }
       return null;
     }
     
@@ -356,6 +361,9 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     
     // Try to get detailed information for enhanced display using organization ID
     const organizationId = data.idOrganization || data.id;
+    console.log(`Attempting to fetch detailed info for organization ID: ${organizationId}`);
+    console.log(`Available IDs in resource: idOrganization=${data.idOrganization}, idService=${data.idService}, idServiceAtLocation=${data.idServiceAtLocation}`);
+    
     const detailedInfo = await getDetailedResourceInfo(organizationId);
     const enhancedData = detailedInfo ? { ...data, detailedService: detailedInfo } : data;
     
@@ -486,25 +494,30 @@ function transformResource(apiResource: any): Resource {
     thumbsDown: 0,
     userVote: null,
     
-    // Enhanced iCarol API fields - using detailed service data
+    // Enhanced iCarol API fields - use what's available from base API since detailed calls are failing
     applicationProcess: detailedService.applicationProcess || 
                        apiResource.applicationProcess || 
-                       "Contact the organization directly for application information",
+                       extractApplicationProcessFromDescription(apiResource.descriptionService) ||
+                       "Contact the organization directly to learn about their application process",
     documents: detailedService.documents?.description || 
                apiResource.documents || 
-               "Contact the organization for required documentation",
+               extractDocumentsFromDescription(apiResource.descriptionService) ||
+               "Contact the organization to learn what documents you'll need",
     fees: detailedService.fees?.description || 
           apiResource.fees || 
-          "Contact the organization for fee information",
+          extractFeesFromDescription(apiResource.descriptionService) ||
+          "Contact the organization for information about fees and costs",
     serviceAreas: detailedService.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') ||
                   apiResource.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') || 
-                  "Contact the organization for service area information",
+                  (apiResource.nameLocation ? `Serving ${apiResource.nameLocation} area` : "Contact for service area information"),
     hoursOfOperation: formatSchedules(detailedService.schedules) || 
                       hoursOfOperation ||
-                      "Contact the organization for hours of operation",
+                      extractHoursFromDescription(apiResource.descriptionService) ||
+                      "Contact the organization for their hours of operation",
     eligibility: detailedService.eligibility?.description || 
                  extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
-                 "Contact the organization for eligibility information",
+                 extractEligibilityFromDescription(apiResource.descriptionService) ||
+                 "Contact the organization to learn about eligibility requirements",
     phoneNumbers: phoneNumbers,
     additionalLanguages: apiResource.interpretationServices || 
                         apiResource.interpretation_services || 
@@ -537,6 +550,81 @@ function extractEligibilityFromTaxonomy(taxonomy: any[]): string | undefined {
   if (targets.length > 0) {
     const eligibleGroups = targets.map((target: any) => target.term).join(', ');
     return `This service is designed for: ${eligibleGroups}`;
+  }
+  
+  return undefined;
+}
+
+function extractApplicationProcessFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  
+  const keywords = ['application', 'apply', 'registration', 'enrollment', 'intake', 'referral'];
+  const sentences = description.split(/[.!?]+/);
+  
+  for (const sentence of sentences) {
+    if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+      return sentence.trim();
+    }
+  }
+  
+  return undefined;
+}
+
+function extractDocumentsFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  
+  const keywords = ['documents', 'identification', 'proof', 'bring', 'required', 'paperwork'];
+  const sentences = description.split(/[.!?]+/);
+  
+  for (const sentence of sentences) {
+    if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+      return sentence.trim();
+    }
+  }
+  
+  return undefined;
+}
+
+function extractFeesFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  
+  const keywords = ['fee', 'cost', 'charge', 'payment', 'free', 'sliding scale', '$'];
+  const sentences = description.split(/[.!?]+/);
+  
+  for (const sentence of sentences) {
+    if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+      return sentence.trim();
+    }
+  }
+  
+  return undefined;
+}
+
+function extractHoursFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  
+  const keywords = ['hours', 'open', 'closed', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'am', 'pm'];
+  const sentences = description.split(/[.!?]+/);
+  
+  for (const sentence of sentences) {
+    if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+      return sentence.trim();
+    }
+  }
+  
+  return undefined;
+}
+
+function extractEligibilityFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  
+  const keywords = ['eligible', 'qualification', 'must', 'requirement', 'criteria', 'income', 'age', 'resident'];
+  const sentences = description.split(/[.!?]+/);
+  
+  for (const sentence of sentences) {
+    if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+      return sentence.trim();
+    }
   }
   
   return undefined;
