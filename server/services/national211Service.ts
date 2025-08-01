@@ -433,9 +433,22 @@ function transformResource(apiResource: any): Resource {
     console.log('Has schedules:', !!detailedService.schedules);
   }
   
-  // Clean HTML from description
-  const cleanDescription = (apiResource.descriptionService || apiResource.description || 'No description available')
-    .replace(/<[^>]*>/g, '').trim();
+  // Clean HTML from description and other fields
+  const cleanHtml = (text: string) => {
+    if (!text) return '';
+    return text
+      .replace(/<[^>]*>/g, '')  // Remove HTML tags
+      .replace(/&nbsp;/g, ' ')  // Replace HTML entities
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ')     // Normalize whitespace
+      .trim();
+  };
+  
+  const cleanDescription = cleanHtml(apiResource.descriptionService || apiResource.description || 'No description available');
   
   // Map taxonomy code to category ID
   const categoryId = getCategoryIdFromTaxonomy(taxonomy.taxonomyCode);
@@ -488,35 +501,35 @@ function transformResource(apiResource: any): Resource {
       address.postalCode
     ].filter(Boolean).join(', '),
     schedules: formatSchedules(detailedService.schedules) || 'Contact for hours',
-    accessibility: detailedService.accessibility?.description || 'Contact for accessibility information',
+    accessibility: cleanHtml(detailedService.accessibility?.description || '') || 'Contact for accessibility information',
     languages: detailedService.languages?.description ? [detailedService.languages.description] : apiResource.languages?.map((lang: any) => lang.name || lang) || ['English'],
     thumbsUp: 0,
     thumbsDown: 0,
     userVote: null,
     
     // Enhanced iCarol API fields - use what's available from base API since detailed calls are failing
-    applicationProcess: detailedService.applicationProcess || 
+    applicationProcess: cleanHtml(detailedService.applicationProcess || 
                        apiResource.applicationProcess || 
-                       extractApplicationProcessFromDescription(apiResource.descriptionService) ||
+                       extractApplicationProcessFromDescription(apiResource.descriptionService) || '') ||
                        "Contact the organization directly to learn about their application process",
-    documents: detailedService.documents?.description || 
+    documents: cleanHtml(detailedService.documents?.description || 
                apiResource.documents || 
-               extractDocumentsFromDescription(apiResource.descriptionService) ||
+               extractDocumentsFromDescription(apiResource.descriptionService) || '') ||
                "Contact the organization to learn what documents you'll need",
-    fees: detailedService.fees?.description || 
+    fees: cleanHtml(detailedService.fees?.description || 
           apiResource.fees || 
-          extractFeesFromDescription(apiResource.descriptionService) ||
+          extractFeesFromDescription(apiResource.descriptionService) || '') ||
           "Contact the organization for information about fees and costs",
     serviceAreas: detailedService.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') ||
                   apiResource.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') || 
                   (apiResource.nameLocation ? `Serving ${apiResource.nameLocation} area` : "Contact for service area information"),
     hoursOfOperation: formatSchedules(detailedService.schedules) || 
                       hoursOfOperation ||
-                      extractHoursFromDescription(apiResource.descriptionService) ||
+                      cleanHtml(extractHoursFromDescription(apiResource.descriptionService) || '') ||
                       "Contact the organization for their hours of operation",
-    eligibility: detailedService.eligibility?.description || 
+    eligibility: cleanHtml(detailedService.eligibility?.description || 
                  extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
-                 extractEligibilityFromDescription(apiResource.descriptionService) ||
+                 extractEligibilityFromDescription(apiResource.descriptionService) || '') ||
                  "Contact the organization to learn about eligibility requirements",
     phoneNumbers: phoneNumbers,
     additionalLanguages: apiResource.interpretationServices || 
