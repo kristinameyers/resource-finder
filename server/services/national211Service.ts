@@ -444,7 +444,7 @@ function transformResource(apiResource: any): Resource {
     location: apiResource.nameLocation || address.city || 'Unknown location',
     zipCode: address.postalCode,
     url: apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
-    phone: apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
+    phone: apiResource.phone || apiResource.phoneNumbers?.[0] || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
     address: [
       address.streetAddress,
@@ -459,11 +459,12 @@ function transformResource(apiResource: any): Resource {
     thumbsDown: 0,
     userVote: null,
     
-    // Enhanced iCarol API fields - using actual API field names
+    // Enhanced iCarol API fields - extracting from taxonomy targets for eligibility
     applicationProcess: apiResource.applicationProcess || 
                        apiResource.eligibility?.description || 
                        apiResource.eligibilityDescription ||
                        apiResource.application_process ||
+                       extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
                        "Contact the organization directly for application information",
     documents: apiResource.documentsRequired || 
                apiResource.requiredDocuments || 
@@ -504,6 +505,18 @@ function extractUrlFromDescription(description: string): string | undefined {
   if (!description) return undefined;
   const urlMatch = description.match(/https?:\/\/[^\s<>"]+/);
   return urlMatch?.[0];
+}
+
+function extractEligibilityFromTaxonomy(taxonomy: any[]): string | undefined {
+  if (!taxonomy?.length) return undefined;
+  
+  const targets = taxonomy.flatMap(t => t.targets || []);
+  if (targets.length > 0) {
+    const eligibleGroups = targets.map((target: any) => target.term).join(', ');
+    return `This service is designed for: ${eligibleGroups}`;
+  }
+  
+  return undefined;
 }
 
 /**
