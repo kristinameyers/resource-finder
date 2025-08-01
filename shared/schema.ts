@@ -83,6 +83,7 @@ export interface Resource {
   fees?: string; // Cost information
   serviceAreas?: string; // Geographic areas served
   hoursOfOperation?: string; // Detailed hours (different from schedules)
+  eligibility?: string; // Eligibility requirements
   phoneNumbers?: {
     main?: string;
     fax?: string;

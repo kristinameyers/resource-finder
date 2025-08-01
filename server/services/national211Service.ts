@@ -268,52 +268,57 @@ export async function searchResourcesByTaxonomyCode(
 }
 
 /**
- * Fetches detailed resource information using the Query V2 API
+ * Fetches detailed resource information using multiple Query V2 API endpoints
  */
 async function getDetailedResourceInfo(organizationId: string): Promise<any | null> {
   try {
-    console.log(`Fetching detailed services for organization ID: ${organizationId}`);
+    console.log(`Fetching detailed info for organization ID: ${organizationId}`);
     
-    const requestUrl = `${QUERY_API_BASE_URL}/services-for-organization/${organizationId}`;
-    console.log(`Making Query API V2 request to: ${requestUrl}`);
+    // Try services-for-organization first
+    let requestUrl = `${QUERY_API_BASE_URL}/services-for-organization/${organizationId}`;
+    console.log(`Trying services endpoint: ${requestUrl}`);
     
     const headers: HeadersInit = {
       'Accept': 'application/json',
       'Api-Key': SUBSCRIPTION_KEY
     };
     
-    const response = await fetch(requestUrl, {
+    let response = await fetch(requestUrl, {
       method: 'GET',
       headers
     });
     
-    if (!response.ok) {
-      console.log(`Query API returned ${response.status}: ${response.statusText}`);
-      const errorText = await response.text();
-      console.log('Error response:', errorText);
-      
-      // Try alternative endpoint with idService instead
-      if (response.status === 404) {
-        console.log('Trying alternative approach - the organization might not have detailed services available');
+    if (response.ok) {
+      const servicesData = await response.json() as any;
+      if (Array.isArray(servicesData) && servicesData.length > 0) {
+        console.log('Services API successful, returning service data');
+        return servicesData[0];
       }
-      return null;
     }
     
-    const detailedData = await response.json() as any;
-    console.log('Services API response type:', Array.isArray(detailedData) ? 'array' : typeof detailedData);
-    console.log('Services count:', Array.isArray(detailedData) ? detailedData.length : 'not an array');
+    // If services fails, try locations-for-organization (which has phones, schedules, etc.)
+    console.log(`Services API failed (${response.status}), trying locations endpoint`);
+    requestUrl = `${QUERY_API_BASE_URL}/locations-for-organization/${organizationId}`;
+    console.log(`Trying locations endpoint: ${requestUrl}`);
     
-    if (Array.isArray(detailedData) && detailedData.length > 0) {
-      const firstService = detailedData[0];
-      console.log('First service keys:', Object.keys(firstService));
-      console.log('Service has phones:', !!firstService.phones);
-      console.log('Service has schedules:', !!firstService.schedules);
-      console.log('Service has applicationProcess:', !!firstService.applicationProcess);
-      console.log('Service has eligibility:', !!firstService.eligibility);
-      console.log('Service has fees:', !!firstService.fees);
-      return firstService;
+    response = await fetch(requestUrl, {
+      method: 'GET',
+      headers
+    });
+    
+    if (response.ok) {
+      const locationsData = await response.json() as any;
+      if (Array.isArray(locationsData) && locationsData.length > 0) {
+        const firstLocation = locationsData[0];
+        console.log('Locations API successful');
+        console.log('Location has phones:', !!firstLocation.phones);
+        console.log('Location has schedules:', !!firstLocation.schedules);
+        console.log('Location has contacts:', !!firstLocation.contacts);
+        return firstLocation;
+      }
     }
     
+    console.log(`Both endpoints failed. Services: ${response.status}, Locations: ${response.status}`);
     return null;
   } catch (error) {
     console.error('Error fetching detailed resource info:', error);
@@ -448,7 +453,24 @@ function transformResource(apiResource: any): Resource {
       .trim();
   };
   
-  const cleanDescription = cleanHtml(apiResource.descriptionService || apiResource.description || 'No description available');
+  // Build comprehensive description with services information
+  let serviceDescription = cleanHtml(apiResource.descriptionService || apiResource.description || 'No description available');
+  
+  // Add extracted service information to description
+  const extractedHours = extractHoursFromDescription(apiResource.descriptionService);
+  const extractedServices = extractServicesFromDescription(apiResource.descriptionService);
+  
+  if (extractedServices || extractedHours) {
+    serviceDescription += '\n\n**Services:**\n';
+    if (extractedServices) {
+      serviceDescription += extractedServices + '\n';
+    }
+    if (extractedHours) {
+      serviceDescription += cleanHtml(extractedHours);
+    }
+  }
+  
+  const cleanDescription = serviceDescription;
   
   // Map taxonomy code to category ID
   const categoryId = getCategoryIdFromTaxonomy(taxonomy.taxonomyCode);
@@ -525,7 +547,6 @@ function transformResource(apiResource: any): Resource {
                   (apiResource.nameLocation ? `Serving ${apiResource.nameLocation} area` : "Contact for service area information"),
     hoursOfOperation: formatSchedules(detailedService.schedules) || 
                       hoursOfOperation ||
-                      cleanHtml(extractHoursFromDescription(apiResource.descriptionService) || '') ||
                       "Contact the organization for their hours of operation",
     eligibility: cleanHtml(detailedService.eligibility?.description || 
                  extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
@@ -632,6 +653,21 @@ function extractEligibilityFromDescription(description: string): string | undefi
   if (!description) return undefined;
   
   const keywords = ['eligible', 'qualification', 'must', 'requirement', 'criteria', 'income', 'age', 'resident'];
+  const sentences = description.split(/[.!?]+/);
+  
+  for (const sentence of sentences) {
+    if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+      return sentence.trim();
+    }
+  }
+  
+  return undefined;
+}
+
+function extractServicesFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  
+  const keywords = ['services include', 'offers', 'provides', 'programs', 'assistance with'];
   const sentences = description.split(/[.!?]+/);
   
   for (const sentence of sentences) {
