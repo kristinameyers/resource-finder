@@ -94,6 +94,19 @@ The application prioritizes user experience with fast loading times, anonymous a
 
 ## Recent Changes (January 2025)
 
+### Distance Calculation System Fixed COMPLETED ✅ (January 31, 2025)
+- **Root Cause Resolution**: Fixed critical CSV parsing limitation that prevented distance calculations
+  - ZIP code 93436 was at line 31,392 but parsing was limited to first 10,000 rows
+  - System was only loading Puerto Rico ZIP codes (00xxx), missing California codes (93xxx)
+- **Full Database Loading**: Now loads all 33,782 US ZIP codes from comprehensive CSV database
+- **Distance Calculations Working**: All resources now display accurate distance measurements
+  - Same ZIP code: 0 miles (e.g., 93436 to 93436)
+  - Nearby locations: 15-25 miles (e.g., Lompoc to Santa Maria area)
+- **Performance Optimized**: Efficient ZIP code lookup with complete nationwide coverage
+- **User Experience**: Resource cards now display distance badges like "16.4 mi", "24.4 mi" as expected
+
+## Recent Changes (January 2025)
+
 ### Enhanced iCarol API Information Integration COMPLETED ✅ (January 31, 2025)
 - **Resource Schema Enhancement**: Added comprehensive iCarol API fields to resource interface
   - Application Process information with step-by-step instructions

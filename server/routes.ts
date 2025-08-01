@@ -75,12 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
                   if (distance !== null) {
                     distanceMiles = distance;
-                    console.log(`Distance calculated: ${resource.name} is ${distanceMiles} miles from ${zipCode}`);
-                  } else {
-                    console.log(`Distance calculation failed for ${resource.name} (${resource.zipCode}) from ${zipCode}`);
                   }
-                } else {
-                  console.log(`Distance calculation skipped for ${resource.name}: userZip=${zipCode}, resourceZip=${resource.zipCode}`);
                 }
                 
                 return { ...resource, distanceMiles };
@@ -98,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 resources.sort((a, b) => a.name.localeCompare(b.name));
               }
               
-              console.log(`Distance calculation complete. Resources with distances: ${resources.filter(r => r.distanceMiles !== undefined).length}/${resources.length}`);
+
             }
             
             console.log(`211 API returned ${resources.length} resources for ${category.name}`);

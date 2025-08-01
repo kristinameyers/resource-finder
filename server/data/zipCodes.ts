@@ -52,7 +52,7 @@ export async function loadZipCodeData() {
       }
       
       console.log(`Loaded ${zipCodeMap.size} zip codes from CSV file for distance calculations`);
-      console.log(`Sample loaded zip codes: ${Array.from(zipCodeMap.keys()).slice(0, 20).join(', ')}`);
+
     } else {
       // Fallback to hardcoded data including the specific zip codes we're seeing in the logs
       const fallbackZipCodes: ZipCodeData[] = [
@@ -88,7 +88,7 @@ export function getZipCodeCoordinates(zipCode: string): { lat: number; lng: numb
   if (zipData) {
     return { lat: zipData.lat, lng: zipData.lng };
   }
-  console.log(`Zip code ${zipCode} not found in database. Available zips: ${Array.from(zipCodeMap.keys()).slice(0, 10).join(', ')}...`);
+
   return null;
 }
 
@@ -121,18 +121,11 @@ export function calculateDistanceFromZipCodes(userZip: string, resourceZip: stri
   const userCoords = getZipCodeCoordinates(userZip);
   const resourceCoords = getZipCodeCoordinates(resourceZip);
   
-  console.log(`Distance calc debug: userZip=${userZip} -> ${userCoords ? 'found' : 'NOT FOUND'}`);
-  console.log(`Distance calc debug: resourceZip=${resourceZip} -> ${resourceCoords ? 'found' : 'NOT FOUND'}`);
-  
   if (!userCoords || !resourceCoords) {
-    if (!userCoords) console.log(`Missing coordinates for user zip: ${userZip}`);
-    if (!resourceCoords) console.log(`Missing coordinates for resource zip: ${resourceZip}`);
     return null;
   }
   
-  const distance = calculateDistance(userCoords.lat, userCoords.lng, resourceCoords.lat, resourceCoords.lng);
-  console.log(`Distance calculated: ${userZip} to ${resourceZip} = ${distance} miles`);
-  return distance;
+  return calculateDistance(userCoords.lat, userCoords.lng, resourceCoords.lat, resourceCoords.lng);
 }
 
 // Initialize on module load
