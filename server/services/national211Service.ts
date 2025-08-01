@@ -270,11 +270,11 @@ export async function searchResourcesByTaxonomyCode(
 /**
  * Fetches detailed resource information using the Query V2 API
  */
-async function getDetailedResourceInfo(serviceAtLocationId: string): Promise<any | null> {
+async function getDetailedResourceInfo(organizationId: string): Promise<any | null> {
   try {
-    console.log(`Fetching detailed info for service-at-location ID: ${serviceAtLocationId}`);
+    console.log(`Fetching detailed services for organization ID: ${organizationId}`);
     
-    const requestUrl = `${QUERY_API_BASE_URL}/service-at-location-details?serviceAtLocationId=${serviceAtLocationId}`;
+    const requestUrl = `${QUERY_API_BASE_URL}/services-for-organization/${organizationId}`;
     console.log(`Making Query API V2 request to: ${requestUrl}`);
     
     const headers: HeadersInit = {
@@ -293,8 +293,11 @@ async function getDetailedResourceInfo(serviceAtLocationId: string): Promise<any
     }
     
     const detailedData = await response.json() as any;
-    console.log('Detailed resource data keys:', Object.keys(detailedData || {}));
-    return detailedData;
+    console.log('Detailed organization services data available:', !!detailedData);
+    console.log('Services count:', detailedData?.length || 0);
+    
+    // Return the first service for now, or find matching service
+    return detailedData?.[0] || null;
   } catch (error) {
     console.error('Error fetching detailed resource info:', error);
     return null;
@@ -339,9 +342,10 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     const data = await response.json() as any;
     console.log(`Successfully retrieved resource "${data.name || data.nameService}" from 211 API`);
     
-    // Try to get detailed information for enhanced display
-    const detailedInfo = await getDetailedResourceInfo(id);
-    const enhancedData = detailedInfo ? { ...data, ...detailedInfo } : data;
+    // Try to get detailed information for enhanced display using organization ID
+    const organizationId = data.idOrganization || data.id;
+    const detailedInfo = await getDetailedResourceInfo(organizationId);
+    const enhancedData = detailedInfo ? { ...data, detailedService: detailedInfo } : data;
     
     return transformResource(enhancedData);
   } catch (error) {
@@ -398,6 +402,12 @@ function transformResource(apiResource: any): Resource {
   
   const address = apiResource.address || {};
   const taxonomy = apiResource.taxonomy?.[0] || {};
+  const detailedService = apiResource.detailedService || {};
+  
+  console.log('Enhanced service data available:', !!detailedService);
+  if (detailedService) {
+    console.log('Detailed service fields:', Object.keys(detailedService));
+  }
   
   // Clean HTML from description
   const cleanDescription = (apiResource.descriptionService || apiResource.description || 'No description available')
@@ -443,8 +453,8 @@ function transformResource(apiResource: any): Resource {
     subcategoryId: taxonomy.taxonomyTerm ? taxonomy.taxonomyTerm.toLowerCase().replace(/\s+/g, '-') : undefined,
     location: apiResource.nameLocation || address.city || 'Unknown location',
     zipCode: address.postalCode,
-    url: apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
-    phone: apiResource.phone || apiResource.phoneNumbers?.[0] || extractPhoneFromDescription(apiResource.descriptionService),
+    url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
+    phone: detailedService.phones?.[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
     address: [
       address.streetAddress,
@@ -452,36 +462,32 @@ function transformResource(apiResource: any): Resource {
       address.stateProvince,
       address.postalCode
     ].filter(Boolean).join(', '),
-    schedules: 'Contact for hours',
-    accessibility: 'Contact for accessibility information',
-    languages: apiResource.languages?.map((lang: any) => lang.name || lang) || ['English'],
+    schedules: formatSchedules(detailedService.schedules) || 'Contact for hours',
+    accessibility: detailedService.accessibility?.description || 'Contact for accessibility information',
+    languages: detailedService.languages?.description ? [detailedService.languages.description] : apiResource.languages?.map((lang: any) => lang.name || lang) || ['English'],
     thumbsUp: 0,
     thumbsDown: 0,
     userVote: null,
     
-    // Enhanced iCarol API fields - extracting from taxonomy targets for eligibility
-    applicationProcess: apiResource.applicationProcess || 
-                       apiResource.eligibility?.description || 
-                       apiResource.eligibilityDescription ||
-                       apiResource.application_process ||
-                       extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
+    // Enhanced iCarol API fields - using detailed service data
+    applicationProcess: detailedService.applicationProcess || 
+                       apiResource.applicationProcess || 
                        "Contact the organization directly for application information",
-    documents: apiResource.documentsRequired || 
-               apiResource.requiredDocuments || 
-               apiResource.documents_required ||
+    documents: detailedService.documents?.description || 
+               apiResource.documents || 
                "Contact the organization for required documentation",
-    fees: apiResource.fees || 
-          apiResource.feeStructure || 
-          apiResource.cost || 
-          apiResource.fee_structure ||
+    fees: detailedService.fees?.description || 
+          apiResource.fees || 
           "Contact the organization for fee information",
-    serviceAreas: apiResource.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') || 
-                  apiResource.service_areas?.map((area: any) => area.value || area.description || area.name).join(', ') ||
-                  apiResource.geographicAreas || 
+    serviceAreas: detailedService.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') ||
+                  apiResource.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') || 
                   "Contact the organization for service area information",
-    hoursOfOperation: hoursOfOperation || 
-                      apiResource.hours_of_operation ||
+    hoursOfOperation: formatSchedules(detailedService.schedules) || 
+                      hoursOfOperation ||
                       "Contact the organization for hours of operation",
+    eligibility: detailedService.eligibility?.description || 
+                 extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
+                 "Contact the organization for eligibility information",
     phoneNumbers: phoneNumbers,
     additionalLanguages: apiResource.interpretationServices || 
                         apiResource.interpretation_services || 
@@ -517,6 +523,23 @@ function extractEligibilityFromTaxonomy(taxonomy: any[]): string | undefined {
   }
   
   return undefined;
+}
+
+function formatSchedules(schedules: any[]): string | undefined {
+  if (!schedules?.length) return undefined;
+  
+  return schedules.map(schedule => {
+    if (schedule.open?.length) {
+      const hours = schedule.open.map((time: any) => {
+        const day = time.day || 'Unknown';
+        const opens = time.opensAt || 'Unknown';
+        const closes = time.closesAt || 'Unknown';
+        return `${day}: ${opens} - ${closes}`;
+      }).join('\n');
+      return hours;
+    }
+    return 'Contact for specific hours';
+  }).join('\n\n');
 }
 
 /**
