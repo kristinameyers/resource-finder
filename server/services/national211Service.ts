@@ -47,6 +47,7 @@ interface SearchResourcesResponse {
 
 // Using the correct 211 API endpoint structure 
 const API_BASE_URL = "https://api.211.org/resources/v2/search/keyword";  // Back to keyword endpoint
+const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
 
 // Get API key from environment variables  
 const SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545'; // Use your latest API key directly
@@ -267,6 +268,40 @@ export async function searchResourcesByTaxonomyCode(
 }
 
 /**
+ * Fetches detailed resource information using the Query V2 API
+ */
+async function getDetailedResourceInfo(serviceAtLocationId: string): Promise<any | null> {
+  try {
+    console.log(`Fetching detailed info for service-at-location ID: ${serviceAtLocationId}`);
+    
+    const requestUrl = `${QUERY_API_BASE_URL}/service-at-location-details?serviceAtLocationId=${serviceAtLocationId}`;
+    console.log(`Making Query API V2 request to: ${requestUrl}`);
+    
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+      'Api-Key': SUBSCRIPTION_KEY
+    };
+    
+    const response = await fetch(requestUrl, {
+      method: 'GET',
+      headers
+    });
+    
+    if (!response.ok) {
+      console.log(`Query API returned ${response.status}, falling back to search data`);
+      return null;
+    }
+    
+    const detailedData = await response.json() as any;
+    console.log('Detailed resource data keys:', Object.keys(detailedData || {}));
+    return detailedData;
+  } catch (error) {
+    console.error('Error fetching detailed resource info:', error);
+    return null;
+  }
+}
+
+/**
  * Fetches a resource by ID
  */
 export async function getResourceById(id: string): Promise<Resource | null> {
@@ -301,10 +336,14 @@ export async function getResourceById(id: string): Promise<Resource | null> {
       throw new Error(`211 API Error: ${response.status} - ${errorText}`);
     }
     
-    const data = await response.json() as National211Resource;
-    console.log(`Successfully retrieved resource "${data.name}" from 211 API`);
+    const data = await response.json() as any;
+    console.log(`Successfully retrieved resource "${data.name || data.nameService}" from 211 API`);
     
-    return transformResource(data);
+    // Try to get detailed information for enhanced display
+    const detailedInfo = await getDetailedResourceInfo(id);
+    const enhancedData = detailedInfo ? { ...data, ...detailedInfo } : data;
+    
+    return transformResource(enhancedData);
   } catch (error) {
     console.error('Error fetching resource by ID:', error);
     throw error;
@@ -354,8 +393,8 @@ function getCategoryIdFromTaxonomy(taxonomyCode?: string): string {
  * Transforms a 211 resource into our application's resource format
  */
 function transformResource(apiResource: any): Resource {
-  // Debug: Log the full API resource structure to understand available fields
-  console.log('API Resource structure:', JSON.stringify(apiResource, null, 2));
+  // Debug: Log the full API resource structure to understand available fields (limited output)
+  console.log('API Resource keys:', Object.keys(apiResource));
   
   const address = apiResource.address || {};
   const taxonomy = apiResource.taxonomy?.[0] || {};
@@ -388,13 +427,12 @@ function transformResource(apiResource: any): Resource {
   }).join('\n');
   
   // Debug: Check for specific iCarol fields
-  console.log('Checking for iCarol fields:');
-  console.log('- applicationProcess:', apiResource.applicationProcess);
-  console.log('- eligibility:', apiResource.eligibility);
-  console.log('- documentsRequired:', apiResource.documentsRequired);
-  console.log('- fees:', apiResource.fees);
-  console.log('- serviceAreas:', apiResource.serviceAreas);
-  console.log('- schedules:', apiResource.schedules);
+  console.log('Checking for key fields:');
+  console.log('- phones/contacts:', !!apiResource.phones || !!apiResource.contacts);
+  console.log('- eligibility:', !!apiResource.eligibility);
+  console.log('- serviceAreas:', !!apiResource.serviceAreas);
+  console.log('- schedules:', !!apiResource.schedules);
+  console.log('- languages:', !!apiResource.languages);
 
   // Create the transformed resource
   return {
@@ -405,8 +443,8 @@ function transformResource(apiResource: any): Resource {
     subcategoryId: taxonomy.taxonomyTerm ? taxonomy.taxonomyTerm.toLowerCase().replace(/\s+/g, '-') : undefined,
     location: apiResource.nameLocation || address.city || 'Unknown location',
     zipCode: address.postalCode,
-    url: apiResource.url,
-    phone: extractPhoneFromDescription(apiResource.descriptionService),
+    url: apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
+    phone: apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
     address: [
       address.streetAddress,
@@ -416,7 +454,7 @@ function transformResource(apiResource: any): Resource {
     ].filter(Boolean).join(', '),
     schedules: 'Contact for hours',
     accessibility: 'Contact for accessibility information',
-    languages: apiResource.languages || ['English'],
+    languages: apiResource.languages?.map((lang: any) => lang.name || lang) || ['English'],
     thumbsUp: 0,
     thumbsDown: 0,
     userVote: null,
@@ -424,6 +462,7 @@ function transformResource(apiResource: any): Resource {
     // Enhanced iCarol API fields - using actual API field names
     applicationProcess: apiResource.applicationProcess || 
                        apiResource.eligibility?.description || 
+                       apiResource.eligibilityDescription ||
                        apiResource.application_process ||
                        "Contact the organization directly for application information",
     documents: apiResource.documentsRequired || 
@@ -435,8 +474,8 @@ function transformResource(apiResource: any): Resource {
           apiResource.cost || 
           apiResource.fee_structure ||
           "Contact the organization for fee information",
-    serviceAreas: apiResource.serviceAreas?.map((area: any) => area.description || area.name).join(', ') || 
-                  apiResource.service_areas?.map((area: any) => area.description || area.name).join(', ') ||
+    serviceAreas: apiResource.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') || 
+                  apiResource.service_areas?.map((area: any) => area.value || area.description || area.name).join(', ') ||
                   apiResource.geographicAreas || 
                   "Contact the organization for service area information",
     hoursOfOperation: hoursOfOperation || 
@@ -459,6 +498,12 @@ function extractEmailFromDescription(description: string): string | undefined {
   if (!description) return undefined;
   const emailMatch = description.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
   return emailMatch?.[0];
+}
+
+function extractUrlFromDescription(description: string): string | undefined {
+  if (!description) return undefined;
+  const urlMatch = description.match(/https?:\/\/[^\s<>"]+/);
+  return urlMatch?.[0];
 }
 
 /**
