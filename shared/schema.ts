@@ -121,6 +121,7 @@ export const resourceSchema = z.object({
     crisis: z.string().optional(),
   }).optional(),
   additionalLanguages: z.array(z.string()).optional(),
+  eligibility: z.string().optional(),
 });
 
 export const categorySchema = z.object({

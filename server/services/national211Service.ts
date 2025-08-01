@@ -295,6 +295,8 @@ async function getDetailedResourceInfo(organizationId: string): Promise<any | nu
     const detailedData = await response.json() as any;
     console.log('Detailed organization services data available:', !!detailedData);
     console.log('Services count:', detailedData?.length || 0);
+    console.log('Raw detailed API response keys:', Object.keys(detailedData || {}));
+    console.log('Raw detailed API response sample:', JSON.stringify(detailedData, null, 2).substring(0, 500));
     
     // Return the first service for now, or find matching service
     return detailedData?.[0] || null;
@@ -407,6 +409,7 @@ function transformResource(apiResource: any): Resource {
   console.log('Enhanced service data available:', !!detailedService);
   if (detailedService) {
     console.log('Detailed service fields:', Object.keys(detailedService));
+    console.log('Detailed service sample data:', JSON.stringify(detailedService, null, 2).substring(0, 300));
   }
   
   // Clean HTML from description
@@ -454,7 +457,7 @@ function transformResource(apiResource: any): Resource {
     location: apiResource.nameLocation || address.city || 'Unknown location',
     zipCode: address.postalCode,
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
-    phone: detailedService.phones?.[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
+    phone: detailedService.phones?.[0]?.number || apiResource.phone || apiResource.phoneNumber || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
     address: [
       address.streetAddress,
