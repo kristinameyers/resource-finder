@@ -438,18 +438,29 @@ function transformResource(apiResource: any): Resource {
     console.log('Has schedules:', !!detailedService.schedules);
   }
   
-  // Clean HTML from description and other fields
+  // Enhanced HTML cleaning function
   const cleanHtml = (text: string) => {
     if (!text) return '';
     return text
-      .replace(/<[^>]*>/g, '')  // Remove HTML tags
-      .replace(/&nbsp;/g, ' ')  // Replace HTML entities
+      // Remove all HTML tags including complex ones with attributes
+      .replace(/<[^>]*>/g, '')
+      // Remove common HTML entities
+      .replace(/&nbsp;/g, ' ')
       .replace(/&amp;/g, '&')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/\s+/g, ' ')     // Normalize whitespace
+      .replace(/&apos;/g, "'")
+      .replace(/&hellip;/g, '...')
+      // Remove any remaining HTML entity patterns
+      .replace(/&[a-zA-Z0-9#]+;/g, '')
+      // Clean up multiple consecutive spaces and newlines
+      .replace(/\s+/g, ' ')
+      .replace(/\n\s*\n/g, '\n')
+      // Remove any leftover fragments that look like HTML attributes
+      .replace(/data-[a-zA-Z0-9-]+="[^"]*"/g, '')
+      .replace(/[a-zA-Z-]+=["'][^"']*["']/g, '')
       .trim();
   };
   

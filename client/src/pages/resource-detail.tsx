@@ -162,7 +162,7 @@ export default function ResourceDetail() {
           <CardTitle>About this resource</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-line">{resource.description}</p>
+          <p className="whitespace-pre-line">{resource.description?.replace(/<[^>]*>/g, '').replace(/&[a-zA-Z0-9#]+;/g, '').trim()}</p>
         </CardContent>
       </Card>
       
