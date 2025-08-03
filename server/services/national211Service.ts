@@ -438,11 +438,22 @@ function transformResource(apiResource: any): Resource {
     console.log('Has schedules:', !!detailedService.schedules);
   }
   
-  // Enhanced HTML cleaning function
+  // Enhanced HTML cleaning function with list preservation
   const cleanHtml = (text: string) => {
     if (!text) return '';
-    return text
-      // Remove all HTML tags including complex ones with attributes
+    
+    let cleaned = text
+      // First preserve list items by converting them to bullet points
+      .replace(/<li[^>]*>(.*?)<\/li>/gi, '• $1\n')
+      .replace(/<ul[^>]*>/gi, '\n')
+      .replace(/<\/ul>/gi, '\n')
+      .replace(/<ol[^>]*>/gi, '\n')
+      .replace(/<\/ol>/gi, '\n')
+      // Convert paragraph breaks to newlines
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<br[^>]*>/gi, '\n')
+      // Remove all remaining HTML tags
       .replace(/<[^>]*>/g, '')
       // Remove common HTML entities
       .replace(/&nbsp;/g, ' ')
@@ -462,6 +473,41 @@ function transformResource(apiResource: any): Resource {
       .replace(/data-[a-zA-Z0-9-]+="[^"]*"/g, '')
       .replace(/[a-zA-Z-]+=["'][^"']*["']/g, '')
       .trim();
+
+    // Smart list detection: look for patterns that should be bullet points
+    // Pattern: "Services include, but are not limited to:ItemItemItem"
+    cleaned = cleaned.replace(
+      /(Services include[^:]*:)\s*(.+?)(?=\n|$)/gi,
+      (match, intro, content) => {
+        // Look for concatenated capitalized words/phrases that should be list items
+        const listItems = content.match(/[A-Z][A-Za-z\s&,.-]+?(?=[A-Z]|$)/g) || [];
+        
+        if (listItems.length > 2) {
+          const bulletList = listItems
+            .map(item => `• ${item.trim().replace(/,$/, '')}`)
+            .join('\n');
+          return `${intro}\n${bulletList}`;
+        }
+        return match;
+      }
+    );
+
+    // Also handle lists that start with patterns like "Meals Health and Wellness"
+    cleaned = cleaned.replace(
+      /([A-Z][a-z]+)([A-Z][a-z\s]+)([A-Z][a-z\s&]+)([A-Z][a-z\s:,.-]+)/g,
+      (match, ...items) => {
+        // If we have multiple capitalized phrases in sequence, convert to list
+        if (items.length >= 3) {
+          return items
+            .filter(item => item && item.trim())
+            .map(item => `• ${item.trim()}`)
+            .join('\n');
+        }
+        return match;
+      }
+    );
+
+    return cleaned;
   };
   
   // Build comprehensive description with services information

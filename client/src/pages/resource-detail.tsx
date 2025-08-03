@@ -162,7 +162,19 @@ export default function ResourceDetail() {
           <CardTitle>About this resource</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-line">{resource.description?.replace(/<[^>]*>/g, '').replace(/&[a-zA-Z0-9#]+;/g, '').trim()}</p>
+          <div className="whitespace-pre-line">
+            {resource.description?.split('\n').map((line, index) => {
+              if (line.trim().startsWith('•')) {
+                return (
+                  <div key={index} className="flex items-start mb-1">
+                    <span className="text-primary mr-2 mt-1">•</span>
+                    <span>{line.replace('•', '').trim()}</span>
+                  </div>
+                );
+              }
+              return <p key={index} className="mb-2">{line}</p>;
+            })}
+          </div>
         </CardContent>
       </Card>
       
