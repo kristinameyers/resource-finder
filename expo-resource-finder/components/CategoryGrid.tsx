@@ -7,7 +7,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import Svg, { Rect, Path, Circle, G } from 'react-native-svg';
+import Svg, { Rect, Path, Circle, G, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 3; // 3 columns with padding
@@ -199,6 +199,16 @@ export function CategoryGrid({
               activeOpacity={0.8}
             >
               <View style={styles.cardContent}>
+                {/* SVG Gradient Background */}
+                <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%">
+                  <Defs>
+                    <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <Stop offset="0%" stopColor="#4a90e2" stopOpacity="1" />
+                      <Stop offset="100%" stopColor="#357abd" stopOpacity="1" />
+                    </SvgLinearGradient>
+                  </Defs>
+                  <Rect width="100%" height="100%" fill="url(#grad)" rx="12" />
+                </Svg>
                 <View style={styles.iconContainer}>
                   <IconComponent size={42} />
                 </View>
@@ -252,7 +262,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
-    backgroundColor: 'white',
   },
   selectedCard: {
     borderWidth: 2,
@@ -274,8 +283,9 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 18,
-    color: 'black',
+    color: 'white',
     textAlign: 'center',
     fontFamily: 'Roboto-Medium',
+    marginTop: 8,
   },
 });

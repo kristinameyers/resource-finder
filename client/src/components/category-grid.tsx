@@ -23,7 +23,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
           return (
             <div 
               key={category.id} 
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 overflow-hidden rounded-xl min-h-[130px] h-full flex flex-col bg-white ${
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 overflow-hidden rounded-xl min-h-[130px] h-full flex flex-col bg-gradient-to-br from-[#4a90e2] to-[#357abd] ${
                 isSelected 
                   ? 'ring-2 ring-white shadow-xl transform scale-105' 
                   : 'hover:shadow-xl hover:transform hover:scale-102'
@@ -34,7 +34,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
                   <CustomIconComponent />
                 </div>
-                <h3 className="font-medium leading-tight category-text">{category.name}</h3>
+                <h3 className="font-medium leading-tight category-text text-white">{category.name}</h3>
               </div>
             </div>
           );

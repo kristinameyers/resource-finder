@@ -1,0 +1,42 @@
+Certainly! This image shows a rounded rectangle (frame) with a blue gradient background and slightly soft corners.
+
+Below is the React Native code (using `react-native-linear-gradient` for the gradient) to recreate this frame. If you haven't already, you'll need to install `react-native-linear-gradient`:
+
+```sh
+npm install react-native-linear-gradient
+```
+
+**Component Code:**
+
+```jsx
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+
+const RoundedBlueFrame = () => {
+  return (
+    
+      {/* You can add content here if needed */}
+    
+  );
+};
+
+const styles = StyleSheet.create({
+  frame: {
+    width: 120,   // adjust as needed
+    height: 120,  // adjust as needed
+    borderRadius: 24,
+  },
+});
+
+export default RoundedBlueFrame;
+```
+
+**Explanation:**
+- Uses `LinearGradient` for the blue effect. Adjust colors if needed for a closer match.
+- The `borderRadius` gives the soft, rounded corners.
+- You can adjust `width` and `height` to match your design.
+
+Let me know if you'd like help with specific sizing or tweaking the gradient colors to better match the image!
+
+[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/239884/e214cced-402d-4b47-b618-5671376c6d4e/icon-Frame.jpg?AWSAccessKeyId=ASIA2F3EMEYE74G34EWW&Signature=BK3eJH%2Fz%2BXobFA%2BtfDGckeQQHAM%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEC8aCXVzLWVhc3QtMSJIMEYCIQC%2BSgVyakGOrNVjmikh%2F%2Bwt9DGTde7VJ44QghdlLyuchwIhALktnLMGkfdKeRUk2iaHTfoX7I746lLlD5XCYq7ovYkDKvEECGgQARoMNjk5NzUzMzA5NzA1IgyQW%2Bf%2FpleFID8%2BfpUqzgTCxr1XOrWP1AHYXU1nBkNrrUzwCif98UfNTLRynmrhAh4%2BDJiSQsyPnAGiDJZqBGa05Mul2eZBSszK2nnwVC%2Bte0HNNfA%2BeSxSmCZDvsbs65hsUDtEd%2B75j7wjOrfmc6pL0MLu6AXOjrbVynJdUFtDkvtR3eE1Qahc%2BvoZSQJDvdG62DSiV%2BQf46358XzPk6FsEiitighn3Trc1PDbteINY7HXOXteenrYywpx2nZdXiwR9bynT%2BL7N0c8itN%2BjqgX6iPwT1zmG3XJShsbvXosJGQjXNodRT9fDK2aU5ytLM%2FD%2BCJmIw7k3bjqQOT0AiBS41Z6Jm%2FdbPKDWCYVpx%2BeRbVO1Y09LVoLKIfm8XWvvf%2Ff9hUdKtJILp2npqwNtT0RVfCZry8Vh6Ln7gwMjlrQsgs5uYbFsyCdNIBSYm3N4PgWRocETX8dmEm2im0XauUQklJgT2o5KuUoM9BLHFR9KTHSTk8l4EfGULcHRWooISXpGxEZwGMOPNQVmNpEgtRxIw7QRBuVAJzLQGsb8jmAknTfIbyiUtzsVykpHPMYmNGjETDvXxTpKDTvlaQ3f7lvD8ue10YZQP9%2Bc64%2F4VHvp%2BdCoT50u7b1MbbFWKrlNFxkRsR03VpXzLxh%2B2urSHczKvJkphSGrYfI54r%2BLRGiPdB5FegvA3ihVS8XgkiYqUfVbPEINV%2FdJ5F9O8VqIUEHKEvrN7hwmxMdlE2JagegF%2B3LZVrUY%2FhqCLuYV%2FqyRQZ12ypzPDFk%2B30YZKU36zJ4h4oUPKF7c%2FFg%2FfXZpzDxl8rEBjqZAZ%2F7aBkJD8vRrV41Zoz4JG7MJAmOAwHyreVrLHVHS%2BXfZ5xh7x3sYJ54b0h0718uSYW4Y%2BS4Zw5uy9WEq83nGGsdXIItIa%2B%2FILbkTy52YgdUG3k99I27BXcSz%2BN5%2F%2FAMyET1fGdk9ZgpXwocDgl40S9cPz2gNUpIe9108EEE%2BJxS8habhU6U3om7yCi6GoxGfS4%2B9mOPPRFSGg%3D%3D&Expires=1754437156
