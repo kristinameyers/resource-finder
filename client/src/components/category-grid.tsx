@@ -28,11 +28,11 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
               }`}
               onClick={() => onCategorySelect(category.id)}
             >
-              <CardContent className={`p-6 text-center ${colorClass} rounded-xl min-h-[120px] flex flex-col items-center justify-center`}>
+              <CardContent className={`p-6 text-center ${colorClass} rounded-xl min-h-[130px] flex flex-col items-center justify-center`}>
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
                   <IconComponent className="h-8 w-8" />
                 </div>
-                <h3 className="font-medium text-sm leading-tight">{category.name}</h3>
+                <h3 className="font-semibold text-base leading-tight">{category.name}</h3>
               </CardContent>
             </Card>
           );

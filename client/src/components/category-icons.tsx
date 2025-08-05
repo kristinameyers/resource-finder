@@ -38,6 +38,7 @@ export const getCategoryColorClass = (categoryId: string): string => {
     housing: "category-housing",
     food: "category-food", 
     health: "category-health",
+    healthcare: "category-health",
     education: "category-education",
     employment: "category-employment",
     legal: "category-legal",

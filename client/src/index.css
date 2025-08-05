@@ -51,33 +51,35 @@
 }
 
 @layer components {
-  /* Category color palette - ADA compliant with sufficient contrast */
-  .category-housing { @apply bg-[#ff443b] text-white; }
-  .category-food { @apply bg-[#ffb351] text-black; }
-  .category-health { @apply bg-[#4eb99f] text-white; }
-  .category-education { @apply bg-[#4eb99f] text-white; }
-  .category-employment { @apply bg-[#539ed0] text-white; }
-  .category-legal { @apply bg-[#005191] text-white; }
-  .category-transportation { @apply bg-[#f2b131] text-black; }
-  .category-mental-health { @apply bg-[#00adb5] text-white; }
-  .category-substance { @apply bg-[#e54e39] text-white; }
-  .category-family { @apply bg-[#539ed0] text-white; }
-  .category-hygiene { @apply bg-[#76ced9] text-black; }
-  .category-young-adults { @apply bg-[#058587] text-white; }
+  /* Category color palette - greater variety using your full palette */
+  .category-housing { @apply bg-[#ff443b] text-white; }                  /* Red */
+  .category-food { @apply bg-[#ffb351] text-black; }                     /* Orange */
+  .category-health { @apply bg-[#f2b131] text-black; }                   /* Gold/Yellow */
+  .category-healthcare { @apply bg-[#f2b131] text-black; }               /* Gold/Yellow */
+  .category-education { @apply bg-[#4eb99f] text-white; }                /* Teal/Green */
+  .category-employment { @apply bg-[#539ed0] text-white; }               /* Light Blue */
+  .category-legal { @apply bg-[#76ced9] text-black; }                    /* Light Blue-Green */
+  .category-transportation { @apply bg-[#e54e39] text-white; }           /* Orange-Red */
+  .category-mental-health { @apply bg-[#00adb5] text-white; }            /* Darker Teal */
+  .category-substance { @apply bg-[#058587] text-white; }                /* Dark Teal */
+  .category-family { @apply bg-[#539ed0] text-white; }                   /* Light Blue */
+  .category-hygiene { @apply bg-[#76ced9] text-black; }                  /* Light Blue-Green */
+  .category-young-adults { @apply bg-[#005191] text-white; }             /* Dark Blue */
 
   /* Hover states with proper contrast */
   .category-housing:hover { @apply bg-[#e03d35]; }
   .category-food:hover { @apply bg-[#e8a147]; }
-  .category-health:hover { @apply bg-[#46a690]; }
+  .category-health:hover { @apply bg-[#da9f2c]; }
+  .category-healthcare:hover { @apply bg-[#da9f2c]; }
   .category-education:hover { @apply bg-[#46a690]; }
   .category-employment:hover { @apply bg-[#4a8fbb]; }
-  .category-legal:hover { @apply bg-[#004782]; }
-  .category-transportation:hover { @apply bg-[#da9f2c]; }
+  .category-legal:hover { @apply bg-[#6bb8c3]; }
+  .category-transportation:hover { @apply bg-[#cf4732]; }
   .category-mental-health:hover { @apply bg-[#009ba3]; }
-  .category-substance:hover { @apply bg-[#cf4732]; }
+  .category-substance:hover { @apply bg-[#047779]; }
   .category-family:hover { @apply bg-[#4a8fbb]; }
   .category-hygiene:hover { @apply bg-[#6bb8c3]; }
-  .category-young-adults:hover { @apply bg-[#047779]; }
+  .category-young-adults:hover { @apply bg-[#004782]; }
 
   .highlight {
     color: #FFB351;
