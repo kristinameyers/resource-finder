@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application designed to help users find community resources by category, subcategory, and location. It integrates data from a local database and the National 211 API, providing a comprehensive search platform. The project aims to deliver a fast, responsive user experience with real-time data from authoritative sources, ultimately assisting individuals in finding critical local support.
+This is a full-stack web application designed to help users find community resources by category, subcategory, and location. It integrates data from a local database and the National 211 API, providing a comprehensive search platform. The project includes both a web application and a native mobile app for Google Play and iTunes distribution, featuring custom PNG category icons, ADA-compliant accessibility, and an exact 3-column grid layout with specific color palette matching provided design specifications.
 
 ## User Preferences
 
@@ -18,7 +18,7 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Styling**: Tailwind CSS with shadcn/ui
 - **State Management**: TanStack Query
 - **Build Tool**: Vite
-- **UI/UX Decisions**: Prioritizes user experience with fast loading, anonymous access, and a clean, accessible interface. It utilizes a consistent color palette (#005191 primary) and typography (League Gothic headers, Roboto body text). Skeleton loading provides visual feedback during data fetching.
+- **UI/UX Decisions**: Prioritizes user experience with fast loading, anonymous access, and a clean, accessible interface. It utilizes a consistent color palette (#005191 primary) and typography (Roboto font family throughout - Regular, Medium, Bold weights). Custom PNG category icons provide brand consistency. Skeleton loading provides visual feedback during data fetching.
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
@@ -36,6 +36,13 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Favorites System**: Local device storage (localStorage) for user favorites without cloud dependencies.
 - **Taxonomy Integration**: Utilizes official 211 taxonomy data for categories and subcategories, enabling precise API queries.
 - **Comprehensive Resource Details**: Displays detailed information including application process, required documents, fees, service areas, enhanced contact information, and hours of operation.
+
+## Recent Changes (January 2025)
+
+- **Typography Overhaul**: Completely replaced League Gothic with Roboto font family across both web and mobile applications. All text now uses Roboto Regular (400), Medium (500), and Bold (700) weights for consistency.
+- **Category Card Design Fix**: Resolved background color extension issue for Food and Education category cards by replacing shadcn Card components with direct div structure, ensuring colors extend fully to card edges.
+- **Mobile App Fonts**: Integrated custom Roboto font files into React Native app with proper font family declarations for cross-platform consistency.
+- **Design Consistency**: Both web and mobile apps now maintain identical visual styling with proper color coverage and typography.
 
 ## External Dependencies
 
