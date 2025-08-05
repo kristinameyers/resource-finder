@@ -1,28 +1,28 @@
 import { 
   Home, 
   Utensils, 
-  GraduationCap, 
+  BookOpen, 
   Briefcase, 
   Heart,
   Scale,
-  Car,
+  Bus,
   Brain,
   Pill,
-  Users,
+  Users2,
   Droplets,
   User
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 export const CategoryIcons: Record<string, LucideIcon> = {
-  "children-family": Users,      // Children & Family - group of people icon
+  "children-family": Users2,     // Children & Family - family/group icon
   food: Utensils,               // Food - fork and spoon
-  education: GraduationCap,     // Education - graduation cap
+  education: BookOpen,          // Education - open book icon
   housing: Home,
   "finance-employment": Briefcase,
   healthcare: Heart,
   "legal-assistance": Scale,
-  transportation: Car,
+  transportation: Bus,
   "mental-wellness": Brain,
   "substance-use": Pill,
   "hygiene-household": Droplets,

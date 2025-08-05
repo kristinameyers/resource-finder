@@ -44,21 +44,24 @@ export class MemStorage implements IStorage {
     this.subcategories = [];
     this.locations = [];
     
-    // Populate categories with official 211 taxonomy codes
+    // Populate categories with official 211 taxonomy codes - Row order for display
     this.categories = [
-      { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH' },
-      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'N' },
+      // Row 1: Children & Family, Food, Education
+      { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'P' },
       { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD' },
-      { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT' },
+      { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'H' },
+      // Row 2: Finance & Employment, Housing, Health Care
+      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'N' },
+      { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH' },
       { id: 'healthcare', name: 'Health Care', icon: 'stethoscope', taxonomyCode: 'L' },
+      // Row 3: Hygiene & Household, Mental Wellness, Legal Assistance
       { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower' },
       { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'R' },
-      { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX' },
-      { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'P' },
-      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'YB-9000' },
-      { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'H' },
       { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel', taxonomyCode: 'F' },
-      { id: 'utilities', name: 'Utilities', icon: 'bolt', taxonomyCode: 'BV' },
+      // Row 4: Substance Use, Transportation, Young Adults
+      { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX' },
+      { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT' },
+      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'YB-9000' },
     ];
     
     // Populate subcategories for each category
