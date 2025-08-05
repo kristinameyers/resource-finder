@@ -12,7 +12,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
   return (
     <div className="bg-[#005191] p-6 rounded-xl">
       <h2 className="text-white text-center mb-6 text-2xl font-normal">Browse all Categories</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {categories.map((category) => {
           const IconComponent = getCategoryIcon(category.id);
           const colorClass = getCategoryColorClass(category.id);

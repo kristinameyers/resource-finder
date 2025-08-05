@@ -15,9 +15,10 @@ import {
 import { LucideIcon } from "lucide-react";
 
 export const CategoryIcons: Record<string, LucideIcon> = {
+  family: Users,              // Children & Family - group of people icon
+  food: Utensils,            // Food - fork and spoon
+  education: GraduationCap,  // Education - graduation cap
   housing: Home,
-  food: Utensils,
-  education: GraduationCap,
   employment: Briefcase,
   health: Heart,
   healthcare: Heart,
@@ -25,7 +26,6 @@ export const CategoryIcons: Record<string, LucideIcon> = {
   transportation: Car,
   "mental-health": Brain,
   substance: Pill,
-  family: Users,
   hygiene: Droplets,
   "young-adults": User
 };

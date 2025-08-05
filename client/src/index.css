@@ -50,18 +50,20 @@
 }
 
 @layer components {
-  /* Category color palette - matching your design exactly */
+  /* Category color palette - Row 1: Children & Family, Food, Education */
+  .category-family { @apply bg-[#539ed0] text-black; }                   /* Children & Family - Light Blue */
+  .category-food { @apply bg-[#ffb351] text-black; }                     /* Food - Orange */
+  .category-education { @apply bg-[#4eb99f] text-black; }                /* Education - Teal */
+  
+  /* Other categories (to be updated) */
   .category-housing { @apply bg-[#ff443b] text-white; }                  /* Red */
-  .category-food { @apply bg-[#ffb351] text-black; }                     /* Orange */
   .category-health { @apply bg-[#f2b131] text-black; }                   /* Yellow */
   .category-healthcare { @apply bg-[#f2b131] text-black; }               /* Yellow */
-  .category-education { @apply bg-[#4eb99f] text-white; }                /* Teal */
   .category-employment { @apply bg-[#76ced9] text-black; }               /* Light Blue */
   .category-legal { @apply bg-[#539ed0] text-white; }                    /* Medium Blue */
   .category-transportation { @apply bg-[#f2b131] text-black; }           /* Yellow */
   .category-mental-health { @apply bg-[#4eb99f] text-white; }            /* Teal */
   .category-substance { @apply bg-[#ffb351] text-black; }                /* Orange */
-  .category-family { @apply bg-[#539ed0] text-white; }                   /* Medium Blue */
   .category-hygiene { @apply bg-[#76ced9] text-black; }                  /* Light Blue */
   .category-young-adults { @apply bg-[#539ed0] text-white; }             /* Medium Blue */
 
