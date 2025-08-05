@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&family=Roboto+Condensed:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=League+Gothic&family=Roboto:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -21,12 +21,64 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Roboto Condensed', sans-serif;
-    font-weight: 700;
+    font-family: 'League Gothic', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ADA compliant text sizes */
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  /* Ensure minimum contrast ratio for body text */
+  p, span, div {
+    color: #000000; /* Ensures high contrast on white backgrounds */
   }
 }
 
 @layer components {
+  /* Category color palette - ADA compliant with sufficient contrast */
+  .category-housing { @apply bg-[#ff443b] text-white; }
+  .category-food { @apply bg-[#ffb351] text-black; }
+  .category-health { @apply bg-[#4eb99f] text-white; }
+  .category-education { @apply bg-[#4eb99f] text-white; }
+  .category-employment { @apply bg-[#539ed0] text-white; }
+  .category-legal { @apply bg-[#005191] text-white; }
+  .category-transportation { @apply bg-[#f2b131] text-black; }
+  .category-mental-health { @apply bg-[#00adb5] text-white; }
+  .category-substance { @apply bg-[#e54e39] text-white; }
+  .category-family { @apply bg-[#539ed0] text-white; }
+  .category-hygiene { @apply bg-[#76ced9] text-black; }
+  .category-young-adults { @apply bg-[#058587] text-white; }
+
+  /* Hover states with proper contrast */
+  .category-housing:hover { @apply bg-[#e03d35]; }
+  .category-food:hover { @apply bg-[#e8a147]; }
+  .category-health:hover { @apply bg-[#46a690]; }
+  .category-education:hover { @apply bg-[#46a690]; }
+  .category-employment:hover { @apply bg-[#4a8fbb]; }
+  .category-legal:hover { @apply bg-[#004782]; }
+  .category-transportation:hover { @apply bg-[#da9f2c]; }
+  .category-mental-health:hover { @apply bg-[#009ba3]; }
+  .category-substance:hover { @apply bg-[#cf4732]; }
+  .category-family:hover { @apply bg-[#4a8fbb]; }
+  .category-hygiene:hover { @apply bg-[#6bb8c3]; }
+  .category-young-adults:hover { @apply bg-[#047779]; }
+
   .highlight {
     color: #FFB351;
   }

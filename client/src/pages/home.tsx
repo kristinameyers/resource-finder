@@ -162,21 +162,21 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Resource Finder</h1>
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
+          <h1 className="text-4xl font-bold text-[#005191] tracking-wide">Resource Finder</h1>
           
           {/* Loading indicator */}
           {(isLoadingCategories || isLoadingResources) && (
             <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Loading...</span>
+              <Loader2 className="h-5 w-5 animate-spin text-[#005191]" />
+              <span className="text-base text-[#005191] font-medium">Loading...</span>
             </div>
           )}
         </div>
       </header>
       
-      <main className="flex-grow container mx-auto px-4 py-6">
+      <main className="flex-grow container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
         {/* Data source toggle */}
         <div className="flex items-center justify-end mb-4 gap-2">
           <div className="flex items-center space-x-2">
@@ -257,15 +257,17 @@ export default function Home() {
           </>
         ) : (
           // Show category grid when no category is selected
-          isLoadingCategories ? (
-            <CategoryGridSkeleton />
-          ) : (
-            <CategoryGrid 
-              categories={categories}
-              onCategorySelect={handleCategorySelect}
-              selectedCategoryId={selectedCategoryId}
-            />
-          )
+          <div className="mb-8">
+            {isLoadingCategories ? (
+              <CategoryGridSkeleton />
+            ) : (
+              <CategoryGrid 
+                categories={categories}
+                onCategorySelect={handleCategorySelect}
+                selectedCategoryId={selectedCategoryId}
+              />
+            )}
+          </div>
         )}
       </main>
       
