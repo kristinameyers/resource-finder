@@ -19,9 +19,9 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    // Add custom fonts here if needed
-    // 'League Gothic': require('../assets/fonts/LeagueGothic-Regular.ttf'),
-    // 'Roboto': require('../assets/fonts/Roboto-Regular.ttf'),
+    'Roboto-Regular': require('../assets/fonts/Roboto-Regular.ttf'),
+    'Roboto-Medium': require('../assets/fonts/Roboto-Medium.ttf'),
+    'Roboto-Bold': require('../assets/fonts/Roboto-Bold.ttf'),
   });
 
   useEffect(() => {

@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     marginBottom: 20,
-    fontWeight: '700',
+    fontFamily: 'Roboto-Bold',
   },
   loadingContainer: {
     height: 200,
@@ -159,6 +159,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'black',
     textAlign: 'center',
-    fontWeight: '500',
+    fontFamily: 'Roboto-Medium',
   },
 });

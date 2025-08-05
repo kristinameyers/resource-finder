@@ -137,13 +137,14 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     marginBottom: 5,
-    fontWeight: '700',
+    fontFamily: 'Roboto-Bold',
   },
   headerSubtitle: {
     fontSize: 16,
     color: 'white',
     textAlign: 'center',
     opacity: 0.9,
+    fontFamily: 'Roboto-Regular',
   },
   content: {
     flex: 1,
@@ -167,6 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#ddd',
+    fontFamily: 'Roboto-Regular',
   },
   zipCodeButton: {
     backgroundColor: '#005191',
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
   zipCodeButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Roboto-Bold',
   },
   categoriesSection: {
     marginBottom: 30,

@@ -43,14 +43,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     marginBottom: 5,
-    fontWeight: '500',
+    fontFamily: 'Roboto-Medium',
   },
   subtitle: {
     fontSize: 14,
     color: '#666',
+    fontFamily: 'Roboto-Regular',
   },
   coordinates: {
     fontSize: 14,
     color: '#666',
+    fontFamily: 'Roboto-Regular',
   },
 });
