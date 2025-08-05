@@ -41,8 +41,10 @@ The application adopts a modern full-stack architecture, separating frontend and
 
 - **Typography Overhaul**: Completely replaced League Gothic with Roboto font family across both web and mobile applications. All text now uses Roboto Regular (400), Medium (500), and Bold (700) weights for consistency.
 - **Category Card Design Fix**: Resolved background color extension issue for Food and Education category cards by replacing shadcn Card components with direct div structure, ensuring colors extend fully to card edges.
+- **Custom Icon System**: Implemented rounded square frame icons with category-specific symbols and colors, replacing previous PNG/SVG approach with consistent SVG-based icons across all platforms.
+- **CardFrame Component**: Created sophisticated card styling with #256BAE background, semi-transparent white borders, platform-specific shadows, and 140x140px dimensions with 32px border radius for professional visual depth.
 - **Mobile App Fonts**: Integrated custom Roboto font files into React Native app with proper font family declarations for cross-platform consistency.
-- **Design Consistency**: Both web and mobile apps now maintain identical visual styling with proper color coverage and typography.
+- **Design Consistency**: Both web and mobile apps now maintain identical visual styling with proper color coverage, typography, and modern card frame design.
 
 ## External Dependencies
 
