@@ -23,8 +23,7 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'League Gothic', sans-serif;
     font-weight: 400;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
 
   /* ADA compliant text sizes */
@@ -51,20 +50,20 @@
 }
 
 @layer components {
-  /* Category color palette - greater variety using your full palette */
+  /* Category color palette - matching your design exactly */
   .category-housing { @apply bg-[#ff443b] text-white; }                  /* Red */
   .category-food { @apply bg-[#ffb351] text-black; }                     /* Orange */
-  .category-health { @apply bg-[#f2b131] text-black; }                   /* Gold/Yellow */
-  .category-healthcare { @apply bg-[#f2b131] text-black; }               /* Gold/Yellow */
-  .category-education { @apply bg-[#4eb99f] text-white; }                /* Teal/Green */
-  .category-employment { @apply bg-[#539ed0] text-white; }               /* Light Blue */
-  .category-legal { @apply bg-[#76ced9] text-black; }                    /* Light Blue-Green */
-  .category-transportation { @apply bg-[#e54e39] text-white; }           /* Orange-Red */
-  .category-mental-health { @apply bg-[#00adb5] text-white; }            /* Darker Teal */
-  .category-substance { @apply bg-[#058587] text-white; }                /* Dark Teal */
-  .category-family { @apply bg-[#539ed0] text-white; }                   /* Light Blue */
-  .category-hygiene { @apply bg-[#76ced9] text-black; }                  /* Light Blue-Green */
-  .category-young-adults { @apply bg-[#005191] text-white; }             /* Dark Blue */
+  .category-health { @apply bg-[#f2b131] text-black; }                   /* Yellow */
+  .category-healthcare { @apply bg-[#f2b131] text-black; }               /* Yellow */
+  .category-education { @apply bg-[#4eb99f] text-white; }                /* Teal */
+  .category-employment { @apply bg-[#76ced9] text-black; }               /* Light Blue */
+  .category-legal { @apply bg-[#539ed0] text-white; }                    /* Medium Blue */
+  .category-transportation { @apply bg-[#f2b131] text-black; }           /* Yellow */
+  .category-mental-health { @apply bg-[#4eb99f] text-white; }            /* Teal */
+  .category-substance { @apply bg-[#ffb351] text-black; }                /* Orange */
+  .category-family { @apply bg-[#539ed0] text-white; }                   /* Medium Blue */
+  .category-hygiene { @apply bg-[#76ced9] text-black; }                  /* Light Blue */
+  .category-young-adults { @apply bg-[#539ed0] text-white; }             /* Medium Blue */
 
   /* Hover states with proper contrast */
   .category-housing:hover { @apply bg-[#e03d35]; }

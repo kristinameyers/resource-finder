@@ -11,7 +11,7 @@ interface CategoryGridProps {
 export default function CategoryGrid({ categories, onCategorySelect, selectedCategoryId }: CategoryGridProps) {
   return (
     <div className="bg-[#005191] p-6 rounded-xl">
-      <h2 className="text-white text-center mb-6 text-2xl font-bold tracking-wide">Browse all Categories</h2>
+      <h2 className="text-white text-center mb-6 text-2xl font-normal">Browse all Categories</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {categories.map((category) => {
           const IconComponent = getCategoryIcon(category.id);
@@ -32,7 +32,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
                   <IconComponent className="h-8 w-8" />
                 </div>
-                <h3 className="font-semibold text-base leading-tight">{category.name}</h3>
+                <h3 className="font-medium text-sm leading-tight">{category.name}</h3>
               </CardContent>
             </Card>
           );

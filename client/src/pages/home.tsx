@@ -164,7 +164,7 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-[#005191] tracking-wide">Resource Finder</h1>
+          <h1 className="text-4xl font-normal text-[#005191]">Santa Barbara 211</h1>
           
           {/* Loading indicator */}
           {(isLoadingCategories || isLoadingResources) && (

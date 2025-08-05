@@ -9,8 +9,8 @@ import {
   Brain,
   Pill,
   Users,
-  ShowerHead,
-  UserCheck
+  Droplets,
+  User
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
@@ -20,13 +20,14 @@ export const CategoryIcons: Record<string, LucideIcon> = {
   education: GraduationCap,
   employment: Briefcase,
   health: Heart,
+  healthcare: Heart,
   legal: Scale,
   transportation: Car,
   "mental-health": Brain,
   substance: Pill,
   family: Users,
-  hygiene: ShowerHead,
-  "young-adults": UserCheck
+  hygiene: Droplets,
+  "young-adults": User
 };
 
 export const getCategoryIcon = (categoryId: string): LucideIcon => {
