@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Card } from 'tamagui';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface LocationDisplayProps {
   location: any;
@@ -8,27 +8,49 @@ interface LocationDisplayProps {
 export function LocationDisplay({ location }: LocationDisplayProps) {
   if (!location) {
     return (
-      <Card backgroundColor="white" borderRadius={8} padding={15} elevation={5}>
-        <Text fontSize={16} color="#333" marginBottom={5} fontWeight="500" fontFamily="$body">
-          📍 Location
-        </Text>
-        <Text fontSize={14} color="#666" fontFamily="$body">
-          Getting your location...
-        </Text>
-      </Card>
+      <View style={styles.container}>
+        <Text style={styles.title}>📍 Location</Text>
+        <Text style={styles.subtitle}>Getting your location...</Text>
+      </View>
     );
   }
 
   return (
-    <Card backgroundColor="white" borderRadius={8} padding={15} elevation={5}>
-      <Text fontSize={16} color="#333" marginBottom={5} fontWeight="500" fontFamily="$body">
-        📍 Your Location
-      </Text>
-      <Text fontSize={14} color="#666" fontFamily="$body">
+    <View style={styles.container}>
+      <Text style={styles.title}>📍 Your Location</Text>
+      <Text style={styles.coordinates}>
         {location.coords.latitude.toFixed(4)}, {location.coords.longitude.toFixed(4)}
       </Text>
-    </Card>
+    </View>
   );
 }
 
-// Styles removed - now using Tamagui components
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+    fontWeight: '500',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  coordinates: {
+    fontSize: 14,
+    color: '#666',
+  },
+});

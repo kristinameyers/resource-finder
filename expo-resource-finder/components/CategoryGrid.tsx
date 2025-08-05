@@ -1,6 +1,16 @@
 import React from 'react';
-import { Image, ActivityIndicator } from 'react-native';
-import { View, Text, Button, XStack, YStack, Spinner, getTokenValue } from 'tamagui';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  ActivityIndicator,
+} from 'react-native';
+
+const { width } = Dimensions.get('window');
+const cardWidth = (width - 60) / 3; // 3 columns with padding
 
 interface Category {
   id: string;
@@ -50,67 +60,105 @@ export function CategoryGrid({
 }: CategoryGridProps) {
   if (isLoading) {
     return (
-      <View backgroundColor="#005191" padding={20} borderRadius={12}>
-        <Text fontSize={24} color="white" textAlign="center" marginBottom={20} fontFamily="$heading">
-          Browse all Categories
-        </Text>
-        <View height={200} justifyContent="center" alignItems="center">
-          <Spinner size="large" color="white" />
+      <View style={styles.container}>
+        <Text style={styles.title}>Browse all Categories</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
         </View>
       </View>
     );
   }
 
   return (
-    <View backgroundColor="#005191" borderRadius={12} padding={20}>
-      <Text fontSize={24} color="white" textAlign="center" marginBottom={20} fontFamily="$heading">
-        Browse all Categories
-      </Text>
-      <XStack flexWrap="wrap" justifyContent="space-between" gap={15}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Browse all Categories</Text>
+      <View style={styles.grid}>
         {categories.map((category) => {
           const backgroundColor = categoryColors[category.id] || '#005191';
           const isSelected = selectedCategoryId === category.id;
           const icon = categoryIcons[category.id];
 
           return (
-            <Button
+            <TouchableOpacity
               key={category.id}
-              backgroundColor={backgroundColor}
-              width="30%"
-              minHeight={120}
-              borderRadius={12}
-              padding={15}
-              alignItems="center"
-              justifyContent="center"
-              flexDirection="column"
-              borderWidth={isSelected ? 2 : 0}
-              borderColor="white"
-              transform={isSelected ? [{ scale: 1.05 }] : undefined}
+              style={[
+                styles.card,
+                { backgroundColor },
+                isSelected && styles.selectedCard,
+              ]}
               onPress={() => onCategorySelect(category.id)}
-              pressStyle={{ opacity: 0.8 }}
-              unstyled
+              activeOpacity={0.8}
             >
-              <View marginBottom={10}>
+              <View style={styles.iconContainer}>
                 {icon ? (
-                  <Image source={icon} style={{ width: 42, height: 42, resizeMode: 'contain' }} />
+                  <Image source={icon} style={styles.icon} />
                 ) : (
-                  <View 
-                    width={42} 
-                    height={42} 
-                    borderRadius={21} 
-                    backgroundColor="rgba(255,255,255,0.3)" 
-                  />
+                  <View style={[styles.iconPlaceholder, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
                 )}
               </View>
-              <Text fontSize={18} color="black" textAlign="center" fontWeight="500" fontFamily="$body">
-                {category.name}
-              </Text>
-            </Button>
+              <Text style={styles.categoryText}>{category.name}</Text>
+            </TouchableOpacity>
           );
         })}
-      </XStack>
+      </View>
     </View>
   );
 }
 
-// Styles removed - now using Tamagui components
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#005191',
+    borderRadius: 12,
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: '700',
+  },
+  loadingContainer: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: cardWidth,
+    minHeight: 120,
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedCard: {
+    borderWidth: 2,
+    borderColor: 'white',
+    transform: [{ scale: 1.05 }],
+  },
+  iconContainer: {
+    marginBottom: 10,
+  },
+  icon: {
+    width: 42,
+    height: 42,
+    resizeMode: 'contain',
+  },
+  iconPlaceholder: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+  },
+  categoryText: {
+    fontSize: 18,
+    color: 'black',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+});

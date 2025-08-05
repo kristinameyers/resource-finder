@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import ResourceDetail from "@/pages/resource-detail";
-import MobilePreview from "@/pages/mobile-preview";
 
 function Router() {
   return (
@@ -13,7 +12,6 @@ function Router() {
       {/* Add pages below */}
       <Route path="/" component={Home} />
       <Route path="/resources/:id" component={ResourceDetail} />
-      <Route path="/mobile-preview" component={MobilePreview} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
