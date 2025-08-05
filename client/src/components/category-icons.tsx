@@ -15,19 +15,19 @@ import {
 import { LucideIcon } from "lucide-react";
 
 export const CategoryIcons: Record<string, LucideIcon> = {
-  family: Users,              // Children & Family - group of people icon
-  food: Utensils,            // Food - fork and spoon
-  education: GraduationCap,  // Education - graduation cap
+  "children-family": Users,      // Children & Family - group of people icon
+  food: Utensils,               // Food - fork and spoon
+  education: GraduationCap,     // Education - graduation cap
   housing: Home,
-  employment: Briefcase,
-  health: Heart,
+  "finance-employment": Briefcase,
   healthcare: Heart,
-  legal: Scale,
+  "legal-assistance": Scale,
   transportation: Car,
-  "mental-health": Brain,
-  substance: Pill,
-  hygiene: Droplets,
-  "young-adults": User
+  "mental-wellness": Brain,
+  "substance-use": Pill,
+  "hygiene-household": Droplets,
+  "young-adults": User,
+  utilities: Briefcase
 };
 
 export const getCategoryIcon = (categoryId: string): LucideIcon => {
@@ -38,17 +38,17 @@ export const getCategoryColorClass = (categoryId: string): string => {
   const colorMap: Record<string, string> = {
     housing: "category-housing",
     food: "category-food", 
-    health: "category-health",
-    healthcare: "category-health",
+    healthcare: "category-healthcare",
     education: "category-education",
-    employment: "category-employment",
-    legal: "category-legal",
+    "finance-employment": "category-finance-employment",
+    "legal-assistance": "category-legal-assistance",
     transportation: "category-transportation",
-    "mental-health": "category-mental-health",
-    substance: "category-substance",
-    family: "category-family",
-    hygiene: "category-hygiene",
-    "young-adults": "category-young-adults"
+    "mental-wellness": "category-mental-wellness",
+    "substance-use": "category-substance-use",
+    "children-family": "category-children-family",
+    "hygiene-household": "category-hygiene-household",
+    "young-adults": "category-young-adults",
+    utilities: "category-utilities"
   };
   
   return colorMap[categoryId] || "category-housing";
