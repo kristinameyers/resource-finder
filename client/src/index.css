@@ -67,6 +67,12 @@
   .category-young-adults { @apply bg-[#539ed0] text-white; }             /* Medium Blue */
   .category-utilities { @apply bg-[#f2b131] text-black; }                /* Yellow */
 
+  /* Category text styling */
+  .category-text {
+    font-family: 'Roboto', sans-serif !important;
+    font-size: 18px !important;
+  }
+
   /* Hover states with proper contrast */
   .category-housing:hover { @apply bg-[#e03d35]; }
   .category-food:hover { @apply bg-[#e8a147]; }

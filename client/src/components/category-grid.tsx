@@ -37,7 +37,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
                     <IconComponent className="h-[42px] w-[42px]" />
                   )}
                 </div>
-                <h3 className="font-medium text-base leading-tight">{category.name}</h3>
+                <h3 className="font-medium leading-tight category-text">{category.name}</h3>
               </CardContent>
             </Card>
           );
