@@ -7,7 +7,8 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import Svg, { Rect, Path, Circle, G, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Svg, { Rect, Path, Circle, G } from 'react-native-svg';
+import CardFrame from './CardFrame';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 60) / 3; // 3 columns with padding
@@ -192,28 +193,17 @@ export function CategoryGrid({
             <TouchableOpacity
               key={category.id}
               style={[
-                styles.card,
                 isSelected && styles.selectedCard,
               ]}
               onPress={() => onCategorySelect(category.id)}
               activeOpacity={0.8}
             >
-              <View style={styles.cardContent}>
-                {/* SVG Gradient Background */}
-                <Svg style={StyleSheet.absoluteFillObject} width="100%" height="100%">
-                  <Defs>
-                    <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <Stop offset="0%" stopColor="#4a90e2" stopOpacity="1" />
-                      <Stop offset="100%" stopColor="#357abd" stopOpacity="1" />
-                    </SvgLinearGradient>
-                  </Defs>
-                  <Rect width="100%" height="100%" fill="url(#grad)" rx="12" />
-                </Svg>
+              <CardFrame>
                 <View style={styles.iconContainer}>
                   <IconComponent size={42} />
                 </View>
                 <Text style={styles.categoryText}>{category.name}</Text>
-              </View>
+              </CardFrame>
             </TouchableOpacity>
           );
         })}
@@ -245,24 +235,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  card: {
-    width: cardWidth,
-    minHeight: 120,
-    borderRadius: 12,
-    marginBottom: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  cardContent: {
-    width: '100%',
-    height: '100%',
-    minHeight: 120,
-    padding: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-  },
+
   selectedCard: {
     borderWidth: 2,
     borderColor: 'white',

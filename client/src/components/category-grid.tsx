@@ -12,7 +12,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
   return (
     <div className="bg-[#005191] p-6 rounded-xl">
       <h2 className="text-white text-center mb-6 text-2xl font-normal">Browse all Categories</h2>
-      <div className="grid grid-cols-3 gap-4 items-stretch">
+      <div className="grid grid-cols-3 gap-3 justify-items-center">
         {categories.map((category) => {
           const IconComponent = getCategoryIcon(category.id);
           const customIcon = getCustomCategoryIcon(category.id);
@@ -23,7 +23,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
           return (
             <div 
               key={category.id} 
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 overflow-hidden rounded-xl min-h-[130px] h-full flex flex-col bg-gradient-to-br from-[#4a90e2] to-[#357abd] ${
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 overflow-hidden rounded-[32px] min-h-[140px] w-[140px] h-[140px] flex flex-col bg-[#256BAE] border-2 border-white/25 shadow-lg ${
                 isSelected 
                   ? 'ring-2 ring-white shadow-xl transform scale-105' 
                   : 'hover:shadow-xl hover:transform hover:scale-102'
