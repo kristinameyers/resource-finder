@@ -1,6 +1,6 @@
 import { Category } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
-import { getCategoryIcon, getCategoryColorClass } from "@/components/category-icons";
+import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "@/components/category-icons";
 
 interface CategoryGridProps {
   categories: Category[];
@@ -15,6 +15,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
       <div className="grid grid-cols-3 gap-4">
         {categories.map((category) => {
           const IconComponent = getCategoryIcon(category.id);
+          const customIcon = getCustomCategoryIcon(category.id);
           const colorClass = getCategoryColorClass(category.id);
           const isSelected = selectedCategoryId === category.id;
           
@@ -30,7 +31,11 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
             >
               <CardContent className={`p-6 text-center ${colorClass} rounded-xl min-h-[130px] flex flex-col items-center justify-center`}>
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                  <IconComponent className="h-8 w-8" />
+                  {customIcon ? (
+                    <img src={customIcon} alt={category.name} className="h-8 w-8" />
+                  ) : (
+                    <IconComponent className="h-8 w-8" />
+                  )}
                 </div>
                 <h3 className="font-medium text-sm leading-tight">{category.name}</h3>
               </CardContent>

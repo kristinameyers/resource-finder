@@ -14,10 +14,15 @@ import {
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
+// Import custom PNG icons
+import childrenFamilyIcon from "@assets/Children and Family_1754356261782.png";
+import foodIcon from "@assets/food_1754356284244.png";
+import educationIcon from "@assets/education_1754356313451.png";
+
 export const CategoryIcons: Record<string, LucideIcon> = {
-  "children-family": Users2,     // Children & Family - family/group icon
-  food: Utensils,               // Food - fork and spoon
-  education: BookOpen,          // Education - open book icon
+  "children-family": Users2,     // Will be replaced with custom PNG
+  food: Utensils,               // Will be replaced with custom PNG
+  education: BookOpen,          // Will be replaced with custom PNG
   housing: Home,
   "finance-employment": Briefcase,
   healthcare: Heart,
@@ -30,8 +35,19 @@ export const CategoryIcons: Record<string, LucideIcon> = {
   utilities: Briefcase
 };
 
+// Custom PNG icons for specific categories
+export const CustomCategoryIcons: Record<string, string> = {
+  "children-family": childrenFamilyIcon,
+  food: foodIcon,
+  education: educationIcon
+};
+
 export const getCategoryIcon = (categoryId: string): LucideIcon => {
   return CategoryIcons[categoryId] || Home;
+};
+
+export const getCustomCategoryIcon = (categoryId: string): string | null => {
+  return CustomCategoryIcons[categoryId] || null;
 };
 
 export const getCategoryColorClass = (categoryId: string): string => {
