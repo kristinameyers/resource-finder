@@ -1,6 +1,16 @@
 import { Category } from "@shared/schema";
 import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "@/components/category-icons";
-import { getCustomCategoryIconComponent } from "@/components/custom-category-icons";
+
+// Import PNG icons
+import educationIcon from "../assets/icons/education.png";
+import legalAssistanceIcon from "../assets/icons/legal-assistance.png";
+import childrenFamilyIcon from "../assets/icons/children-family.png";
+import foodIcon from "../assets/icons/food.png";
+import financeEmploymentIcon from "../assets/icons/finance-employment.png";
+import healthcareIcon from "../assets/icons/healthcare.png";
+import housingIcon from "../assets/icons/housing.png";
+import substanceUseIcon from "../assets/icons/substance-use.png";
+import youngAdultsIcon from "../assets/icons/young-adults.png";
 
 interface CategoryGridProps {
   categories: Category[];
@@ -14,10 +24,24 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
       <h2 className="text-white text-center mb-6 text-2xl font-normal">Browse all Categories</h2>
       <div className="grid grid-cols-3 gap-3 justify-items-center">
         {categories.map((category) => {
-          const IconComponent = getCategoryIcon(category.id);
-          const customIcon = getCustomCategoryIcon(category.id);
-          const CustomIconComponent = getCustomCategoryIconComponent(category.id);
-          const colorClass = getCategoryColorClass(category.id);
+          const iconMap: Record<string, string> = {
+            'education': educationIcon,
+            'legal-assistance': legalAssistanceIcon,
+            'children-family': childrenFamilyIcon,
+            'food': foodIcon,
+            'finance-employment': financeEmploymentIcon,
+            'healthcare': healthcareIcon,
+            'housing': housingIcon,
+            'substance-use': substanceUseIcon,
+            'young-adults': youngAdultsIcon,
+            // Add fallbacks for missing icons
+            'transportation': housingIcon,
+            'mental-wellness': healthcareIcon,
+            'hygiene-household': housingIcon,
+            'utilities': financeEmploymentIcon,
+          };
+          
+          const categoryIcon = iconMap[category.id];
           const isSelected = selectedCategoryId === category.id;
           
           return (
@@ -32,7 +56,11 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
             >
               <div className="p-6 flex-1 flex flex-col items-center justify-center text-center">
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                  <CustomIconComponent />
+                  {categoryIcon ? (
+                    <img src={categoryIcon} alt={category.name} className="h-[42px] w-[42px]" />
+                  ) : (
+                    <div className="h-[42px] w-[42px] bg-white/20 rounded-lg"></div>
+                  )}
                 </div>
                 <h3 className="font-medium leading-tight category-text text-white">{category.name}</h3>
               </div>
