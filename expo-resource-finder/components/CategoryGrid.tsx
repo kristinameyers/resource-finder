@@ -83,20 +83,21 @@ export function CategoryGrid({
               key={category.id}
               style={[
                 styles.card,
-                { backgroundColor },
                 isSelected && styles.selectedCard,
               ]}
               onPress={() => onCategorySelect(category.id)}
               activeOpacity={0.8}
             >
-              <View style={styles.iconContainer}>
-                {icon ? (
-                  <Image source={icon} style={styles.icon} />
-                ) : (
-                  <View style={[styles.iconPlaceholder, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
-                )}
+              <View style={[styles.cardContent, { backgroundColor }]}>
+                <View style={styles.iconContainer}>
+                  {icon ? (
+                    <Image source={icon} style={styles.icon} />
+                  ) : (
+                    <View style={[styles.iconPlaceholder, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+                  )}
+                </View>
+                <Text style={styles.categoryText}>{category.name}</Text>
               </View>
-              <Text style={styles.categoryText}>{category.name}</Text>
             </TouchableOpacity>
           );
         })}
@@ -132,10 +133,19 @@ const styles = StyleSheet.create({
     width: cardWidth,
     minHeight: 120,
     borderRadius: 12,
-    padding: 15,
     marginBottom: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  cardContent: {
+    width: '100%',
+    height: '100%',
+    minHeight: 120,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
   },
   selectedCard: {
     borderWidth: 2,
