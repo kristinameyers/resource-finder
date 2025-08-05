@@ -22,14 +22,14 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
           return (
             <Card 
               key={category.id} 
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 ${
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 overflow-hidden ${colorClass} rounded-xl ${
                 isSelected 
                   ? 'ring-2 ring-white shadow-xl transform scale-105' 
                   : 'hover:shadow-xl hover:transform hover:scale-102'
               }`}
               onClick={() => onCategorySelect(category.id)}
             >
-              <CardContent className={`p-6 text-center ${colorClass} rounded-xl min-h-[130px] flex flex-col items-center justify-center`}>
+              <CardContent className={`p-6 text-center min-h-[130px] flex flex-col items-center justify-center`}>
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
                   {customIcon ? (
                     <img src={customIcon} alt={category.name} className="h-[42px] w-[42px]" />
