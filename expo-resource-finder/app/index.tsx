@@ -1,24 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  Image,
-  Dimensions,
-} from 'react-native';
+import { Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { View, Text, ScrollView, Button, Input, XStack, YStack } from 'tamagui';
 import { CategoryGrid } from '../components/CategoryGrid';
 import { LocationDisplay } from '../components/LocationDisplay';
 import { API_BASE_URL } from '../constants/api';
-
-const { width } = Dimensions.get('window');
 
 export default function HomePage() {
   const router = useRouter();
@@ -77,112 +66,61 @@ export default function HomePage() {
   };
 
   return (
-    <View style={styles.container}>
+    <View flex={1} backgroundColor="$background">
       <StatusBar style="light" backgroundColor="#005191" />
       
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Santa Barbara Community Resources</Text>
-        <Text style={styles.headerSubtitle}>Find local help and support services</Text>
+      <View backgroundColor="#005191" paddingTop={60} paddingBottom={20} paddingHorizontal={20} alignItems="center">
+        <Text fontSize={28} color="white" textAlign="center" marginBottom={5} fontFamily="$heading">
+          Santa Barbara Community Resources
+        </Text>
+        <Text fontSize={16} color="white" textAlign="center" opacity={0.9} fontFamily="$body">
+          Find local help and support services
+        </Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView flex={1} paddingHorizontal={20} showsVerticalScrollIndicator={false}>
         {/* Location Section */}
-        <View style={styles.locationSection}>
+        <YStack marginTop={20} marginBottom={20}>
           <LocationDisplay location={location} />
           
-          <View style={styles.zipCodeContainer}>
-            <TextInput
-              style={styles.zipCodeInput}
+          <XStack marginTop={15} alignItems="center" gap={10}>
+            <Input
+              flex={1}
               placeholder="Enter ZIP code"
               value={zipCode}
               onChangeText={setZipCode}
               keyboardType="numeric"
               maxLength={5}
+              backgroundColor="white"
+              borderColor="$borderColor"
+              paddingHorizontal={15}
+              paddingVertical={12}
+              fontSize={16}
             />
-            <TouchableOpacity style={styles.zipCodeButton} onPress={handleZipCodeSubmit}>
-              <Text style={styles.zipCodeButtonText}>✓</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+            <Button 
+              backgroundColor="#005191" 
+              color="white"
+              paddingHorizontal={20}
+              onPress={handleZipCodeSubmit}
+            >
+              ✓
+            </Button>
+          </XStack>
+        </YStack>
 
         {/* Categories Section */}
-        <View style={styles.categoriesSection}>
+        <YStack marginBottom={30}>
           <CategoryGrid
             categories={categories}
             onCategorySelect={handleCategorySelect}
             selectedCategoryId={selectedCategoryId}
             isLoading={categoriesLoading}
           />
-        </View>
+        </YStack>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: '#005191',
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontFamily: 'League Gothic',
-    fontSize: 28,
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  headerSubtitle: {
-    fontFamily: 'Roboto',
-    fontSize: 16,
-    color: 'white',
-    textAlign: 'center',
-    opacity: 0.9,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  locationSection: {
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  zipCodeContainer: {
-    flexDirection: 'row',
-    marginTop: 15,
-    alignItems: 'center',
-  },
-  zipCodeInput: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 16,
-    fontFamily: 'Roboto',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  zipCodeButton: {
-    backgroundColor: '#005191',
-    marginLeft: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  zipCodeButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  categoriesSection: {
-    marginBottom: 30,
-  },
-});
+// Styles removed - now using Tamagui components
