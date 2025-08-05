@@ -32,12 +32,12 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
               <CardContent className={`p-6 text-center ${colorClass} rounded-xl min-h-[130px] flex flex-col items-center justify-center`}>
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
                   {customIcon ? (
-                    <img src={customIcon} alt={category.name} className="h-8 w-8" />
+                    <img src={customIcon} alt={category.name} className="h-[42px] w-[42px]" />
                   ) : (
-                    <IconComponent className="h-8 w-8" />
+                    <IconComponent className="h-[42px] w-[42px]" />
                   )}
                 </div>
-                <h3 className="font-medium text-sm leading-tight">{category.name}</h3>
+                <h3 className="font-medium text-base leading-tight">{category.name}</h3>
               </CardContent>
             </Card>
           );
