@@ -51,10 +51,10 @@ const CategoryPNGIcons: Record<string, any> = {
   'housing': require('../assets/icons/housing.png'),
   'substance-use': require('../assets/icons/substance-use.png'),
   'young-adults': require('../assets/icons/young-adults.png'),
+  'transportation': require('../assets/icons/transportation.png'),
+  'hygiene-household': require('../assets/icons/hygiene-household.png'),
   // Add fallback for missing icons
-  'transportation': require('../assets/icons/housing.png'), // Using housing as fallback
   'mental-wellness': require('../assets/icons/healthcare.png'), // Using healthcare as fallback  
-  'hygiene-household': require('../assets/icons/housing.png'), // Using housing as fallback
   'utilities': require('../assets/icons/finance-employment.png'), // Using finance as fallback
 };
 

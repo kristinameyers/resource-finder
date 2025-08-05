@@ -11,6 +11,8 @@ import healthcareIcon from "../assets/icons/healthcare.png";
 import housingIcon from "../assets/icons/housing.png";
 import substanceUseIcon from "../assets/icons/substance-use.png";
 import youngAdultsIcon from "../assets/icons/young-adults.png";
+import transportationIcon from "../assets/icons/transportation.png";
+import hygieneHouseholdIcon from "../assets/icons/hygiene-household.png";
 
 interface CategoryGridProps {
   categories: Category[];
@@ -34,10 +36,10 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
             'housing': housingIcon,
             'substance-use': substanceUseIcon,
             'young-adults': youngAdultsIcon,
-            // Add fallbacks for missing icons
-            'transportation': housingIcon,
+            'transportation': transportationIcon,
+            'hygiene-household': hygieneHouseholdIcon,
+            // Add fallbacks for remaining missing icons
             'mental-wellness': healthcareIcon,
-            'hygiene-household': housingIcon,
             'utilities': financeEmploymentIcon,
           };
           
