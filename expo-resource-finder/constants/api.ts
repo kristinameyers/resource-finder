@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = 'https://your-replit-app-url.replit.app';
+export const API_BASE_URL = 'https://rest-express.replit.app';
 
-// You'll need to update this with your actual Replit app URL
-// For development, you might use your local server or ngrok tunnel
+// This connects to your existing web app backend
+// Change this to your actual Replit app URL when deploying

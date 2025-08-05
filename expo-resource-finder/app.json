@@ -16,14 +16,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.resourcefinder.app"
+      "bundleIdentifier": "com.resourcefinder.santabarbara"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#005191"
       },
-      "package": "com.resourcefinder.app"
+      "package": "com.resourcefinder.santabarbara"
     },
     "web": {
       "bundler": "metro",

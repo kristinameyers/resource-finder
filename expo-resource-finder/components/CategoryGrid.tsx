@@ -40,11 +40,16 @@ const categoryColors: Record<string, string> = {
 };
 
 const categoryIcons: Record<string, any> = {
-  // Note: Add actual icon files to assets/icons/ directory
-  // 'children-family': require('../assets/icons/children-family.png'),
-  // 'food': require('../assets/icons/food.png'),
-  // 'education': require('../assets/icons/education.png'),
-  // Add other icons as needed
+  'children-family': require('../assets/icons/children-family.png'),
+  'food': require('../assets/icons/food.png'),
+  'education': require('../assets/icons/education.png'),
+  'housing': require('../assets/icons/housing.png'),
+  'healthcare': require('../assets/icons/healthcare.png'),
+  'finance-employment': require('../assets/icons/finance-employment.png'),
+  'substance-use': require('../assets/icons/substance-use.png'),
+  'young-adults': require('../assets/icons/young-adults.png'),
+  'legal-assistance': require('../assets/icons/legal-assistance.png'),
+  'hygiene-household': require('../assets/icons/hygiene-household.png'),
 };
 
 export function CategoryGrid({ 
