@@ -45,9 +45,9 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// Using the correct 211 API endpoint structure 
-const API_BASE_URL = "https://api.211.org/resources/v2/search/keyword";  // Back to keyword endpoint
-const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
+// Using the correct iCarol API endpoint structure from your sample code
+const ICAROL_API_BASE_URL = "https://api.icarol.com/v1/resource/Search";
+const API_BASE_URL = "https://api.211.org/resources/v2/search/keyword";  // Keep as fallback
 
 // Get API key from environment variables  
 const SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545'; // Use your latest API key directly
@@ -796,20 +796,17 @@ export async function searchResources(
   // Get the proper taxonomy code using our imported taxonomy data
   let taxonomyCode: string;
   
-  // For subcategory searches, fall back to using the parent category taxonomy code
+  // Get taxonomy codes for both category and subcategory searches
   if (subcategory) {
-    console.log(`Subcategory search: falling back to parent category search for "${subcategory}"`);
-    
-    // Since subcategory-specific searches aren't working, use the parent category taxonomy code
-    // This will return relevant resources from the category that users can filter through
-    taxonomyCode = getCategoryTaxonomyCode(category);
-    console.log(`Using parent category taxonomy code: ${taxonomyCode} for subcategory: ${subcategory}`);
-    
+    // Try to get specific subcategory taxonomy code first
+    taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
     if (!taxonomyCode) {
-      console.log(`No parent category taxonomy code found for subcategory: ${subcategory}`);
-      return { resources: [], total: 0 };
+      // Fallback to category taxonomy code
+      taxonomyCode = getCategoryTaxonomyCode(category);
+      console.log(`No subcategory taxonomy code found, using category code: ${taxonomyCode} for ${subcategory}`);
+    } else {
+      console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
     }
-    // Continue with taxonomy search using parent category code
   } else {
     // Use the main category taxonomy code for category-level searches
     taxonomyCode = getCategoryTaxonomyCode(category);
