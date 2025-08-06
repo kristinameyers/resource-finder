@@ -50,7 +50,7 @@ const API_BASE_URL = "https://api.211.org/resources/v2/search";
 const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
 
 // Get API key from environment variables  
-const SUBSCRIPTION_KEY = "0b49fd58c6ba4f17836bd9a350c72fb4";
+const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY;
 
 console.log('National 211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
@@ -188,52 +188,52 @@ export async function searchResourcesByTaxonomyCode(
   offset: number = 0
 ): Promise<{ resources: Resource[], total: number }> {
   try {
-    console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
+    console.log(`\n=== DEBUGGING 211 API ===`);
+    console.log(`Taxonomy Code: ${taxonomyCode}`);
+    console.log(`API Key Present: ${!!SUBSCRIPTION_KEY}`);
+    console.log(`API Base URL: ${API_BASE_URL}`);
     
-    // Use Search V2 API format with proper request body structure
-    const requestBody = {
-      keywords: taxonomyCode,
-      keywordIsTaxonomyCode: true,
-      location: zipCode || 'United States',
-      distance: 25,
-      locationMode: 'Near',
-      skip: offset,
-      size: limit,
-      includeTotalCount: true,
-      orderByDistance: true
-    };
+    // Build request URL for the /keyword endpoint
+    const requestUrl = `${API_BASE_URL}/keyword`;
+    console.log('Testing basic API connectivity...');
     
-    // If coordinates are provided, use them instead of location string
-    if (latitude !== undefined && longitude !== undefined) {
-      requestBody.location = `${latitude},${longitude}`;
-    }
-    
-    console.log(`Making Search V2 API request to: ${API_BASE_URL}/keyword`);
-    console.log(`Request body:`, JSON.stringify(requestBody, null, 2));
-    
-    console.log(`Using API key: ${SUBSCRIPTION_KEY ? 'Key present' : 'No key found'}`);
-    console.log(`API key value: ${SUBSCRIPTION_KEY?.substring(0, 8)}...`);
-    
-    // Try GET method with query parameters as that seems to be the working approach
+    // Build query parameters for the GET request to /keyword endpoint
     const queryParams = new URLSearchParams({
       keywords: taxonomyCode,
-      location: zipCode || 'Santa Barbara, CA',
-      distance: '25',
       keywordIsTaxonomyCode: 'true',
-      skip: offset.toString(),
-      size: limit.toString()
+      locationMode: 'Serving', // Required field
+      size: limit.toString(),
+      skip: offset.toString()
     });
     
-    const getUrl = `${API_BASE_URL}?${queryParams.toString()}`;
-    console.log(`Making GET request to: ${getUrl}`);
+    // Add location parameter
+    if (zipCode) {
+      queryParams.set('location', zipCode);
+      queryParams.set('distance', '25');
+    } else if (latitude !== undefined && longitude !== undefined) {
+      queryParams.set('location', `${latitude},${longitude}`);
+      queryParams.set('distance', '25');
+    } else {
+      queryParams.set('location', 'Santa Barbara, CA'); // Default location
+      queryParams.set('distance', '25');
+    }
     
-    const response = await fetch(getUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY || ''
-      }
-    });
+    const fullUrl = `${requestUrl}?${queryParams.toString()}`;
+    console.log(`Making GET request to: ${fullUrl}`);
+    
+    let response: Response;
+    try {
+      response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Api-Key': SUBSCRIPTION_KEY || ''
+        }
+      });
+    } catch (connectivityError) {
+      console.error('API connectivity test failed:', connectivityError);
+      return { resources: [], total: 0 };
+    }
     
     if (!response.ok) {
       const errorText = await response.text();
