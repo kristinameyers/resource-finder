@@ -817,17 +817,38 @@ export async function searchResources(
     return { resources: [], total: 0 };
   }
 
-  // Use the taxonomy-based search function
+  // The API taxonomy endpoint isn't working reliably, so use keyword search with proper terms
+  console.log(`Using keyword search for taxonomy code ${taxonomyCode}`);
+  
+  // Map taxonomy codes to better search keywords
+  const taxonomyToKeyword: { [key: string]: string } = {
+    'P': 'children family services',
+    'BH': 'housing shelter',
+    'N': 'employment finance assistance',
+    'BD': 'food meals groceries',
+    'BT': 'transportation bus',
+    'L': 'healthcare medical clinic',
+    'H': 'education school',
+    'F': 'legal assistance',
+    'RX': 'substance abuse treatment',
+    'YB': 'youth young adult services'
+  };
+  
+  // Use a more specific search term based on taxonomy code
+  let searchTerm = taxonomyToKeyword[taxonomyCode] || category || subcategory || 'services';
+  
+  // If we have a subcategory, use its name for more specific results
+  if (subcategory) {
+    searchTerm = subcategory;
+  }
+  
+  console.log(`Using search term: "${searchTerm}" for category: ${category}, subcategory: ${subcategory}`);
+  
   try {
-    return await searchResourcesByTaxonomyCode(taxonomyCode, zipCode, latitude, longitude);
+    const fallbackResources = await searchResourcesByKeyword(searchTerm, zipCode, latitude, longitude);
+    return { resources: fallbackResources, total: fallbackResources.length };
   } catch (error) {
-    console.log(`Taxonomy search failed for ${taxonomyCode}, trying keyword fallback`);
-    // If taxonomy search fails, try a keyword search with the category/subcategory name
-    const searchTerm = subcategory || category;
-    if (searchTerm) {
-      const fallbackResources = await searchResourcesByKeyword(searchTerm, zipCode, latitude, longitude);
-      return { resources: fallbackResources, total: fallbackResources.length };
-    }
+    console.error(`Keyword search also failed:`, error);
     return { resources: [], total: 0 };
   }
 }
