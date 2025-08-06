@@ -50,7 +50,7 @@ const API_BASE_URL = "https://api.211.org/resources/v2/search";
 const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
 
 // Get API key from environment variables  
-const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY;
+const SUBSCRIPTION_KEY = "0b49fd58c6ba4f17836bd9a350c72fb4";
 
 console.log('National 211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
@@ -192,7 +192,7 @@ export async function searchResourcesByTaxonomyCode(
     
     // Use Search V2 API format with proper request body structure
     const requestBody = {
-      search: taxonomyCode,
+      keywords: taxonomyCode,
       keywordIsTaxonomyCode: true,
       location: zipCode || 'United States',
       distance: 25,
@@ -211,28 +211,26 @@ export async function searchResourcesByTaxonomyCode(
     console.log(`Making Search V2 API request to: ${API_BASE_URL}/keyword`);
     console.log(`Request body:`, JSON.stringify(requestBody, null, 2));
     
-    // Try GET method first as per documentation
+    console.log(`Using API key: ${SUBSCRIPTION_KEY ? 'Key present' : 'No key found'}`);
+    console.log(`API key value: ${SUBSCRIPTION_KEY?.substring(0, 8)}...`);
+    
+    // Try GET method with query parameters as that seems to be the working approach
     const queryParams = new URLSearchParams({
       keywords: taxonomyCode,
-      location: zipCode || 'United States',
+      location: zipCode || 'Santa Barbara, CA',
       distance: '25',
       keywordIsTaxonomyCode: 'true',
       skip: offset.toString(),
-      size: limit.toString(),
-      locationMode: 'Near',
-      orderByDistance: 'true'
+      size: limit.toString()
     });
     
-    const getUrl = `${API_BASE_URL}/keyword?${queryParams.toString()}`;
-    console.log(`Trying GET method first: ${getUrl}`);
-    
-    console.log(`Using API key: ${SUBSCRIPTION_KEY ? 'Key present' : 'No key found'}`);
+    const getUrl = `${API_BASE_URL}?${queryParams.toString()}`;
+    console.log(`Making GET request to: ${getUrl}`);
     
     const response = await fetch(getUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Subscription-Key': SUBSCRIPTION_KEY || '',
         'Api-Key': SUBSCRIPTION_KEY || ''
       }
     });
