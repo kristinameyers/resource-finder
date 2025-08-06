@@ -45,7 +45,7 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// National 211 API configuration using your provided credentials
+// National 211 API configuration using official endpoints from the PDF documentation
 const API_BASE_URL = "https://api.211.org/resources/v2/search";
 const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
 
@@ -112,7 +112,7 @@ function transformICarolResource(icarolItem: any): Resource {
     applicationProcess: undefined,
     // requiredDocuments: undefined, // Not in Resource interface
     fees: undefined,
-    serviceArea: undefined,
+    serviceAreas: undefined,
     source: 'iCarol'
   };
 }
@@ -188,46 +188,13 @@ export async function searchResourcesByTaxonomyCode(
   offset: number = 0
 ): Promise<{ resources: Resource[], total: number }> {
   try {
-    console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
+    console.log(`\n=== DEBUGGING 211 API ===`);
+    console.log(`Taxonomy Code: ${taxonomyCode}`);
+    console.log(`API Key Present: ${!!SUBSCRIPTION_KEY}`);
+    console.log(`API Base URL: ${API_BASE_URL}`);
     
-    // Use taxonomy codes directly as per the API documentation
-    // The API supports searching by taxonomy codes with keywordIsTaxonomyCode=true
-    // First try with taxonomy code, then fall back to keyword search if needed
-    const searchTerm = taxonomyCode;
-    
-    // Build query parameters (only keywords and location go in query string)
-    let queryParams = [
-      `keywords=${encodeURIComponent(searchTerm)}`, // Use taxonomy code
-    ];
-    
-    // Add location as query parameter if provided
-    if (zipCode) {
-      queryParams.push(`location=${zipCode}`);
-    } else if (latitude !== undefined && longitude !== undefined) {
-      // Use the correct longitude_latitude format: lon:-119.293106_lat:34.28083
-      queryParams.push(`location=lon:${longitude}_lat:${latitude}`);
-    }
-    
-    // Join the parameters with &
-    const queryString = queryParams.join('&');
-    
-    // Use the correct V2 API endpoint structure 
-    const requestUrl = `${API_BASE_URL}?${queryString}`;
-    console.log(`Making 211 API V2 request to: ${requestUrl}`);
-    
-    // Set headers with subscription key and search configuration
-    // According to OpenAPI 3.0.1 docs, these parameters go in headers
-    const headers: HeadersInit = {
-      'Accept': 'application/json',
-      'Api-Key': SUBSCRIPTION_KEY || '',
-      'Cache-Control': 'no-cache',
-      'keywordIsTaxonomyCode': 'true',
-      'searchMode': 'All'
-    };
-    
-    // Location parameters will be handled in the request body for POST or query params for GET
-    
-    console.log('Sending request with headers:', JSON.stringify(headers));
+    // Since API is returning 404 consistently, let's try a very basic request first
+    console.log('Testing basic API connectivity...');
     
     try {
       // Try GET method first with minimal headers
