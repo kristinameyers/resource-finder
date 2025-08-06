@@ -19,6 +19,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { LocationState } from "@/hooks/use-location";
 import { Check, Loader2, MapPin } from "lucide-react";
 import * as icons from "lucide-react";
@@ -121,186 +127,192 @@ export default function FilterSection({
 
   return (
     <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Resource Filters</CardTitle>
-        <CardDescription>
-          Find resources by category and location
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Category Filter */}
-        <div className="space-y-2">
-          <Label htmlFor="category" className="text-sm font-medium text-[#005191]">Category</Label>
-          <Select 
-            value={selectedCategoryId || "all"} 
-            onValueChange={handleCategoryChange}
-          >
-            <SelectTrigger id="category" className="h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20">
-              <SelectValue placeholder="Select a category" className="text-gray-700" />
-            </SelectTrigger>
-            <SelectContent className="max-h-80">
-              <SelectGroup>
-                <SelectItem value="all" className="font-medium">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id} className="py-3">
-                    <div className="flex items-center">
-                      {getCategoryIcon(category)}
-                      <span className="font-medium">{category.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Subcategory Filter - only show when a category is selected */}
-        {selectedCategoryId && (
-          <div className="space-y-2">
-            <Label htmlFor="subcategory" className="text-sm font-medium text-[#005191]">
-              Subcategory
-              {isLoadingSubcategories && (
-                <Loader2 className="h-3 w-3 ml-2 inline animate-spin text-[#256BAE]" />
-              )}
-            </Label>
-            <Select 
-              value={selectedSubcategoryId || "all"} 
-              onValueChange={handleSubcategoryChange}
-              disabled={isLoadingSubcategories || subcategories.length === 0}
-            >
-              <SelectTrigger id="subcategory" className="h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20 disabled:opacity-50">
-                <SelectValue placeholder={
-                  isLoadingSubcategories 
-                    ? "Loading subcategories..." 
-                    : subcategories.length === 0 
-                      ? "No subcategories available" 
-                      : "Select a subcategory"
-                } className="text-gray-700" />
-              </SelectTrigger>
-              <SelectContent className="max-h-80">
-                <SelectGroup>
-                  <SelectItem value="all" className="font-medium">All Subcategories</SelectItem>
-                  {subcategories.map((subcategory) => (
-                    <SelectItem key={subcategory.id} value={subcategory.id} className="py-2">
-                      <span className="font-medium">{subcategory.name}</span>
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        
-        {/* Location Filter */}
-        <div className="pt-4 border-t border-[#256BAE]/20">
-          <Label className="mb-3 block text-sm font-medium text-[#005191]">Location</Label>
-          
-          {/* Current location status */}
-          {locationState.type === 'coordinates' && (
-            <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
-              <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
-              <div className="text-sm">
-                <div className="font-medium text-[#005191]">Using your current location</div>
-                <div className="text-xs text-gray-600">
-                  {locationState.location ? locationState.location.name : 'Coordinates detected'}
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
-                onClick={handleClearLocation}
-              >
-                Clear
-              </Button>
+      <Accordion type="single" collapsible defaultValue="filters" className="w-full">
+        <AccordionItem value="filters">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex flex-col items-start text-left">
+              <h3 className="text-lg font-semibold text-[#005191]">Resource Filters</h3>
+              <p className="text-sm text-gray-600 font-normal">Find resources by category and location</p>
             </div>
-          )}
-          
-          {/* Zip code status */}
-          {locationState.type === 'zipCode' && (
-            <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
-              <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
-              <div className="text-sm">
-                <div className="font-medium text-[#005191]">Zip code: {locationState.zipCode}</div>
-                <div className="text-xs text-gray-600">
-                  {locationState.location 
-                    ? locationState.location.name 
-                    : 'Location not found for this zip code'}
-                </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <div className="space-y-4">
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-sm font-medium text-[#005191]">Category</Label>
+                <Select 
+                  value={selectedCategoryId || "all"} 
+                  onValueChange={handleCategoryChange}
+                >
+                  <SelectTrigger id="category" className="h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20">
+                    <SelectValue placeholder="Select a category" className="text-gray-700" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-80">
+                    <SelectGroup>
+                      <SelectItem value="all" className="font-medium">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id} className="py-3">
+                          <div className="flex items-center">
+                            {getCategoryIcon(category)}
+                            <span className="font-medium">{category.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
-                onClick={handleClearLocation}
-              >
-                Clear
-              </Button>
-            </div>
-          )}
-          
-          {/* Error status */}
-          {locationState.type === 'error' && (
-            <div className="mb-3 p-2 bg-destructive/10 rounded">
-              <div className="text-sm text-destructive">
-                {locationState.message}
-              </div>
-            </div>
-          )}
-          
-          {/* Location controls - always show */}
-          <div className="space-y-2">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE] hover:bg-[#256BAE]/10 text-[#005191] font-medium"
-                onClick={onUseMyLocation}
-                disabled={isLoadingLocation}
-              >
-                {isLoadingLocation ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <MapPin className="h-4 w-4 mr-2" />
-                )}
-                Use My Location
-              </Button>
               
-              <div className="relative w-full flex items-center">
-                <form onSubmit={handleZipCodeSubmit} className="w-full flex">
-                  <Input
-                    type="text"
-                    placeholder="Enter zip code"
-                    value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
-                    disabled={isLoadingLocation}
-                    className="w-full h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20 text-base px-4 font-medium disabled:opacity-50"
-                  />
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    size="sm"
-                    className="ml-2 h-12 px-4 border-2 border-[#256BAE]/20 hover:border-[#256BAE] hover:bg-[#256BAE]/10 text-[#005191] font-medium"
-                    disabled={!zipCode.trim() || isLoadingLocation}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (zipCode.trim()) {
-                        onZipCodeChange(zipCode);
-                      }
-                    }}
-                  >
-                    {isLoadingLocation ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Check className="h-4 w-4" />
+              {/* Subcategory Filter - only show when a category is selected */}
+              {selectedCategoryId && (
+                <div className="space-y-2">
+                  <Label htmlFor="subcategory" className="text-sm font-medium text-[#005191]">
+                    Subcategory
+                    {isLoadingSubcategories && (
+                      <Loader2 className="h-3 w-3 ml-2 inline animate-spin text-[#256BAE]" />
                     )}
-                  </Button>
-                </form>
+                  </Label>
+                  <Select 
+                    value={selectedSubcategoryId || "all"} 
+                    onValueChange={handleSubcategoryChange}
+                    disabled={isLoadingSubcategories || subcategories.length === 0}
+                  >
+                    <SelectTrigger id="subcategory" className="h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20 disabled:opacity-50">
+                      <SelectValue placeholder={
+                        isLoadingSubcategories 
+                          ? "Loading subcategories..." 
+                          : subcategories.length === 0 
+                            ? "No subcategories available" 
+                            : "Select a subcategory"
+                      } className="text-gray-700" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80">
+                      <SelectGroup>
+                        <SelectItem value="all" className="font-medium">All Subcategories</SelectItem>
+                        {subcategories.map((subcategory) => (
+                          <SelectItem key={subcategory.id} value={subcategory.id} className="py-2">
+                            <span className="font-medium">{subcategory.name}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {/* Location Filter */}
+              <div className="pt-4 border-t border-[#256BAE]/20">
+                <Label className="mb-3 block text-sm font-medium text-[#005191]">Location</Label>
+                
+                {/* Current location status */}
+                {locationState.type === 'coordinates' && (
+                  <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
+                    <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
+                    <div className="text-sm">
+                      <div className="font-medium text-[#005191]">Using your current location</div>
+                      <div className="text-xs text-gray-600">
+                        {locationState.location ? locationState.location.name : 'Coordinates detected'}
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
+                      onClick={handleClearLocation}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Zip code status */}
+                {locationState.type === 'zipCode' && (
+                  <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
+                    <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
+                    <div className="text-sm">
+                      <div className="font-medium text-[#005191]">Zip code: {locationState.zipCode}</div>
+                      <div className="text-xs text-gray-600">
+                        {locationState.location 
+                          ? locationState.location.name 
+                          : 'Location not found for this zip code'}
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
+                      onClick={handleClearLocation}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Error status */}
+                {locationState.type === 'error' && (
+                  <div className="mb-3 p-2 bg-destructive/10 rounded">
+                    <div className="text-sm text-destructive">
+                      {locationState.message}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Location controls - always show */}
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE] hover:bg-[#256BAE]/10 text-[#005191] font-medium"
+                      onClick={onUseMyLocation}
+                      disabled={isLoadingLocation}
+                    >
+                      {isLoadingLocation ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4 mr-2" />
+                      )}
+                      Use My Location
+                    </Button>
+                    
+                    <div className="relative w-full flex items-center">
+                      <form onSubmit={handleZipCodeSubmit} className="w-full flex">
+                        <Input
+                          type="text"
+                          placeholder="Enter zip code"
+                          value={zipCode}
+                          onChange={(e) => setZipCode(e.target.value)}
+                          disabled={isLoadingLocation}
+                          className="w-full h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20 text-base px-4 font-medium disabled:opacity-50"
+                        />
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          size="sm"
+                          className="ml-2 h-12 px-4 border-2 border-[#256BAE]/20 hover:border-[#256BAE] hover:bg-[#256BAE]/10 text-[#005191] font-medium"
+                          disabled={!zipCode.trim() || isLoadingLocation}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (zipCode.trim()) {
+                              onZipCodeChange(zipCode);
+                            }
+                          }}
+                        >
+                          {isLoadingLocation ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 }
