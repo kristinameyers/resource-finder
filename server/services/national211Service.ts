@@ -796,18 +796,19 @@ export async function searchResources(
   // Get the proper taxonomy code using our imported taxonomy data
   let taxonomyCode: string;
   
-  // If we have a subcategory, use its specific taxonomy code
+  // For subcategory searches, use keyword search instead of problematic subcategory taxonomy codes
   if (subcategory) {
-    taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
-    if (taxonomyCode) {
-      console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
-    } else {
-      // Fallback to category taxonomy if subcategory not found
-      taxonomyCode = getCategoryTaxonomyCode(category);
-      console.log(`Subcategory not found, using category taxonomy code: ${taxonomyCode} for ${category}`);
+    console.log(`Subcategory search: using keyword "${subcategory}" instead of taxonomy code`);
+    // Use keyword search for subcategories since taxonomy codes aren't working
+    try {
+      const subcategoryResources = await searchResourcesByKeyword(subcategory, zipCode, latitude, longitude);
+      return { resources: subcategoryResources, total: subcategoryResources.length };
+    } catch (error) {
+      console.error(`Subcategory keyword search failed:`, error);
+      return { resources: [], total: 0 };
     }
   } else {
-    // Use the main category taxonomy code
+    // Use the main category taxonomy code for category-level searches
     taxonomyCode = getCategoryTaxonomyCode(category);
     console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
   }
