@@ -130,22 +130,22 @@ export default function FilterSection({
       <CardContent className="space-y-4">
         {/* Category Filter */}
         <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
+          <Label htmlFor="category" className="text-sm font-medium text-[#005191]">Category</Label>
           <Select 
             value={selectedCategoryId || "all"} 
             onValueChange={handleCategoryChange}
           >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select a category" />
+            <SelectTrigger id="category" className="h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20">
+              <SelectValue placeholder="Select a category" className="text-gray-700" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-80">
               <SelectGroup>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all" className="font-medium">All Categories</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.id} className="py-3">
                     <div className="flex items-center">
                       {getCategoryIcon(category)}
-                      {category.name}
+                      <span className="font-medium">{category.name}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -157,10 +157,10 @@ export default function FilterSection({
         {/* Subcategory Filter - only show when a category is selected */}
         {selectedCategoryId && (
           <div className="space-y-2">
-            <Label htmlFor="subcategory">
+            <Label htmlFor="subcategory" className="text-sm font-medium text-[#005191]">
               Subcategory
               {isLoadingSubcategories && (
-                <Loader2 className="h-3 w-3 ml-2 inline animate-spin" />
+                <Loader2 className="h-3 w-3 ml-2 inline animate-spin text-[#256BAE]" />
               )}
             </Label>
             <Select 
@@ -168,21 +168,21 @@ export default function FilterSection({
               onValueChange={handleSubcategoryChange}
               disabled={isLoadingSubcategories || subcategories.length === 0}
             >
-              <SelectTrigger id="subcategory">
+              <SelectTrigger id="subcategory" className="h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20 disabled:opacity-50">
                 <SelectValue placeholder={
                   isLoadingSubcategories 
                     ? "Loading subcategories..." 
                     : subcategories.length === 0 
                       ? "No subcategories available" 
                       : "Select a subcategory"
-                } />
+                } className="text-gray-700" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-80">
                 <SelectGroup>
-                  <SelectItem value="all">All Subcategories</SelectItem>
+                  <SelectItem value="all" className="font-medium">All Subcategories</SelectItem>
                   {subcategories.map((subcategory) => (
-                    <SelectItem key={subcategory.id} value={subcategory.id}>
-                      {subcategory.name}
+                    <SelectItem key={subcategory.id} value={subcategory.id} className="py-2">
+                      <span className="font-medium">{subcategory.name}</span>
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -192,23 +192,23 @@ export default function FilterSection({
         )}
         
         {/* Location Filter */}
-        <div className="pt-2 border-t">
-          <Label className="mb-2 block">Location</Label>
+        <div className="pt-4 border-t border-[#256BAE]/20">
+          <Label className="mb-3 block text-sm font-medium text-[#005191]">Location</Label>
           
           {/* Current location status */}
           {locationState.type === 'coordinates' && (
-            <div className="mb-3 p-2 bg-primary/10 rounded flex items-center">
-              <MapPin className="h-4 w-4 mr-2 highlight" />
+            <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
+              <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
               <div className="text-sm">
-                <div className="font-medium">Using your current location</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-medium text-[#005191]">Using your current location</div>
+                <div className="text-xs text-gray-600">
                   {locationState.location ? locationState.location.name : 'Coordinates detected'}
                 </div>
               </div>
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="ml-auto" 
+                className="ml-auto text-[#005191] hover:bg-[#256BAE]/10" 
                 onClick={handleClearLocation}
               >
                 Clear
@@ -218,11 +218,11 @@ export default function FilterSection({
           
           {/* Zip code status */}
           {locationState.type === 'zipCode' && (
-            <div className="mb-3 p-2 bg-primary/10 rounded flex items-center">
-              <MapPin className="h-4 w-4 mr-2 highlight" />
+            <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
+              <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
               <div className="text-sm">
-                <div className="font-medium">Zip code: {locationState.zipCode}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-medium text-[#005191]">Zip code: {locationState.zipCode}</div>
+                <div className="text-xs text-gray-600">
                   {locationState.location 
                     ? locationState.location.name 
                     : 'Location not found for this zip code'}
