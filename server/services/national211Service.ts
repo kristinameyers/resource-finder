@@ -45,17 +45,16 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// API configuration - trying multiple endpoints to find the working one
-const ICAROL_API_BASE_URL = "https://api.icarol.com/v1/resource/Search";
-const NATIONAL_211_API_BASE_URL = "https://api.211.org/v2/search";
-const ALTERNATIVE_API_BASE_URL = "https://api.icarol.com/v1/Resource/Search";
+// National 211 API configuration using your provided credentials
+const API_BASE_URL = "https://api.211.org/resources/v2/search";
+const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
 
 // Get API key from environment variables  
-const API_TOKEN = process.env.NATIONAL_211_API_KEY;
+const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY;
 
-console.log('211 API configuration set up');
-console.log(`Primary API URL: ${ICAROL_API_BASE_URL}`);
-console.log(`Fallback API URL: ${NATIONAL_211_API_BASE_URL}`);
+console.log('National 211 API V2 configuration set up');
+console.log(`API URL: ${API_BASE_URL}`);
+console.log('Using proper National 211 API credentials');
 
 /**
  * Transform iCarol API resource to our Resource format (based on your sample code)
@@ -111,7 +110,7 @@ function transformICarolResource(icarolItem: any): Resource {
     languages: undefined,
     eligibility: undefined,
     applicationProcess: undefined,
-    requiredDocuments: undefined,
+    // requiredDocuments: undefined, // Not in Resource interface
     fees: undefined,
     serviceArea: undefined,
     source: 'iCarol'
@@ -147,11 +146,11 @@ export async function searchResourcesByKeyword(
     console.log(`Making 211 API keyword request with POST method`);
     console.log(`Request body:`, JSON.stringify(postBody));
     
-    const response = await fetch(NATIONAL_211_API_BASE_URL, {
+    const response = await fetch(API_BASE_URL, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
-        'Api-Key': API_TOKEN,
+        'Api-Key': SUBSCRIPTION_KEY || '',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(postBody)
@@ -213,14 +212,14 @@ export async function searchResourcesByTaxonomyCode(
     const queryString = queryParams.join('&');
     
     // Use the correct V2 API endpoint structure 
-    const requestUrl = `${NATIONAL_211_API_BASE_URL}?${queryString}`;
+    const requestUrl = `${API_BASE_URL}?${queryString}`;
     console.log(`Making 211 API V2 request to: ${requestUrl}`);
     
     // Set headers with subscription key and search configuration
     // According to OpenAPI 3.0.1 docs, these parameters go in headers
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Api-Key': API_TOKEN || '',
+      'Api-Key': SUBSCRIPTION_KEY || '',
       'Cache-Control': 'no-cache',
       'keywordIsTaxonomyCode': 'true',
       'searchMode': 'All'
@@ -234,7 +233,7 @@ export async function searchResourcesByTaxonomyCode(
       // Try GET method first with minimal headers
       const minimalHeaders: HeadersInit = {
         'Accept': 'application/json',
-        'Api-Key': API_TOKEN || '',
+        'Api-Key': SUBSCRIPTION_KEY || '',
         'Cache-Control': 'no-cache'
       };
       
@@ -277,13 +276,13 @@ export async function searchResourcesByTaxonomyCode(
         // Add headers for taxonomy code search
         const postHeaders = {
           'Accept': 'application/json',
-          'Api-Key': API_TOKEN || '',
+          'Api-Key': SUBSCRIPTION_KEY || '',
           'Content-Type': 'application/json'
         };
 
         console.log('Trying POST method with JSON body:', JSON.stringify(postBody));
         
-        response = await fetch(`${NATIONAL_211_API_BASE_URL}`, {
+        response = await fetch(`${API_BASE_URL}`, {
           method: 'POST',
           headers: postHeaders,
           body: JSON.stringify(postBody)
@@ -330,12 +329,12 @@ async function getDetailedResourceInfo(organizationId: string): Promise<any | nu
     console.log(`Fetching detailed info for organization ID: ${organizationId}`);
     
     // Try services-for-organization first
-    let requestUrl = `${NATIONAL_211_API_BASE_URL}/services-for-organization/${organizationId}`;
+    let requestUrl = `${QUERY_API_BASE_URL}/services-for-organization/${organizationId}`;
     console.log(`Trying services endpoint: ${requestUrl}`);
     
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Api-Key': API_TOKEN
+      'Api-Key': SUBSCRIPTION_KEY || ''
     };
     
     let response = await fetch(requestUrl, {
@@ -353,7 +352,7 @@ async function getDetailedResourceInfo(organizationId: string): Promise<any | nu
     
     // If services fails, try locations-for-organization (which has phones, schedules, etc.)
     console.log(`Services API failed (${response.status}), trying locations endpoint`);
-    requestUrl = `${NATIONAL_211_API_BASE_URL}/locations-for-organization/${organizationId}`;
+    requestUrl = `${QUERY_API_BASE_URL}/locations-for-organization/${organizationId}`;
     console.log(`Trying locations endpoint: ${requestUrl}`);
     
     response = await fetch(requestUrl, {
@@ -389,13 +388,13 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     console.log(`Fetching resource with ID: ${id}`);
     
     // Use the V2 API base URL for resource detail lookup
-    const requestUrl = `${NATIONAL_211_API_BASE_URL}/detail?id=${id}`;
+    const requestUrl = `${API_BASE_URL}/detail?id=${id}`;
     console.log(`Making 211 API V2 request to: ${requestUrl} for resource ${id}`);
     
     // Set headers with subscription key
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Api-Key': API_TOKEN
+      'Api-Key': SUBSCRIPTION_KEY || ''
     };
     
     console.log('Sending detail request with headers:', JSON.stringify(headers));
@@ -871,83 +870,22 @@ export async function searchResources(
     return { resources: [], total: 0 };
   }
 
-  // Use iCarol API exactly like your working sample code
-  console.log(`Using iCarol API with taxonomy code: ${taxonomyCode}`);
+  // Use National 211 API with taxonomy codes (applying principles from your sample)
+  console.log(`Using National 211 API with taxonomy code: ${taxonomyCode}`);
   
   try {
-    // Default location if none provided
-    let lat = latitude || 34.0522;  // Los Angeles default
-    let lng = longitude || -118.2437;
+    // Use the searchResourcesByTaxonomyCode function for proper 211 API implementation
+    const result = await searchResourcesByTaxonomyCode(
+      taxonomyCode,
+      zipCode,
+      latitude,
+      longitude
+    );
     
-    // Build API request exactly like your sample code
-    const apiBody = {
-      'term': '*',
-      'taxonomyCodes': [taxonomyCode],
-      'referenceLocations': [{
-        'latitude': lat,
-        'longitude': lng
-      }],
-      'locationFilter': 'serving',
-      'resourceType': 'Program',
-      'sort': 'Alphabetical',
-      'skip': 0,
-      'take': 20,
-      'taxonomyOperator': 'AND',
-      'taxonomyIncludeChildren': true
-    };
-    
-    console.log(`iCarol API request body:`, JSON.stringify(apiBody));
-    
-    // Try multiple authentication and endpoint patterns
-    const endpoints = [
-      {
-        url: ICAROL_API_BASE_URL,
-        headers: { 'Authorization': `Bearer ${API_TOKEN || ''}`, 'Content-Type': 'application/json; charset=utf-8' }
-      },
-      {
-        url: ALTERNATIVE_API_BASE_URL,
-        headers: { 'Authorization': `Bearer ${API_TOKEN || ''}`, 'Content-Type': 'application/json; charset=utf-8' }
-      },
-      {
-        url: NATIONAL_211_API_BASE_URL,
-        headers: { 'Api-Key': API_TOKEN || '', 'Content-Type': 'application/json' }
-      },
-      {
-        url: ICAROL_API_BASE_URL,
-        headers: { 'Api-Key': API_TOKEN || '', 'Content-Type': 'application/json' }
-      }
-    ];
-    
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Trying endpoint: ${endpoint.url}`);
-        const response = await fetch(endpoint.url, {
-          method: 'POST',
-          headers: endpoint.headers,
-          body: JSON.stringify(apiBody)
-        });
-        
-        if (response.ok) {
-          const data: any = await response.json();
-          console.log(`API search successful! Found ${data.results?.length || 0} resources`);
-          
-          if (data.results && data.results.length > 0) {
-            const resources = data.results.map((item: any) => transformICarolResource(item));
-            return { resources, total: data.totalResultCount || resources.length };
-          }
-        } else {
-          const errorText = await response.text();
-          console.log(`Endpoint ${endpoint.url} failed: ${response.status} ${errorText}`);
-        }
-      } catch (error) {
-        console.log(`Endpoint ${endpoint.url} error: ${error}`);
-      }
-    }
-    
-    return { resources: [], total: 0 };
+    return result;
     
   } catch (error) {
-    console.error(`iCarol API search failed:`, error);
+    console.error(`National 211 API search failed:`, error);
     return { resources: [], total: 0 };
   }
 }
