@@ -818,5 +818,16 @@ export async function searchResources(
   }
 
   // Use the taxonomy-based search function
-  return await searchResourcesByTaxonomyCode(taxonomyCode, zipCode, latitude, longitude);
+  try {
+    return await searchResourcesByTaxonomyCode(taxonomyCode, zipCode, latitude, longitude);
+  } catch (error) {
+    console.log(`Taxonomy search failed for ${taxonomyCode}, trying keyword fallback`);
+    // If taxonomy search fails, try a keyword search with the category/subcategory name
+    const searchTerm = subcategory || category;
+    if (searchTerm) {
+      const fallbackResources = await searchResourcesByKeyword(searchTerm, zipCode, latitude, longitude);
+      return { resources: fallbackResources, total: fallbackResources.length };
+    }
+    return { resources: [], total: 0 };
+  }
 }

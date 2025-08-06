@@ -46,40 +46,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
           console.log(`Using 211 API: ${useApi}`);
           
-          // Get the category to determine search approach
-          const categories = await storage.getCategories();
-          const category = categories.find(c => c.id === categoryId);
+          // Use the proper taxonomy-based search with the detailed codes
+          console.log(`Searching with category: ${categoryId}, subcategory: ${subcategoryId}`);
           
-          console.log(`Selected category: ${category?.name} (${categoryId})`);
+          // Use the searchResources function which handles taxonomy codes properly
+          const apiResult = await searchResources(
+            categoryId,
+            subcategoryId || null,
+            zipCode,
+            latitude,
+            longitude,
+            true
+          );
           
-          let resources: any[] = [];
-          
-          if (category) {
-            // Determine search keyword based on category and subcategory
-            let searchKeyword = category.name.toLowerCase();
-            
-            if (subcategoryId) {
-              const subcategories = await storage.getSubcategories(categoryId);
-              const subcategory = subcategories.find(s => s.id === subcategoryId);
-              if (subcategory) {
-                // Use subcategory name for more specific search
-                searchKeyword = subcategory.name.toLowerCase();
-                console.log(`Using subcategory keyword: ${searchKeyword}`);
-              } else {
-                console.log(`Using category keyword: ${searchKeyword}`);
-              }
-            } else {
-              console.log(`Using category keyword: ${searchKeyword}`);
-            }
-            
-            // Use keyword search (proven to work)
-            resources = await searchResourcesByKeyword(
-              searchKeyword,
-              zipCode,
-              latitude,
-              longitude
-            );
-          }
+          let resources = apiResult.resources;
             
             // Calculate distances for all resources, even without userZipCode
             if (resources.length > 0) {
