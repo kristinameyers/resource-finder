@@ -45,17 +45,75 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// Using the correct iCarol API endpoint structure from your sample code
+// Using iCarol API exactly like your working sample code
 const ICAROL_API_BASE_URL = "https://api.icarol.com/v1/resource/Search";
-const API_BASE_URL = "https://api.211.org/resources/v2/search/keyword";  // Keep as fallback
 
-// Get API key from environment variables  
-const SUBSCRIPTION_KEY = '535f3ff3321744c79fd85f4110b09545'; // Use your latest API key directly
+// Get API keys from environment variables  
+const ICAROL_API_TOKEN = process.env.NATIONAL_211_API_KEY;
 
-console.log('211 API V2 configuration set up');
-console.log(`API URL: ${API_BASE_URL}`);
-console.log('Using API key authentication with Api-Key header');
-console.log(`API Key: ${SUBSCRIPTION_KEY.substring(0, 8)}...${SUBSCRIPTION_KEY.substring(SUBSCRIPTION_KEY.length - 8)}`);
+console.log('iCarol API configuration set up');
+console.log(`iCarol API URL: ${ICAROL_API_BASE_URL}`);
+
+/**
+ * Transform iCarol API resource to our Resource format (based on your sample code)
+ */
+function transformICarolResource(icarolItem: any): Resource {
+  const resource = icarolItem.resource;
+  
+  // Extract primary name like your sample code
+  let name = '';
+  if (resource.names) {
+    resource.names.forEach((nameObj: any) => {
+      if (nameObj.purpose === 'Primary') {
+        name = nameObj.value;
+      }
+    });
+  }
+  
+  // Extract organization name
+  let organizationName = '';
+  if (resource.related) {
+    resource.related.forEach((relatedObj: any) => {
+      if (relatedObj.type === 'Agency') {
+        organizationName = relatedObj.name;
+      }
+    });
+  }
+  
+  // Extract address
+  let address = '';
+  if (resource.addresses && resource.addresses.length > 0) {
+    const addr = resource.addresses[0];
+    address = `${addr.address1 || ''} ${addr.city || ''} ${addr.stateProvince || ''} ${addr.postalCode || ''}`.trim();
+  }
+  
+  // Extract phone
+  let phone = '';
+  if (resource.phones && resource.phones.length > 0) {
+    phone = resource.phones[0].number || '';
+  }
+  
+  return {
+    id: icarolItem.resourceId || `icarol-${Date.now()}`,
+    name: name || 'Unknown Service',
+    organization: organizationName || 'Unknown Organization',
+    description: resource.description || '',
+    address: address,
+    phone: phone,
+    website: resource.website || '',
+    categoryId: 'general',
+    subcategoryId: undefined,
+    hours: undefined,
+    accessibility: undefined,
+    languages: undefined,
+    eligibility: undefined,
+    applicationProcess: undefined,
+    requiredDocuments: undefined,
+    fees: undefined,
+    serviceArea: undefined,
+    source: 'iCarol'
+  };
+}
 
 /**
  * Searches for resources by keyword (fallback for compatibility)
@@ -793,12 +851,11 @@ export async function searchResources(
     return { resources: [], total: 0 };
   }
 
-  // Get the proper taxonomy code using our imported taxonomy data
+  // Get the proper taxonomy code using the taxonomy data exactly like your working app
   let taxonomyCode: string;
   
-  // Get taxonomy codes for both category and subcategory searches
+  // Use taxonomy codes for both category and subcategory searches (like your sample code)
   if (subcategory) {
-    // Try to get specific subcategory taxonomy code first
     taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
     if (!taxonomyCode) {
       // Fallback to category taxonomy code
@@ -808,7 +865,6 @@ export async function searchResources(
       console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
     }
   } else {
-    // Use the main category taxonomy code for category-level searches
     taxonomyCode = getCategoryTaxonomyCode(category);
     console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
   }
@@ -818,85 +874,59 @@ export async function searchResources(
     return { resources: [], total: 0 };
   }
 
-  // Try taxonomy-based search with correct API format
-  console.log(`Attempting direct taxonomy search with code: ${taxonomyCode}`);
+  // Use iCarol API exactly like your working sample code
+  console.log(`Using iCarol API with taxonomy code: ${taxonomyCode}`);
   
   try {
-    // Try POST method with taxonomyCodes array parameter
-    const postBody: any = {
-      search: taxonomyCode,
-      input: taxonomyCode,
-      taxonomyCodes: [taxonomyCode],
-      distance: 25,
-      locationMode: 'Serving'
+    // Default location if none provided
+    let lat = latitude || 34.0522;  // Los Angeles default
+    let lng = longitude || -118.2437;
+    
+    // Build API request exactly like your sample code
+    const apiBody = {
+      'term': '*',
+      'taxonomyCodes': [taxonomyCode],
+      'referenceLocations': [{
+        'latitude': lat,
+        'longitude': lng
+      }],
+      'locationFilter': 'serving',
+      'resourceType': 'Program',
+      'sort': 'Alphabetical',
+      'skip': 0,
+      'take': 20,
+      'taxonomyOperator': 'AND',
+      'taxonomyIncludeChildren': true
     };
     
-    if (zipCode) {
-      postBody.location = zipCode;
-    } else if (latitude !== undefined && longitude !== undefined) {
-      postBody.location = `lon:${longitude}_lat:${latitude}`;
-    } else {
-      postBody.location = 'United States';
-      postBody.distance = 5000;
-    }
+    console.log(`iCarol API request body:`, JSON.stringify(apiBody));
     
-    console.log(`Trying taxonomy search with body:`, JSON.stringify(postBody));
-    
-    const response = await fetch(API_BASE_URL, {
+    const response = await fetch(ICAROL_API_BASE_URL, {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY,
-        'Content-Type': 'application/json'
+        'Authorization': 'Bearer ' + ICAROL_API_TOKEN,
+        'Content-Type': 'application/json; charset=utf-8'
       },
-      body: JSON.stringify(postBody)
+      body: JSON.stringify(apiBody)
     });
     
     if (response.ok) {
       const data: any = await response.json();
-      console.log(`Taxonomy search successful! Found ${data.results?.length || 0} resources`);
+      console.log(`iCarol API search successful! Found ${data.results?.length || 0} resources`);
       
       if (data.results && data.results.length > 0) {
-        const resources = data.results.map((item: any) => transformResource(item));
-        return { resources, total: resources.length };
+        const resources = data.results.map((item: any) => transformICarolResource(item));
+        return { resources, total: data.totalResultCount || resources.length };
       }
     } else {
-      console.log(`Taxonomy search failed with status ${response.status}, trying keyword fallback`);
+      const errorText = await response.text();
+      console.log(`iCarol API Error: ${response.status} ${errorText}`);
     }
+    
+    return { resources: [], total: 0 };
+    
   } catch (error) {
-    console.log(`Taxonomy search error: ${error}, trying keyword fallback`);
-  }
-  
-  // Fallback to keyword search with intelligent terms
-  console.log(`Using keyword fallback for taxonomy code ${taxonomyCode}`);
-  
-  let searchTerm: string;
-  if (subcategory) {
-    searchTerm = subcategory;
-    console.log(`Using subcategory name: "${searchTerm}"`);
-  } else {
-    // Map taxonomy codes to effective search terms
-    const taxonomyToKeyword: { [key: string]: string } = {
-      'P': 'children family',
-      'BH': 'housing',
-      'N': 'employment',
-      'BD': 'food',
-      'BT': 'transportation',
-      'L': 'healthcare',
-      'H': 'education',
-      'F': 'legal',
-      'RX': 'substance abuse',
-      'YB': 'youth'
-    };
-    searchTerm = taxonomyToKeyword[taxonomyCode] || category || 'services';
-    console.log(`Using category-based keyword: "${searchTerm}"`);
-  }
-  
-  try {
-    const fallbackResources = await searchResourcesByKeyword(searchTerm, zipCode, latitude, longitude);
-    return { resources: fallbackResources, total: fallbackResources.length };
-  } catch (error) {
-    console.error(`Both taxonomy and keyword search failed:`, error);
+    console.error(`iCarol API search failed:`, error);
     return { resources: [], total: 0 };
   }
 }
