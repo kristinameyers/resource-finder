@@ -796,15 +796,75 @@ export async function searchResources(
   // Get the proper taxonomy code using our imported taxonomy data
   let taxonomyCode: string;
   
-  // For subcategory searches, use keyword search instead of problematic subcategory taxonomy codes
+  // For subcategory searches, use the same taxonomy approach but with better keywords
   if (subcategory) {
-    console.log(`Subcategory search: using keyword "${subcategory}" instead of taxonomy code`);
-    // Use keyword search for subcategories since taxonomy codes aren't working
+    console.log(`Subcategory search: using enhanced keyword for "${subcategory}"`);
+    
+    // Map common subcategory patterns to better search terms
+    const subcategoryKeywordMap: { [key: string]: string } = {
+      'adult-literacy': 'literacy education adult learning',
+      'dropout-prevention': 'dropout prevention high school',
+      'career-counseling': 'career counseling job training',
+      'childcare-referrals': 'childcare daycare child care',
+      'breastfeeding-support': 'breastfeeding lactation support',
+      'family-law-courts': 'family court legal services',
+      'adoption-counseling': 'adoption services counseling',
+      'domestic-violence': 'domestic violence shelter services',
+      'calfresh': 'food stamps SNAP CalFresh',
+      'bus-services': 'public transportation bus',
+      'alcohol-detox': 'alcohol detox treatment',
+      'clinics-urgent-care': 'health clinic urgent care medical',
+      'criminal-courts': 'criminal court legal services'
+    };
+    
+    const searchTerm = subcategoryKeywordMap[subcategory] || subcategory.replace('-', ' ');
+    console.log(`Using enhanced search term: "${searchTerm}" for subcategory: ${subcategory}`);
+    
+    // Use the same successful taxonomy-based search method that works for categories
     try {
-      const subcategoryResources = await searchResourcesByKeyword(subcategory, zipCode, latitude, longitude);
-      return { resources: subcategoryResources, total: subcategoryResources.length };
+      const postBody: any = {
+        search: searchTerm,
+        input: searchTerm,
+        distance: 25,
+        locationMode: 'Serving'
+      };
+      
+      if (zipCode) {
+        postBody.location = zipCode;
+      } else if (latitude !== undefined && longitude !== undefined) {
+        postBody.location = `lon:${longitude}_lat:${latitude}`;
+      } else {
+        postBody.location = 'United States';
+        postBody.distance = 5000;
+      }
+      
+      console.log(`Trying subcategory search with body:`, JSON.stringify(postBody));
+      
+      const response = await fetch(API_BASE_URL, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Api-Key': SUBSCRIPTION_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postBody)
+      });
+      
+      if (response.ok) {
+        const data: any = await response.json();
+        console.log(`Subcategory search successful! Found ${data.results?.length || 0} resources`);
+        
+        if (data.results && data.results.length > 0) {
+          const resources = data.results.map((item: any) => transformResource(item));
+          return { resources, total: resources.length };
+        }
+      }
+      
+      console.log(`Subcategory search returned no results for: ${searchTerm}`);
+      return { resources: [], total: 0 };
+      
     } catch (error) {
-      console.error(`Subcategory keyword search failed:`, error);
+      console.error(`Subcategory search failed:`, error);
       return { resources: [], total: 0 };
     }
   } else {
