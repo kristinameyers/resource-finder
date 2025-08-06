@@ -113,7 +113,7 @@ function transformICarolResource(icarolItem: any): Resource {
     // requiredDocuments: undefined, // Not in Resource interface
     fees: undefined,
     serviceAreas: undefined,
-    source: 'iCarol'
+    // source: 'iCarol' // Not in Resource interface
   };
 }
 
@@ -188,103 +188,72 @@ export async function searchResourcesByTaxonomyCode(
   offset: number = 0
 ): Promise<{ resources: Resource[], total: number }> {
   try {
-    console.log(`\n=== DEBUGGING 211 API ===`);
-    console.log(`Taxonomy Code: ${taxonomyCode}`);
-    console.log(`API Key Present: ${!!SUBSCRIPTION_KEY}`);
-    console.log(`API Base URL: ${API_BASE_URL}`);
+    console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
     
-    // Since API is returning 404 consistently, let's try a very basic request first
-    console.log('Testing basic API connectivity...');
+    // Build POST request body for National 211 API
+    const postBody: any = {
+      search: taxonomyCode,
+      input: taxonomyCode,
+      keywordIsTaxonomyCode: true,
+      skip: offset,
+      size: limit,
+      includeTotalCount: true
+    };
     
-    try {
-      // Try GET method first with minimal headers
-      const minimalHeaders: HeadersInit = {
-        'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY || '',
-        'Cache-Control': 'no-cache'
-      };
-      
-      console.log('Trying GET method with minimal headers first...');
-      let response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: minimalHeaders
-      });
-      
-      // If GET fails, try POST with JSON body (keeping taxonomy code approach)
-      if (!response.ok) {
-        console.log('GET failed, trying POST method with JSON body...');
-        
-        // Build POST body with correct API structure
-        // Using taxonomy code directly as search term
-        const postBody: any = {
-          search: taxonomyCode,
-          input: taxonomyCode, // Required field based on validation error
-          keywordIsTaxonomyCode: true,
-          skip: 0,
-          size: 20,
-          includeTotalCount: true
-        };
-        
-        if (zipCode) {
-          postBody.location = zipCode;
-          postBody.distance = 25;
-          postBody.locationMode = 'Serving';
-        } else if (latitude !== undefined && longitude !== undefined) {
-          postBody.location = `lon:${longitude}_lat:${latitude}`;
-          postBody.distance = 25;
-          postBody.locationMode = 'Near';
-        } else {
-          // Provide default location if none specified
-          postBody.location = 'United States';
-          postBody.distance = 5000;
-          postBody.locationMode = 'Serving';
-        }
-        
-        // Add headers for taxonomy code search
-        const postHeaders = {
-          'Accept': 'application/json',
-          'Api-Key': SUBSCRIPTION_KEY || '',
-          'Content-Type': 'application/json'
-        };
-
-        console.log('Trying POST method with JSON body:', JSON.stringify(postBody));
-        
-        response = await fetch(`${API_BASE_URL}`, {
-          method: 'POST',
-          headers: postHeaders,
-          body: JSON.stringify(postBody)
-        });
-      }
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`211 API Error: ${response.status}`, errorText);
-        throw new Error(`211 API Error: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json() as SearchResourcesResponse;
-      console.log(`Received ${data.resources?.length || 0} resources from 211 API`);
-      
-      // Transform the 211 resource format to our app's resource format
-      const transformedResources = data.resources?.map(transformResource) || [];
-      
-      return {
-        resources: transformedResources,
-        total: data.total || transformedResources.length,
-      };
-    } catch (apiError) {
-      console.error('API Integration Error:', apiError);
-      console.log('API request failed, returning empty result for now');
-      
-      // Return empty results when API fails - this allows for better debugging
-      return {
-        resources: [],
-        total: 0
-      };
+    // Add location parameters
+    if (zipCode) {
+      postBody.location = zipCode;
+      postBody.distance = 25;
+      postBody.locationMode = 'Serving';
+    } else if (latitude !== undefined && longitude !== undefined) {
+      postBody.location = `lon:${longitude}_lat:${latitude}`;
+      postBody.distance = 25;
+      postBody.locationMode = 'Near';
+    } else {
+      postBody.location = 'United States';
+      postBody.distance = 5000;
+      postBody.locationMode = 'Serving';
     }
+    
+    const postHeaders = {
+      'Accept': 'application/json',
+      'Api-Key': SUBSCRIPTION_KEY || '',
+      'Content-Type': 'application/json'
+    };
+
+    console.log('Making National 211 API POST request:', JSON.stringify(postBody));
+    
+    let response = await fetch(`${API_BASE_URL}`, {
+      method: 'POST',
+      headers: postHeaders,
+      body: JSON.stringify(postBody)
+    });
+
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`211 API Error: ${response.status}`, errorText);
+      throw new Error(`211 API Error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json() as SearchResourcesResponse;
+    console.log(`Received ${data.resources?.length || 0} resources from 211 API`);
+    
+    // Transform the 211 resource format to our app's resource format
+    const transformedResources = data.resources?.map(transformResource) || [];
+    
+    return {
+      resources: transformedResources,
+      total: data.total || transformedResources.length,
+    };
   } catch (error) {
     console.error('Error searching resources by taxonomy:', error);
-    throw error;
+    
+    // Return empty results instead of throwing to keep app functional
+    return {
+      resources: [],
+      total: 0
+    };
   }
 }
 
