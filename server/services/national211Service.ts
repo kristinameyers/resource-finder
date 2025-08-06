@@ -45,9 +45,9 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// National 211 API configuration using official endpoints from the PDF documentation
-const API_BASE_URL = "https://api.211.org/resources/v2/search";
-const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
+// National 211 API configuration - use environment URL (working v1 endpoint)
+const API_BASE_URL = process.env.NATIONAL_211_API_URL || "https://api.211.org/search/v1/api/";
+const QUERY_API_BASE_URL = process.env.NATIONAL_211_API_URL || "https://api.211.org/search/v1/api/";
 
 // Get API key from environment variables  
 const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY;
@@ -190,57 +190,50 @@ export async function searchResourcesByTaxonomyCode(
   try {
     console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
     
-    // Build POST request body for National 211 API
+    // Use POST method with v1 API format (matching working commit)
     const postBody: any = {
       search: taxonomyCode,
       input: taxonomyCode,
-      keywordIsTaxonomyCode: true,
-      skip: offset,
-      size: limit,
-      includeTotalCount: true
+      locationMode: 'Serving',
+      distance: 25,
+      location: zipCode || 'United States'
     };
     
-    // Add location parameters
-    if (zipCode) {
-      postBody.location = zipCode;
-      postBody.distance = 25;
-      postBody.locationMode = 'Serving';
-    } else if (latitude !== undefined && longitude !== undefined) {
-      postBody.location = `lon:${longitude}_lat:${latitude}`;
-      postBody.distance = 25;
-      postBody.locationMode = 'Near';
-    } else {
-      postBody.location = 'United States';
-      postBody.distance = 5000;
-      postBody.locationMode = 'Serving';
+    if (latitude !== undefined && longitude !== undefined) {
+      postBody.longitude_latitude = `lon:${longitude}_lat:${latitude}`;
+      delete postBody.location; // Use coordinates instead of location
     }
     
-    const postHeaders = {
-      'Accept': 'application/json',
-      'Api-Key': SUBSCRIPTION_KEY || '',
-      'Content-Type': 'application/json'
-    };
-
-    console.log('Making National 211 API POST request:', JSON.stringify(postBody));
+    console.log(`Making 211 API request with POST method`);
+    console.log(`Request body:`, JSON.stringify(postBody));
     
-    let response = await fetch(`${API_BASE_URL}`, {
+    const response = await fetch(API_BASE_URL, {
       method: 'POST',
-      headers: postHeaders,
+      headers: {
+        'Accept': 'application/json',
+        'Api-Key': SUBSCRIPTION_KEY || '',
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(postBody)
     });
-
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`211 API Error: ${response.status}`, errorText);
+      console.log(`211 API Error: ${response.status} ${errorText}`);
       throw new Error(`211 API Error: ${response.status} - ${errorText}`);
     }
     
-    const data = await response.json() as SearchResourcesResponse;
-    console.log(`Received ${data.resources?.length || 0} resources from 211 API`);
+    const data: any = await response.json();
+    console.log(`API response received with ${data.results?.length || 0} resources`);
     
-    // Transform the 211 resource format to our app's resource format
-    const transformedResources = data.resources?.map(transformResource) || [];
+    if (!data.results || data.results.length === 0) {
+      return {
+        resources: [],
+        total: 0
+      };
+    }
+    
+    const transformedResources = data.results.map(transformResource);
     
     return {
       resources: transformedResources,
