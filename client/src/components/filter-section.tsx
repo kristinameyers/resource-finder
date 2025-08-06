@@ -208,7 +208,7 @@ export default function FilterSection({
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="ml-auto text-[#005191] hover:bg-[#256BAE]/10" 
+                className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
                 onClick={handleClearLocation}
               >
                 Clear
@@ -231,7 +231,7 @@ export default function FilterSection({
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="ml-auto" 
+                className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
                 onClick={handleClearLocation}
               >
                 Clear
@@ -254,7 +254,7 @@ export default function FilterSection({
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full btn-highlight"
+                className="w-full h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE] hover:bg-[#256BAE]/10 text-[#005191] font-medium"
                 onClick={onUseMyLocation}
                 disabled={isLoadingLocation}
               >
@@ -274,13 +274,13 @@ export default function FilterSection({
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
                     disabled={isLoadingLocation}
-                    className="w-full"
+                    className="w-full h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20 text-base px-4 font-medium disabled:opacity-50"
                   />
                   <Button
                     type="submit"
                     variant="outline"
                     size="sm"
-                    className="ml-2 btn-highlight"
+                    className="ml-2 h-12 px-4 border-2 border-[#256BAE]/20 hover:border-[#256BAE] hover:bg-[#256BAE]/10 text-[#005191] font-medium"
                     disabled={!zipCode.trim() || isLoadingLocation}
                     onClick={(e) => {
                       e.preventDefault();
