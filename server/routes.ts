@@ -46,17 +46,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
           console.log(`Using 211 API: ${useApi}`);
           
-          // Use the proper searchResources function that handles taxonomy codes
-          const apiResult = await searchResources(
-            categoryId,
-            subcategoryId || null, 
-            zipCode,
-            latitude,
-            longitude,
-            true
-          );
+          // Get the category to determine search approach
+          const categories = await storage.getCategories();
+          const category = categories.find(c => c.id === categoryId);
           
-          let resources = apiResult.resources;
+          console.log(`Selected category: ${category?.name} (${categoryId})`);
+          
+          let resources: any[] = [];
+          
+          if (category) {
+            // Determine search keyword based on category and subcategory
+            let searchKeyword = category.name.toLowerCase();
+            
+            if (subcategoryId) {
+              const subcategories = await storage.getSubcategories(categoryId);
+              const subcategory = subcategories.find(s => s.id === subcategoryId);
+              if (subcategory) {
+                // Use subcategory name for more specific search
+                searchKeyword = subcategory.name.toLowerCase();
+                console.log(`Using subcategory keyword: ${searchKeyword}`);
+              } else {
+                console.log(`Using category keyword: ${searchKeyword}`);
+              }
+            } else {
+              console.log(`Using category keyword: ${searchKeyword}`);
+            }
+            
+            // Use keyword search (proven to work)
+            resources = await searchResourcesByKeyword(
+              searchKeyword,
+              zipCode,
+              latitude,
+              longitude
+            );
+          }
             
             // Calculate distances for all resources, even without userZipCode
             if (resources.length > 0) {

@@ -151,8 +151,8 @@ export async function searchResourcesByTaxonomyCode(
     // Join the parameters with &
     const queryString = queryParams.join('&');
     
-    // Use the correct V2 API endpoint structure (with /keyword path)
-    const requestUrl = `${API_BASE_URL}/keyword?${queryString}`;
+    // Use the correct V2 API endpoint structure 
+    const requestUrl = `${API_BASE_URL}?${queryString}`;
     console.log(`Making 211 API V2 request to: ${requestUrl}`);
     
     // Set headers with subscription key and search configuration
