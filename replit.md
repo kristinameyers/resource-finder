@@ -39,6 +39,18 @@ The application adopts a modern full-stack architecture, separating frontend and
 
 ## Recent Changes (January 2025)
 
+### National 211 API Integration Breakthrough (January 6, 2025)
+- **RESOLVED**: Major API authentication and endpoint discovery completed successfully 
+- **Working Endpoint**: `/keyword` endpoint at https://api.211.org/resources/v2/search/keyword confirmed functional
+- **Authentication Method**: `Api-Key` header format verified working with production key 0b49fd58c6ba4f17836bd9a350c72fb4
+- **Parameter Format**: locationMode as header, keywordIsTaxonomyCode as header, location/distance as query parameters
+- **Response Handling**: API returns 404 for "no results found" (not endpoint errors), 200 for successful data retrieval
+- **Data Retrieval Success**: Confirmed live data retrieval from Los Angeles area showing real food pantry and resource information
+- **Fallback Strategy**: Implemented taxonomy code → text search fallback for better result coverage
+- **Response Format**: API returns 'results' array with 'count' field, properly mapped to application format
+
+## Recent Changes (January 2025)
+
 - **Typography Overhaul**: Completely replaced League Gothic with Roboto font family across both web and mobile applications. All text now uses Roboto Regular (400), Medium (500), and Bold (700) weights for consistency.
 - **Category Card Design Fix**: Resolved background color extension issue for Food and Education category cards by replacing shadcn Card components with direct div structure, ensuring colors extend fully to card edges.
 - **Custom PNG Icon System**: Replaced all SVG icons with custom PNG designs featuring category-specific symbols (education A-Z book, legal justice scales, children graduation cap, food fork/knife circle, finance dollar bill, healthcare heart pulse, housing house, substance use pill, young adults people group, transportation bus, hygiene clean hands with sparkles).
