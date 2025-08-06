@@ -84,6 +84,7 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Response Format**: API returns 'results' array with 'count' field containing full resource objects
 - **Data Success**: Confirmed retrieval of real Santa Barbara resources (Adam's Angels, Salvation Army, etc.)
 - **Smart Fallback**: Implemented taxonomy code → text search fallback ensuring maximum result coverage
+- **Distance Calculation Restored (January 6, 2025)**: Full distance calculation system operational with 33,782 zip code database, accurate Haversine formula, and distance-based sorting. Blue distance badges display correctly on resource cards when user enters location.
 
 ## Recent Changes (January 2025)
 
@@ -94,6 +95,7 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Mobile App Fonts**: Integrated custom Roboto font files into React Native app with proper font family declarations for cross-platform consistency.
 - **Design Consistency**: Both web and mobile apps now maintain identical visual styling with proper color coverage, typography, and modern card frame design.
 - **Enhanced Filter Section UI (January 6, 2025)**: Upgraded Category and Subcategory select components with professional blue-themed styling, enhanced borders, hover states, and improved typography. Implemented Tamagui-inspired zip code input with size="$4" equivalent styling and borderWidth={2}. Wrapped entire Resource Filters section in collapsible accordion with professional blue header design, providing better space management while maintaining all enhanced functionality.
+- **UI Improvements (January 6, 2025)**: Removed "Visit Website" buttons from resource listing page as requested, maintaining clean single "View Details" button design.
 
 ## External Dependencies
 

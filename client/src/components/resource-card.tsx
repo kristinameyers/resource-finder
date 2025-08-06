@@ -73,10 +73,10 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
         />
       </div>
       
-      <CardFooter className="pt-2 flex gap-2">
+      <CardFooter className="pt-2">
         <Button 
           variant="default" 
-          className="flex-1 btn-highlight" 
+          className="w-full btn-highlight" 
           size="sm"
           asChild
         >
@@ -85,18 +85,6 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
             View Details
           </Link>
         </Button>
-        
-        {resource.url && (
-          <Button 
-            variant="outline" 
-            className="flex-1" 
-            size="sm"
-            onClick={() => window.open(resource.url, '_blank')}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" /> 
-            Visit Website
-          </Button>
-        )}
       </CardFooter>
     </Card>
   );
