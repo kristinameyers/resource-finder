@@ -484,7 +484,7 @@ function transformResource(apiResource: any): Resource {
         
         if (listItems.length > 2) {
           const bulletList = listItems
-            .map(item => `• ${item.trim().replace(/,$/, '')}`)
+            .map((item: string) => `• ${item.trim().replace(/,$/, '')}`)
             .join('\n');
           return `${intro}\n${bulletList}`;
         }
@@ -499,8 +499,8 @@ function transformResource(apiResource: any): Resource {
         // If we have multiple capitalized phrases in sequence, convert to list
         if (items.length >= 3) {
           return items
-            .filter(item => item && item.trim())
-            .map(item => `• ${item.trim()}`)
+            .filter((item: string) => item && item.trim())
+            .map((item: string) => `• ${item.trim()}`)
             .join('\n');
         }
         return match;

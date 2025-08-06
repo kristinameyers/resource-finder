@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { resourceSchema } from "@shared/schema";
-import { searchResourcesByTaxonomyCode, searchResourcesByKeyword, getResourceById } from "./services/national211Service";
+import { searchResourcesByTaxonomyCode, searchResourcesByKeyword, getResourceById, searchResources } from "./services/national211Service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -42,25 +42,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If useApi flag is true and we have a categoryId, use the 211 API
       if (useApi && categoryId) {
         try {
-          // Get the category to find its taxonomy code
-          const categories = await storage.getCategories();
-          const category = categories.find(c => c.id === categoryId);
-          
-          console.log(`Selected category: ${categoryId}, Taxonomy Code: ${category?.taxonomyCode}`);
+          console.log(`Selected category: ${categoryId}, Subcategory: ${subcategoryId}`);
           console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
           console.log(`Using 211 API: ${useApi}`);
           
-          if (category?.taxonomyCode) {
-            // Use the proven working keyword search method with category name
-            console.log(`Searching 211 API for category: ${category.name} (taxonomy: ${category.taxonomyCode})`);
-            
-            const keyword = category.name.toLowerCase();
-            let resources = await searchResourcesByKeyword(
-              keyword,
-              zipCode,
-              latitude,
-              longitude
-            );
+          // Use the proper searchResources function that handles taxonomy codes
+          const apiResult = await searchResources(
+            categoryId,
+            subcategoryId || null, 
+            zipCode,
+            latitude,
+            longitude,
+            true
+          );
+          
+          let resources = apiResult.resources;
             
             // Calculate distances for all resources, even without userZipCode
             if (resources.length > 0) {
@@ -94,18 +90,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
 
-            }
-            
-            console.log(`211 API returned ${resources.length} resources for ${category.name}`);
-            
-            return res.status(200).json({
-              resources: resources,
-              total: resources.length,
-              source: '211_API'
-            });
-          } else {
-            console.log(`Cannot use API: Missing taxonomy code for category ${categoryId}`);
           }
+          
+          console.log(`211 API returned ${resources.length} resources for category: ${categoryId}, subcategory: ${subcategoryId}`);
+          
+          return res.status(200).json({
+            resources: resources,
+            total: resources.length,
+            source: '211_API'
+          });
         } catch (apiError) {
           console.error("Error fetching from 211 API:", apiError);
           // Continue to fallback if API fails
