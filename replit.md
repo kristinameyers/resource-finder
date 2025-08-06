@@ -36,6 +36,7 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Favorites System**: Local device storage (localStorage) for user favorites without cloud dependencies.
 - **Taxonomy Integration**: Utilizes official 211 taxonomy data for categories and subcategories, enabling precise API queries.
 - **Comprehensive Resource Details**: Displays detailed information including application process, required documents, fees, service areas, enhanced contact information, and hours of operation.
+- **API Configuration Mastery**: Proven methodology for National 211 API integration using taxonomy codes with smart text fallback, locationMode='Serving', and zip code targeting for optimal local resource discovery.
 
 ## Recent Changes (January 2025)
 
@@ -43,13 +44,16 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **RESOLVED**: Major API authentication and endpoint discovery completed successfully 
 - **Working Endpoint**: `/keyword` endpoint at https://api.211.org/resources/v2/search/keyword confirmed functional
 - **Authentication Method**: `Api-Key` header format verified working with production key 0b49fd58c6ba4f17836bd9a350c72fb4
-- **Parameter Format**: locationMode as header, keywordIsTaxonomyCode as header, location/distance as query parameters
+- **Critical Configuration**: 
+  - Headers: `locationMode: 'Serving'`, `keywordIsTaxonomyCode: 'true'` for taxonomy searches
+  - Query params: `keywords={taxonomyCode}`, `location={zipCode}`, `distance=25`, `size=20`
+  - Fallback: When taxonomy fails (404), retry with `keywordIsTaxonomyCode: 'false'` and category name
 - **Response Handling**: API returns 404 for "no results found" (not endpoint errors), 200 for successful data retrieval
-- **Data Retrieval Success**: Confirmed live data retrieval from Los Angeles area showing real food pantry and resource information
-- **Fallback Strategy**: Implemented taxonomy code → text search fallback for better result coverage
-- **Response Format**: API returns 'results' array with 'count' field, properly mapped to application format
-- **Location Optimization**: Updated to use zip code 93101 with locationMode='Serving' for precise local service discovery
-- **Enhanced Data Retrieval**: Now retrieving 10+ real resources per category with comprehensive service details
+- **Taxonomy Code Strategy**: Use official 211 taxonomy codes (BD=food, BH=housing, etc.) with text fallback
+- **Location Precision**: Zip code 93101 with locationMode='Serving' delivers 10+ targeted local resources
+- **Response Format**: API returns 'results' array with 'count' field containing full resource objects
+- **Data Success**: Confirmed retrieval of real Santa Barbara resources (Adam's Angels, Salvation Army, etc.)
+- **Smart Fallback**: Implemented taxonomy code → text search fallback ensuring maximum result coverage
 
 ## Recent Changes (January 2025)
 
