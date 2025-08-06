@@ -46,7 +46,7 @@ interface SearchResourcesResponse {
 }
 
 // National 211 API configuration - use v2 endpoints as specified
-const API_BASE_URL = "https://api.211.org/resources/v2/search/keyword";
+const API_BASE_URL = "https://api.211.org/resources/v2/search";
 const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
 
 // Get API key from environment variables  
@@ -208,17 +208,33 @@ export async function searchResourcesByTaxonomyCode(
       requestBody.location = `${latitude},${longitude}`;
     }
     
-    console.log(`Making Search V2 API request to: ${API_BASE_URL}`);
+    console.log(`Making Search V2 API request to: ${API_BASE_URL}/keyword`);
     console.log(`Request body:`, JSON.stringify(requestBody, null, 2));
     
-    const response = await fetch(API_BASE_URL, {
-      method: 'POST',
+    // Try GET method first as per documentation
+    const queryParams = new URLSearchParams({
+      keywords: taxonomyCode,
+      location: zipCode || 'United States',
+      distance: '25',
+      keywordIsTaxonomyCode: 'true',
+      skip: offset.toString(),
+      size: limit.toString(),
+      locationMode: 'Near',
+      orderByDistance: 'true'
+    });
+    
+    const getUrl = `${API_BASE_URL}/keyword?${queryParams.toString()}`;
+    console.log(`Trying GET method first: ${getUrl}`);
+    
+    console.log(`Using API key: ${SUBSCRIPTION_KEY ? 'Key present' : 'No key found'}`);
+    
+    const response = await fetch(getUrl, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY || '',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
+        'Subscription-Key': SUBSCRIPTION_KEY || '',
+        'Api-Key': SUBSCRIPTION_KEY || ''
+      }
     });
     
     if (!response.ok) {
