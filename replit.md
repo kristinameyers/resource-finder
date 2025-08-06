@@ -48,6 +48,8 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Data Retrieval Success**: Confirmed live data retrieval from Los Angeles area showing real food pantry and resource information
 - **Fallback Strategy**: Implemented taxonomy code → text search fallback for better result coverage
 - **Response Format**: API returns 'results' array with 'count' field, properly mapped to application format
+- **Location Optimization**: Updated to use zip code 93101 with locationMode='Serving' for precise local service discovery
+- **Enhanced Data Retrieval**: Now retrieving 10+ real resources per category with comprehensive service details
 
 ## Recent Changes (January 2025)
 

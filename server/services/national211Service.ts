@@ -214,7 +214,7 @@ export async function searchResourcesByTaxonomyCode(
     } else if (latitude !== undefined && longitude !== undefined) {
       queryParams.set('location', `${latitude},${longitude}`);
     } else {
-      queryParams.set('location', 'Los Angeles, CA');
+      queryParams.set('location', '93101');
     }
     
     const fullUrl = `${requestUrl}?${queryParams.toString()}`;
