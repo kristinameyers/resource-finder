@@ -817,38 +817,85 @@ export async function searchResources(
     return { resources: [], total: 0 };
   }
 
-  // The API taxonomy endpoint isn't working reliably, so use keyword search with proper terms
-  console.log(`Using keyword search for taxonomy code ${taxonomyCode}`);
+  // Try taxonomy-based search with correct API format
+  console.log(`Attempting direct taxonomy search with code: ${taxonomyCode}`);
   
-  // Map taxonomy codes to better search keywords
-  const taxonomyToKeyword: { [key: string]: string } = {
-    'P': 'children family services',
-    'BH': 'housing shelter',
-    'N': 'employment finance assistance',
-    'BD': 'food meals groceries',
-    'BT': 'transportation bus',
-    'L': 'healthcare medical clinic',
-    'H': 'education school',
-    'F': 'legal assistance',
-    'RX': 'substance abuse treatment',
-    'YB': 'youth young adult services'
-  };
-  
-  // Use a more specific search term based on taxonomy code
-  let searchTerm = taxonomyToKeyword[taxonomyCode] || category || subcategory || 'services';
-  
-  // If we have a subcategory, use its name for more specific results
-  if (subcategory) {
-    searchTerm = subcategory;
+  try {
+    // Try POST method with taxonomyCodes array parameter
+    const postBody: any = {
+      search: taxonomyCode,
+      input: taxonomyCode,
+      taxonomyCodes: [taxonomyCode],
+      distance: 25,
+      locationMode: 'Serving'
+    };
+    
+    if (zipCode) {
+      postBody.location = zipCode;
+    } else if (latitude !== undefined && longitude !== undefined) {
+      postBody.location = `lon:${longitude}_lat:${latitude}`;
+    } else {
+      postBody.location = 'United States';
+      postBody.distance = 5000;
+    }
+    
+    console.log(`Trying taxonomy search with body:`, JSON.stringify(postBody));
+    
+    const response = await fetch(API_BASE_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Api-Key': SUBSCRIPTION_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postBody)
+    });
+    
+    if (response.ok) {
+      const data: any = await response.json();
+      console.log(`Taxonomy search successful! Found ${data.results?.length || 0} resources`);
+      
+      if (data.results && data.results.length > 0) {
+        const resources = data.results.map((item: any) => transformResource(item));
+        return { resources, total: resources.length };
+      }
+    } else {
+      console.log(`Taxonomy search failed with status ${response.status}, trying keyword fallback`);
+    }
+  } catch (error) {
+    console.log(`Taxonomy search error: ${error}, trying keyword fallback`);
   }
   
-  console.log(`Using search term: "${searchTerm}" for category: ${category}, subcategory: ${subcategory}`);
+  // Fallback to keyword search with intelligent terms
+  console.log(`Using keyword fallback for taxonomy code ${taxonomyCode}`);
+  
+  let searchTerm: string;
+  if (subcategory) {
+    searchTerm = subcategory;
+    console.log(`Using subcategory name: "${searchTerm}"`);
+  } else {
+    // Map taxonomy codes to effective search terms
+    const taxonomyToKeyword: { [key: string]: string } = {
+      'P': 'children family',
+      'BH': 'housing',
+      'N': 'employment',
+      'BD': 'food',
+      'BT': 'transportation',
+      'L': 'healthcare',
+      'H': 'education',
+      'F': 'legal',
+      'RX': 'substance abuse',
+      'YB': 'youth'
+    };
+    searchTerm = taxonomyToKeyword[taxonomyCode] || category || 'services';
+    console.log(`Using category-based keyword: "${searchTerm}"`);
+  }
   
   try {
     const fallbackResources = await searchResourcesByKeyword(searchTerm, zipCode, latitude, longitude);
     return { resources: fallbackResources, total: fallbackResources.length };
   } catch (error) {
-    console.error(`Keyword search also failed:`, error);
+    console.error(`Both taxonomy and keyword search failed:`, error);
     return { resources: [], total: 0 };
   }
 }
