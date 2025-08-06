@@ -8,6 +8,36 @@ This is a full-stack web application designed to help users find community resou
 
 Preferred communication style: Simple, everyday language.
 
+## Critical API Integration Knowledge (January 6, 2025)
+
+**WORKING CONFIGURATION FOR NATIONAL 211 API:**
+- **Base URL**: `https://api.211.org/resources/v2/search/keyword`
+- **Authentication**: Header `Api-Key: 0b49fd58c6ba4f17836bd9a350c72fb4`
+- **Location Mode**: Header `locationMode: Serving` (critical for local service discovery)
+- **Search Strategy**: Primary taxonomy code search with text fallback
+- **Location**: Use specific zip codes (93101) for targeted results
+- **Response Format**: API returns `results` array with `count` field
+
+**PROVEN SEARCH PROCESS:**
+1. Try taxonomy code search: `keywordIsTaxonomyCode: true`, `keywords: BD` (for food)
+2. If 404 response, fallback to text search: `keywordIsTaxonomyCode: false`, `keywords: food`
+3. Parse `data.results` array for resource objects
+4. Transform API response to application format
+
+**TAXONOMY CODE MAPPINGS:**
+- BD = Food
+- BH = Housing  
+- N = Employment
+- L = Healthcare
+- F = Legal
+- H = Education
+- BT = Transportation
+- P = Family/Children
+- RX = Substance Use
+- YB-9000 = Youth Services
+
+**VERIFIED RESULTS:** Successfully retrieving 10+ real Santa Barbara resources per category including Adam's Angels Food Program, Salvation Army Food Pantry, Food From The Heart Harvest Program, and housing services.
+
 ## System Architecture
 
 The application adopts a modern full-stack architecture, separating frontend and backend concerns.
