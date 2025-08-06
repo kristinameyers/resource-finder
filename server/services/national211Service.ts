@@ -45,9 +45,9 @@ interface SearchResourcesResponse {
   // Include other fields returned by the API
 }
 
-// National 211 API configuration - use environment URL (working v1 endpoint)
-const API_BASE_URL = process.env.NATIONAL_211_API_URL || "https://api.211.org/search/v1/api/";
-const QUERY_API_BASE_URL = process.env.NATIONAL_211_API_URL || "https://api.211.org/search/v1/api/";
+// National 211 API configuration - use v2 endpoints as specified
+const API_BASE_URL = "https://api.211.org/resources/v2/search/keyword";
+const QUERY_API_BASE_URL = "https://api.211.org/resources/v2/query";
 
 // Get API key from environment variables  
 const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY;
@@ -190,22 +190,26 @@ export async function searchResourcesByTaxonomyCode(
   try {
     console.log(`Searching for resources with taxonomy code: ${taxonomyCode}`);
     
-    // Use POST method with v1 API format (matching working commit)
-    const postBody: any = {
+    // Use Search V2 API format with proper request body structure
+    const requestBody = {
       search: taxonomyCode,
-      input: taxonomyCode,
-      locationMode: 'Serving',
+      keywordIsTaxonomyCode: true,
+      location: zipCode || 'United States',
       distance: 25,
-      location: zipCode || 'United States'
+      locationMode: 'Near',
+      skip: offset,
+      size: limit,
+      includeTotalCount: true,
+      orderByDistance: true
     };
     
+    // If coordinates are provided, use them instead of location string
     if (latitude !== undefined && longitude !== undefined) {
-      postBody.longitude_latitude = `lon:${longitude}_lat:${latitude}`;
-      delete postBody.location; // Use coordinates instead of location
+      requestBody.location = `${latitude},${longitude}`;
     }
     
-    console.log(`Making 211 API request with POST method`);
-    console.log(`Request body:`, JSON.stringify(postBody));
+    console.log(`Making Search V2 API request to: ${API_BASE_URL}`);
+    console.log(`Request body:`, JSON.stringify(requestBody, null, 2));
     
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
@@ -214,7 +218,7 @@ export async function searchResourcesByTaxonomyCode(
         'Api-Key': SUBSCRIPTION_KEY || '',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(postBody)
+      body: JSON.stringify(requestBody)
     });
     
     if (!response.ok) {
@@ -225,11 +229,13 @@ export async function searchResourcesByTaxonomyCode(
     
     const data: any = await response.json();
     console.log(`API response received with ${data.results?.length || 0} resources`);
+    console.log(`Response structure:`, Object.keys(data));
     
     if (!data.results || data.results.length === 0) {
+      console.log('No results returned from API');
       return {
         resources: [],
-        total: 0
+        total: data.totalCount || 0
       };
     }
     
@@ -237,7 +243,7 @@ export async function searchResourcesByTaxonomyCode(
     
     return {
       resources: transformedResources,
-      total: data.total || transformedResources.length,
+      total: data.totalCount || transformedResources.length,
     };
   } catch (error) {
     console.error('Error searching resources by taxonomy:', error);
