@@ -58,11 +58,11 @@ export function useResources(
           );
         }
       } else {
-        // Default to Santa Barbara when no location specified
+        // No location specified - let backend handle without forcing a default
         result = await fetchResources(
           categoryId || undefined, 
           subcategoryId || undefined,
-          "93101", // Default to Santa Barbara zip code
+          undefined, // No default zip code
           undefined,
           useApi,
           sortBy

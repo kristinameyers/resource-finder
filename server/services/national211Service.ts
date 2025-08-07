@@ -135,7 +135,7 @@ export async function searchResourcesByKeyword(
       input: keyword,
       locationMode: 'Serving',
       distance: 25,
-      location: zipCode || '93101' // API requires location - default to Santa Barbara for demo
+      location: zipCode || 'Santa Barbara County, CA' // API requires location - use county when no zip provided
     };
     
     if (latitude !== undefined && longitude !== undefined) {
@@ -942,7 +942,7 @@ function getZipFromCoordinates(lat: string, lon: string): string | undefined {
   if (latitude >= 34.40 && latitude <= 34.50 && longitude >= -119.80 && longitude <= -119.60) {
     // Santa Barbara city area
     if (latitude >= 34.42 && latitude <= 34.44) {
-      return '93101'; // Downtown/central SB
+      return null; // No default zip code for distance calculations
     } else if (latitude >= 34.44 && latitude <= 34.46) {
       return '93110'; // Upper State Street area
     } else {
