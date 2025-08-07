@@ -189,8 +189,9 @@ export async function searchAllResourcesByTaxonomyCode(
   
   let allResources: Resource[] = [];
   let currentPage = 0;
-  const pageSize = 20;
+  const pageSize = 10; // API seems to cap at 10 resources per page
   let hasMoreResults = true;
+  let apiTotalCount = 0;
   
   while (hasMoreResults) {
     try {
@@ -206,16 +207,26 @@ export async function searchAllResourcesByTaxonomyCode(
         offset
       );
       
+      // Store the total count from API on first page
+      if (currentPage === 0) {
+        apiTotalCount = pageResult.total;
+        console.log(`API reports total of ${apiTotalCount} resources available`);
+      }
+      
       if (pageResult.resources.length === 0) {
         hasMoreResults = false;
         console.log(`No more results found at page ${currentPage + 1}`);
       } else {
         allResources.push(...pageResult.resources);
         console.log(`Retrieved ${pageResult.resources.length} resources from page ${currentPage + 1}`);
-        console.log(`Total resources so far: ${allResources.length}`);
+        console.log(`Total resources so far: ${allResources.length} / ${apiTotalCount}`);
         
-        // If we got fewer results than the page size, we've reached the end
-        if (pageResult.resources.length < pageSize) {
+        // Check if we've gotten all available resources based on API total count
+        if (allResources.length >= apiTotalCount) {
+          hasMoreResults = false;
+          console.log(`Retrieved all ${allResources.length} available resources`);
+        } else if (pageResult.resources.length < pageSize) {
+          // Also stop if we get fewer results than expected (backup condition)
           hasMoreResults = false;
           console.log(`Got ${pageResult.resources.length} < ${pageSize}, reached end of results`);
         } else {
@@ -229,7 +240,7 @@ export async function searchAllResourcesByTaxonomyCode(
   }
   
   console.log(`=== COMPLETED: Retrieved ${allResources.length} total resources for ${taxonomyCode} ===`);
-  return { resources: allResources, total: allResources.length };
+  return { resources: allResources, total: Math.max(allResources.length, apiTotalCount) };
 }
 
 /**
@@ -257,7 +268,7 @@ export async function searchResourcesByTaxonomyCode(
     const queryParams = new URLSearchParams({
       keywords: taxonomyCode,
       distance: '25',
-      size: limit.toString(),
+      size: Math.min(limit, 10).toString(), // API seems to cap at 10
       skip: offset.toString()
     });
     
