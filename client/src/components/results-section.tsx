@@ -7,6 +7,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 
 interface ResultsSectionProps {
   resources: Resource[];
+  totalCount: number;
   categories: Category[];
   subcategories: Subcategory[];
   isLoading: boolean;
@@ -21,6 +22,7 @@ interface ResultsSectionProps {
 
 export default function ResultsSection({
   resources,
+  totalCount,
   categories,
   subcategories,
   isLoading,
@@ -96,7 +98,7 @@ export default function ResultsSection({
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-semibold">
-              {resources.length} Resource{resources.length !== 1 && 's'} 
+              {totalCount} Resource{totalCount !== 1 && 's'} 
               {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
             </h2>
             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">

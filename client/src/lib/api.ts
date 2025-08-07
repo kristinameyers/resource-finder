@@ -12,6 +12,7 @@ import {
 
 // Type for the enhanced resources response
 interface EnhancedResourcesResponse extends ResourcesResponse {
+  total: number;
   source: string;
 }
 
@@ -29,7 +30,7 @@ export async function fetchResources(
   coordinates?: { latitude: number; longitude: number },
   useApi: boolean = true,
   sortBy: 'relevance' | 'distance' | 'name' = 'relevance'
-): Promise<{resources: Resource[], source: string}> {
+): Promise<{resources: Resource[], total: number, source: string}> {
   const queryParams = new URLSearchParams();
   
   // Add filter parameters if they exist
@@ -63,6 +64,7 @@ export async function fetchResources(
     const data = await response.json() as EnhancedResourcesResponse;
     return {
       resources: data.resources,
+      total: data.total || data.resources.length,
       source: data.source || 'local'
     };
   } catch (error) {

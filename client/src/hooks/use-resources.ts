@@ -4,6 +4,7 @@ import { fetchResources } from "@/lib/api";
 
 interface ResourcesResponse {
   resources: Resource[];
+  total: number;
   source: string;
 }
 
@@ -79,7 +80,7 @@ export function useResources(
   
   return {
     resources: data?.resources || [],
-    totalCount: data?.resources?.length || 0,
+    totalCount: data?.total || 0,
     dataSource: data?.source || 'local',
     isLoading,
     error: error as Error | null,

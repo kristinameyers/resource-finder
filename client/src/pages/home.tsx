@@ -91,6 +91,7 @@ export default function Home() {
   // Fetch resources based on current filters
   const {
     resources,
+    totalCount,
     dataSource,
     isLoading: isLoadingResources,
     error: resourcesError,
@@ -236,6 +237,7 @@ export default function Home() {
             
             <ResultsSection 
               resources={resources}
+              totalCount={totalCount}
               categories={categories}
               subcategories={[...subcategories, ...allSubcategories]}
               isLoading={isLoadingResources}
