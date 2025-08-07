@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { resourceSchema } from "@shared/schema";
-import { searchResourcesByTaxonomyCode, searchResourcesByKeyword, getResourceById, searchResources } from "./services/national211Service";
+import { searchResourcesByTaxonomyCode, searchResourcesByKeyword, getResourceById, getServiceAtLocationDetails, searchResources } from "./services/national211Service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -268,6 +268,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API endpoint to get detailed resource information using Service At Location Details
+  app.get("/api/resources/:id/details", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        return res.status(400).json({
+          message: "Resource ID is required"
+        });
+      }
+      
+      // Extract serviceAtLocation ID from composite ID
+      const serviceAtLocationId = id.replace('211santaba-', '');
+      console.log(`Fetching detailed info for serviceAtLocation ID: ${serviceAtLocationId}`);
+      
+      try {
+        const detailedInfo = await getServiceAtLocationDetails(serviceAtLocationId);
+        
+        if (detailedInfo) {
+          return res.status(200).json({
+            details: detailedInfo,
+            source: '211_API_Details'
+          });
+        } else {
+          return res.status(404).json({
+            message: "Detailed resource information not found"
+          });
+        }
+      } catch (apiError) {
+        console.error("Error fetching detailed resource info:", apiError);
+        return res.status(500).json({
+          message: "Error fetching detailed resource information",
+          error: (apiError as Error).message
+        });
+      }
+    } catch (error) {
+      console.error("Error processing detailed resource request:", error);
+      return res.status(500).json({
+        message: "Error processing request",
+        error: (error as Error).message
+      });
+    }
+  });
+
   // API endpoint to get a specific resource by ID
   app.get("/api/resources/:id", async (req: Request, res: Response) => {
     try {

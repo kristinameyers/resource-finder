@@ -185,3 +185,18 @@ export function getCurrentLocation(): Promise<{ latitude: number; longitude: num
     );
   });
 }
+
+// Fetch detailed resource information using Service At Location Details endpoint
+export async function fetchResourceDetails(id: string): Promise<any> {
+  try {
+    const response = await apiRequest('GET', `/api/resources/${id}/details`);
+    if (response.status === 404) {
+      return null; // No detailed information available
+    }
+    const data = await response.json();
+    return data.details;
+  } catch (error) {
+    console.error('Error fetching resource details:', error);
+    return null; // Return null instead of throwing to allow graceful degradation
+  }
+}

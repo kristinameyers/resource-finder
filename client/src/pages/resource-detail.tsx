@@ -26,7 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { fetchResourceById, fetchCategories, fetchSubcategories } from '@/lib/api';
+import { fetchResourceById, fetchResourceDetails, fetchCategories, fetchSubcategories } from '@/lib/api';
 import FavoriteButton from '@/components/favorite-button';
 
 export default function ResourceDetail() {
@@ -56,6 +56,16 @@ export default function ResourceDetail() {
     enabled: !!id
   });
 
+  // Fetch detailed resource information if this is a 211 API resource
+  const detailsQuery = useQuery({
+    queryKey: ['/api/resource-details', id],
+    queryFn: async () => {
+      if (!id || !id.includes('211santaba')) return null;
+      return await fetchResourceDetails(id);
+    },
+    enabled: !!id && id.includes('211santaba')
+  });
+
   // Get search context from localStorage for back navigation
   const getBackNavigationUrl = () => {
     const searchContext = localStorage.getItem('searchContext');
@@ -80,6 +90,7 @@ export default function ResourceDetail() {
   };
 
   const resource = resourceQuery.data;
+  const detailedInfo = detailsQuery.data;
   
   // Fetch categories
   const categoriesQuery = useQuery({
@@ -108,7 +119,8 @@ export default function ResourceDetail() {
   const subcategory = subcategoriesQuery.data?.subcategories?.find((s: any) => s.id === resource?.subcategoryId);
 
   const isLoading = resourceQuery.isLoading || categoriesQuery.isLoading || 
-                   (!!resource?.categoryId && subcategoriesQuery.isLoading);
+                   (!!resource?.categoryId && subcategoriesQuery.isLoading) ||
+                   (id?.includes('211santaba') && detailsQuery.isLoading);
   
   const error = resourceQuery.error || categoriesQuery.error || subcategoriesQuery.error;
 
@@ -186,7 +198,8 @@ export default function ResourceDetail() {
         </CardHeader>
         <CardContent>
           <div className="whitespace-pre-line">
-            {resource.description?.split('\n').map((line, index) => {
+            {/* Use detailed description if available, otherwise use basic description */}
+            {(detailedInfo?.description || resource.description)?.split('\n').map((line: string, index: number) => {
               if (line.trim().startsWith('•')) {
                 return (
                   <div key={index} className="flex items-start mb-1">
@@ -198,6 +211,17 @@ export default function ResourceDetail() {
               return <p key={index} className="mb-2">{line}</p>;
             })}
           </div>
+          
+          {/* Show enhanced information if available from Service At Location Details */}
+          {detailedInfo && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-900 mb-2">📋 Enhanced Information Available</h4>
+              <p className="text-sm text-blue-700">
+                This resource has comprehensive details including eligibility requirements, 
+                fees, application process, and required documents.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -212,7 +236,7 @@ export default function ResourceDetail() {
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-line text-sm">
-              {resource.applicationProcess || "Contact the organization directly for application information"}
+              {detailedInfo?.applicationProcess || resource.applicationProcess || "Contact the organization directly for application information"}
             </p>
           </CardContent>
         </Card>
@@ -226,7 +250,7 @@ export default function ResourceDetail() {
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-line text-sm">
-              {resource.documents || "Contact the organization for required documentation"}
+              {detailedInfo?.documents || detailedInfo?.requiredDocuments || resource.documents || "Contact the organization for required documentation"}
             </p>
           </CardContent>
         </Card>
@@ -240,7 +264,7 @@ export default function ResourceDetail() {
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-line text-sm">
-              {resource.fees || "Contact the organization for fee information"}
+              {detailedInfo?.fees || resource.fees || "Contact the organization for fee information"}
             </p>
           </CardContent>
         </Card>
@@ -317,8 +341,8 @@ export default function ResourceDetail() {
               <div>
                 <p className="font-medium">Hours of Operation</p>
                 <div className="text-muted-foreground whitespace-pre-line">
-                  {resource.hoursOfOperation ? (
-                    resource.hoursOfOperation.split('\n').map((line: string, index: number) => (
+                  {(detailedInfo?.hours || detailedInfo?.schedule || resource.hoursOfOperation) ? (
+                    (detailedInfo?.hours || detailedInfo?.schedule || resource.hoursOfOperation).split('\n').map((line: string, index: number) => (
                       <div key={index} className="flex justify-between">
                         <span>{line}</span>
                       </div>
@@ -404,7 +428,7 @@ export default function ResourceDetail() {
               <div>
                 <p className="font-medium">Eligibility</p>
                 <p className="text-muted-foreground whitespace-pre-line">
-                  {resource.eligibility || "Contact the organization for eligibility information"}
+                  {detailedInfo?.eligibility || resource.eligibility || "Contact the organization for eligibility information"}
                 </p>
               </div>
             </div>

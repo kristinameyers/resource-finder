@@ -419,7 +419,51 @@ export async function searchResourcesByTaxonomyCode(
 }
 
 /**
- * Fetches detailed resource information using multiple Query V2 API endpoints
+ * Fetches detailed resource information using the Service At Location Details endpoint
+ */
+export async function getServiceAtLocationDetails(serviceAtLocationId: string): Promise<any | null> {
+  try {
+    console.log(`Fetching detailed info for serviceAtLocation ID: ${serviceAtLocationId}`);
+    
+    // Use the Service At Location Details endpoint as specified by the user
+    const requestUrl = `${QUERY_API_BASE_URL}/serviceAtLocationDetails/${serviceAtLocationId}`;
+    console.log(`Calling Service At Location Details endpoint: ${requestUrl}`);
+    
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+      'Api-Key': SUBSCRIPTION_KEY || ''
+    };
+    
+    const response = await fetch(requestUrl, {
+      method: 'GET',
+      headers
+    });
+    
+    if (response.ok) {
+      const detailsData = await response.json() as any;
+      console.log('Service At Location Details API successful');
+      console.log('Details include:');
+      console.log('- Description:', !!detailsData.description);
+      console.log('- Eligibility:', !!detailsData.eligibility);
+      console.log('- Fees:', !!detailsData.fees);
+      console.log('- Hours:', !!detailsData.hours || !!detailsData.schedule);
+      console.log('- Documents:', !!detailsData.documents || !!detailsData.requiredDocuments);
+      console.log('- Contact info:', !!detailsData.contacts || !!detailsData.phones);
+      return detailsData;
+    } else {
+      console.log(`Service At Location Details API failed with status: ${response.status}`);
+      const errorText = await response.text();
+      console.log('Error response:', errorText);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching Service At Location Details:', error);
+    return null;
+  }
+}
+
+/**
+ * Legacy function - keeping for backward compatibility
  */
 async function getDetailedResourceInfo(organizationId: string): Promise<any | null> {
   try {
@@ -478,20 +522,19 @@ async function getDetailedResourceInfo(organizationId: string): Promise<any | nu
 }
 
 /**
- * Fetches a resource by ID
+ * Fetches comprehensive resource details using Service At Location Details endpoint
  */
 export async function getResourceById(id: string): Promise<Resource | null> {
   try {
-    console.log(`Fetching resource with ID: ${id}`);
+    console.log(`Fetching comprehensive resource details for ID: ${id}`);
     
-    // Extract the actual service ID from the composite ID
-    const serviceId = id.replace('211santaba-', '');
+    // Extract the serviceAtLocation ID from the composite ID
+    const serviceAtLocationId = id.replace('211santaba-', '');
     
-    // Use the correct endpoint for resource details - search endpoint with specific ID
-    const requestUrl = `${API_BASE_URL}?keywords=${id}&keywordIsTaxonomyCode=false&location=Santa%20Barbara%20County,%20CA&distance=100&size=1`;
-    console.log(`Making 211 API V2 request to: ${requestUrl} for resource ID ${id}`);
+    // First get basic resource info from search endpoint
+    const requestUrl = `${API_BASE_URL}/keyword?keywords=${id}&keywordIsTaxonomyCode=false&location=Santa%20Barbara%20County,%20CA&distance=100&size=1`;
+    console.log(`Getting basic resource info: ${requestUrl}`);
     
-    // Set headers with subscription key for search-based resource details
     const headers: HeadersInit = {
       'Accept': 'application/json',
       'Api-Key': SUBSCRIPTION_KEY || '',
@@ -499,9 +542,6 @@ export async function getResourceById(id: string): Promise<Resource | null> {
       'keywordIsTaxonomyCode': 'false'
     };
     
-    console.log('Sending detail request with headers:', JSON.stringify(headers));
-    
-    // Make the API request as a GET
     const response = await fetch(requestUrl, {
       method: 'GET',
       headers
@@ -517,20 +557,30 @@ export async function getResourceById(id: string): Promise<Resource | null> {
       throw new Error(`211 API Error: ${response.status} - ${errorText}`);
     }
     
-    const data = await response.json() as any;
-    console.log(`Successfully retrieved resource "${data.name || data.nameService}" from 211 API`);
+    const searchData = await response.json() as any;
+    const resourceData = searchData.results?.[0] || searchData;
     
-    // Try to get detailed information for enhanced display using organization ID
-    const organizationId = data.idOrganization || data.id;
-    console.log(`Attempting to fetch detailed info for organization ID: ${organizationId}`);
-    console.log(`Available IDs in resource: idOrganization=${data.idOrganization}, idService=${data.idService}, idServiceAtLocation=${data.idServiceAtLocation}`);
+    if (!resourceData) {
+      console.log(`No resource data found for ID: ${id}`);
+      return null;
+    }
     
-    const detailedInfo = await getDetailedResourceInfo(organizationId);
-    const enhancedData = detailedInfo ? { ...data, detailedService: detailedInfo } : data;
+    console.log(`Retrieved basic resource info for: ${resourceData.nameService || resourceData.name}`);
+    console.log(`ServiceAtLocation ID: ${resourceData.idServiceAtLocation}`);
+    
+    // Now get comprehensive details using Service At Location Details endpoint
+    let detailedInfo = null;
+    if (resourceData.idServiceAtLocation) {
+      console.log(`Fetching detailed info using serviceAtLocation ID: ${resourceData.idServiceAtLocation}`);
+      detailedInfo = await getServiceAtLocationDetails(resourceData.idServiceAtLocation);
+    }
+    
+    // Merge basic and detailed information
+    const enhancedData = detailedInfo ? { ...resourceData, serviceDetails: detailedInfo } : resourceData;
     
     return transformResource(enhancedData);
   } catch (error) {
-    console.error('Error fetching resource by ID:', error);
+    console.error('Error fetching comprehensive resource details:', error);
     throw error;
   }
 }
@@ -594,6 +644,7 @@ function transformResource(apiResource: any): Resource {
   
   // Check for enhanced service data from detailed API calls
   const hasDetailedService = detailedService && Object.keys(detailedService).length > 0;
+  const hasServiceDetails = serviceDetails && Object.keys(serviceDetails).length > 0;
   
   // Enhanced HTML cleaning function with list preservation
   const cleanHtml = (text: string) => {
@@ -751,29 +802,49 @@ function transformResource(apiResource: any): Resource {
     thumbsDown: 0,
     userVote: null,
     
-    // Enhanced iCarol API fields - use what's available from base API since detailed calls are failing
-    applicationProcess: cleanHtml(detailedService.applicationProcess || 
+    // Enhanced fields with Service At Location Details integration
+    applicationProcess: (() => {
+      if (hasServiceDetails && serviceDetails.applicationProcess) {
+        return cleanHtml(serviceDetails.applicationProcess);
+      }
+      return cleanHtml(detailedService.applicationProcess || 
                        apiResource.applicationProcess || 
                        extractApplicationProcessFromDescription(apiResource.descriptionService) || '') ||
-                       "Contact the organization directly to learn about their application process",
-    documents: cleanHtml(detailedService.documents?.description || 
-               apiResource.documents || 
-               extractDocumentsFromDescription(apiResource.descriptionService) || '') ||
-               "Contact the organization to learn what documents you'll need",
-    fees: cleanHtml(detailedService.fees?.description || 
-          apiResource.fees || 
-          extractFeesFromDescription(apiResource.descriptionService) || '') ||
-          "Contact the organization for information about fees and costs",
+                       "Contact the organization directly to learn about their application process";
+    })(),
+    documents: (() => {
+      if (hasServiceDetails && (serviceDetails.documents || serviceDetails.requiredDocuments)) {
+        return cleanHtml(serviceDetails.documents || serviceDetails.requiredDocuments);
+      }
+      return cleanHtml(detailedService.documents?.description || 
+                       apiResource.documents || 
+                       extractDocumentsFromDescription(apiResource.descriptionService) || '') ||
+                       "Contact the organization to learn what documents you'll need";
+    })(),
+    fees: (() => {
+      if (hasServiceDetails && serviceDetails.fees) {
+        return cleanHtml(serviceDetails.fees);
+      }
+      return cleanHtml(detailedService.fees?.description || 
+                       apiResource.fees || 
+                       extractFeesFromDescription(apiResource.descriptionService) || '') ||
+                       "Contact the organization for information about fees and costs";
+    })(),
     serviceAreas: detailedService.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') ||
                   apiResource.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') || 
                   (apiResource.nameLocation ? `Serving ${apiResource.nameLocation} area` : "Contact for service area information"),
     hoursOfOperation: formatSchedules(detailedService.schedules) || 
                       hoursOfOperation ||
                       "Contact the organization for their hours of operation",
-    eligibility: cleanHtml(detailedService.eligibility?.description || 
-                 extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
-                 extractEligibilityFromDescription(apiResource.descriptionService) || '') ||
-                 "Contact the organization to learn about eligibility requirements",
+    eligibility: (() => {
+      if (hasServiceDetails && serviceDetails.eligibility) {
+        return cleanHtml(serviceDetails.eligibility);
+      }
+      return cleanHtml(detailedService.eligibility?.description || 
+                       extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
+                       extractEligibilityFromDescription(apiResource.descriptionService) || '') ||
+                       "Contact the organization to learn about eligibility requirements";
+    })(),
     phoneNumbers: phoneNumbers,
     additionalLanguages: apiResource.interpretationServices || 
                         apiResource.interpretation_services || 
