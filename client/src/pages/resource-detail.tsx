@@ -56,6 +56,29 @@ export default function ResourceDetail() {
     enabled: !!id
   });
 
+  // Get search context from localStorage for back navigation
+  const getBackNavigationUrl = () => {
+    const searchContext = localStorage.getItem('searchContext');
+    if (searchContext) {
+      const { categoryId, subcategoryId, location } = JSON.parse(searchContext);
+      const params = new URLSearchParams();
+      
+      if (categoryId) params.set('category', categoryId);
+      if (subcategoryId) params.set('subcategory', subcategoryId);
+      if (location) {
+        if (location.type === 'zipCode') {
+          params.set('zipCode', location.value);
+        } else if (location.type === 'coordinates') {
+          params.set('lat', location.latitude.toString());
+          params.set('lng', location.longitude.toString());
+        }
+      }
+      
+      return `/?${params.toString()}`;
+    }
+    return '/'; // Default fallback
+  };
+
   const resource = resourceQuery.data;
   
   // Fetch categories
@@ -120,7 +143,7 @@ export default function ResourceDetail() {
     <div className="container max-w-4xl mx-auto p-4 md:p-6">
       {/* Back button */}
       <Button variant="ghost" asChild className="mb-4">
-        <Link href="/">
+        <Link href={getBackNavigationUrl()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to resources
         </Link>

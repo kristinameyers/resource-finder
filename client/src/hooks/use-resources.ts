@@ -74,6 +74,14 @@ export function useResources(
         localStorage.setItem('recentResources', JSON.stringify(result.resources));
       }
       
+      // Store search context for back navigation
+      const searchContext = {
+        categoryId: categoryId || null,
+        subcategoryId: subcategoryId || null,
+        location: location || null
+      };
+      localStorage.setItem('searchContext', JSON.stringify(searchContext));
+      
       return result;
     },
     enabled: true,

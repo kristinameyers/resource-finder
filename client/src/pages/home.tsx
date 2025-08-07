@@ -15,13 +15,37 @@ import { fetchCategories } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
+  // Initialize state from URL parameters or localStorage
+  const initializeFiltersFromUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      categoryId: urlParams.get('category') || null,
+      subcategoryId: urlParams.get('subcategory') || null,
+      zipCode: urlParams.get('zipCode') || null,
+      lat: urlParams.get('lat') ? parseFloat(urlParams.get('lat')!) : null,
+      lng: urlParams.get('lng') ? parseFloat(urlParams.get('lng')!) : null
+    };
+  };
+
+  const urlFilters = initializeFiltersFromUrl();
+
   // State for selected filters
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(urlFilters.categoryId);
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(urlFilters.subcategoryId);
   
   // Category & location hooks
   const { locationState, requestCurrentLocation, setLocationByZipCode, clearLocation } = useLocation();
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+
+  // Initialize location from URL parameters
+  useEffect(() => {
+    if (urlFilters.zipCode) {
+      setLocationByZipCode(urlFilters.zipCode);
+    } else if (urlFilters.lat && urlFilters.lng) {
+      // Note: This would require a setLocationByCoordinates method in useLocation hook
+      // For now, we'll handle zip codes primarily
+    }
+  }, []); // Empty dependency array - only run once on mount
   
   // No default location - user must enter their own location
   
