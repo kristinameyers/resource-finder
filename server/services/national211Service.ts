@@ -714,8 +714,16 @@ function transformResource(apiResource: any): Resource {
   // console.log('- schedules:', !!apiResource.schedules);
   // console.log('- languages:', !!apiResource.languages);
 
-  // Debug: Uncomment for address debugging
-  // console.log(`Resource "${apiResource.nameService}": zipCode = ${address.postalCode}`);
+  // Debug address extraction for resources showing "Unknown"
+  if (!address.postalCode && apiResource.nameService) {
+    console.log(`Missing zip code for ${apiResource.nameService}:`, {
+      hasAddress: !!address,
+      addressKeys: Object.keys(address),
+      addressData: address,
+      geoPoint: apiResource.geoPoint,
+      serviceAreas: apiResource.serviceAreas?.slice(0, 2) // First 2 service areas for debugging
+    });
+  }
   
   // Create the transformed resource
   return {
@@ -726,9 +734,11 @@ function transformResource(apiResource: any): Resource {
     subcategoryId: taxonomy.taxonomyTerm ? taxonomy.taxonomyTerm.toLowerCase().replace(/\s+/g, '-') : undefined,
     location: apiResource.nameLocation || address.city || 'Unknown location',
     zipCode: address.postalCode || 
+             geoPoint.postalCode ||
              extractZipCodeFromAddress(address.streetAddress || '') || 
-             extractZipCodeFromDescription(apiResource.descriptionService) || 
-             'Unknown',
+             extractZipCodeFromDescription(apiResource.descriptionService) ||
+             extractZipCodeFromServiceAreas(apiResource.serviceAreas) ||
+             '93101', // Default to Santa Barbara instead of 'Unknown' for distance calculations
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
     phone: phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
@@ -909,6 +919,20 @@ function extractZipCodeFromDescription(description: string): string | undefined 
   // Look for 5-digit zip codes in description
   const zipMatch = description.match(/\b\d{5}(-\d{4})?\b/);
   return zipMatch?.[0]?.split('-')[0]; // Return just the 5-digit part
+}
+
+function extractZipCodeFromServiceAreas(serviceAreas: any[]): string | undefined {
+  if (!serviceAreas?.length) return undefined;
+  
+  for (const area of serviceAreas) {
+    const areaText = area.value || area.description || area.name || '';
+    const zipMatch = areaText.match(/\b\d{5}(-\d{4})?\b/);
+    if (zipMatch) {
+      return zipMatch[0].split('-')[0];
+    }
+  }
+  
+  return undefined;
 }
 
 function formatSchedules(schedules: any[]): string | undefined {
