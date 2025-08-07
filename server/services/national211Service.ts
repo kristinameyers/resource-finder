@@ -177,7 +177,63 @@ export async function searchResourcesByKeyword(
 }
 
 /**
- * Searches for resources by taxonomy code (primary method)
+ * Searches for ALL resources by taxonomy code (retrieves all pages)
+ */
+export async function searchAllResourcesByTaxonomyCode(
+  taxonomyCode: string,
+  zipCode?: string,
+  latitude?: number,
+  longitude?: number
+): Promise<{ resources: Resource[], total: number }> {
+  console.log(`\n=== FETCHING ALL RESOURCES FOR TAXONOMY: ${taxonomyCode} ===`);
+  
+  let allResources: Resource[] = [];
+  let currentPage = 0;
+  const pageSize = 20;
+  let hasMoreResults = true;
+  
+  while (hasMoreResults) {
+    try {
+      const offset = currentPage * pageSize;
+      console.log(`Fetching page ${currentPage + 1} (offset: ${offset})`);
+      
+      const pageResult = await searchResourcesByTaxonomyCode(
+        taxonomyCode,
+        zipCode,
+        latitude,
+        longitude,
+        pageSize,
+        offset
+      );
+      
+      if (pageResult.resources.length === 0) {
+        hasMoreResults = false;
+        console.log(`No more results found at page ${currentPage + 1}`);
+      } else {
+        allResources.push(...pageResult.resources);
+        console.log(`Retrieved ${pageResult.resources.length} resources from page ${currentPage + 1}`);
+        console.log(`Total resources so far: ${allResources.length}`);
+        
+        // If we got fewer results than the page size, we've reached the end
+        if (pageResult.resources.length < pageSize) {
+          hasMoreResults = false;
+          console.log(`Got ${pageResult.resources.length} < ${pageSize}, reached end of results`);
+        } else {
+          currentPage++;
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching page ${currentPage + 1}:`, error);
+      hasMoreResults = false;
+    }
+  }
+  
+  console.log(`=== COMPLETED: Retrieved ${allResources.length} total resources for ${taxonomyCode} ===`);
+  return { resources: allResources, total: allResources.length };
+}
+
+/**
+ * Searches for resources by taxonomy code (single page - internal method)
  */
 export async function searchResourcesByTaxonomyCode(
   taxonomyCode: string,
@@ -872,8 +928,8 @@ export async function searchResources(
   console.log(`Using National 211 API with taxonomy code: ${taxonomyCode}`);
   
   try {
-    // Use the searchResourcesByTaxonomyCode function for proper 211 API implementation
-    const result = await searchResourcesByTaxonomyCode(
+    // Use the searchAllResourcesByTaxonomyCode function to get ALL resources in the taxonomy
+    const result = await searchAllResourcesByTaxonomyCode(
       taxonomyCode,
       zipCode,
       latitude,

@@ -83,8 +83,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 return { ...resource, distanceMiles };
               });
               
-              // Sort by distance if requested
-              if (sortBy === 'distance') {
+              // Sort by distance by default when user provides location, otherwise by relevance
+              if (zipCode && resources.some(r => r.distanceMiles !== undefined)) {
+                // Auto-sort by distance when location is provided
+                resources.sort((a, b) => {
+                  if (a.distanceMiles === undefined && b.distanceMiles === undefined) return 0;
+                  if (a.distanceMiles === undefined) return 1;
+                  if (b.distanceMiles === undefined) return -1;
+                  return a.distanceMiles - b.distanceMiles;
+                });
+                console.log(`Auto-sorted ${resources.length} resources by distance (closest first)`);
+              } else if (sortBy === 'distance') {
                 resources.sort((a, b) => {
                   if (a.distanceMiles === undefined && b.distanceMiles === undefined) return 0;
                   if (a.distanceMiles === undefined) return 1;
@@ -98,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           }
           
-          console.log(`211 API returned ${resources.length} resources for category: ${categoryId}, subcategory: ${subcategoryId}`);
+          console.log(`211 API returned ${resources.length} total resources for category: ${categoryId}, subcategory: ${subcategoryId}`);
           
           return res.status(200).json({
             resources: resources,
