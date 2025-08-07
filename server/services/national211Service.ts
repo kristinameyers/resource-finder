@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
-import { getCategoryTaxonomyCode, getSubcategoryTaxonomyCode } from '../data/taxonomy';
+import { getCategoryTaxonomyCode, getSubcategoryTaxonomyCode, getOfficialCategoryCode, getOfficialSubcategoryCode } from '../data/taxonomy';
 
 // Define interfaces for the 211 API responses
 interface National211Resource {
@@ -997,18 +997,23 @@ export async function searchResources(
   // Get the proper taxonomy code using the taxonomy data exactly like your working app
   let taxonomyCode: string;
   
-  // Use taxonomy codes for both category and subcategory searches (like your sample code)
+  // Use official taxonomy codes for both category and subcategory searches
   if (subcategory) {
-    taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
+    // Try official subcategory taxonomy code first
+    taxonomyCode = getOfficialSubcategoryCode(category, subcategory);
     if (!taxonomyCode) {
-      // Fallback to category taxonomy code
-      taxonomyCode = getCategoryTaxonomyCode(category);
+      // Fallback to existing subcategory system
+      taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
+    }
+    if (!taxonomyCode) {
+      // Final fallback to category taxonomy code
+      taxonomyCode = getOfficialCategoryCode(category);
       console.log(`No subcategory taxonomy code found, using category code: ${taxonomyCode} for ${subcategory}`);
     } else {
       console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
     }
   } else {
-    taxonomyCode = getCategoryTaxonomyCode(category);
+    taxonomyCode = getOfficialCategoryCode(category);
     console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
   }
 

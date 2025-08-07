@@ -238,7 +238,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'legal-assistance': {
     id: 'legal-assistance',
     name: 'Legal Assistance',
-    taxonomyCode: 'FT',
+    taxonomyCode: 'F',
     subcategories: [
       { id: 'criminal-courts', name: 'Criminal State Trial Courts', taxonomyCode: 'FC-8200.1550' },
       { id: 'juvenile-courts', name: 'Juvenile Justice Courts', taxonomyCode: 'FC-8200.3500-350' },
@@ -291,6 +291,21 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
 export function getCategoryTaxonomyCode(categoryId: string): string {
   const category = CATEGORY_TAXONOMY[categoryId];
   return category?.taxonomyCode || categoryId.toUpperCase();
+}
+
+// Import and use official taxonomy codes when available
+import { getOfficialCategoryTaxonomyCode, getOfficialSubcategoryTaxonomyCode } from './officialTaxonomy';
+
+export function getOfficialCategoryCode(categoryId: string): string {
+  const officialCode = getOfficialCategoryTaxonomyCode(categoryId);
+  if (officialCode) return officialCode;
+  
+  // Fallback to existing system
+  return getCategoryTaxonomyCode(categoryId);
+}
+
+export function getOfficialSubcategoryCode(categoryId: string, subcategoryId: string): string | null {
+  return getOfficialSubcategoryTaxonomyCode(categoryId, subcategoryId);
 }
 
 // Helper function to get taxonomy code for a subcategory

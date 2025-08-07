@@ -24,17 +24,21 @@ Preferred communication style: Simple, everyday language.
 3. Parse `data.results` array for resource objects
 4. Transform API response to application format
 
-**TAXONOMY CODE MAPPINGS:**
+**OFFICIAL TAXONOMY CODE MAPPINGS (Updated January 7, 2025):**
+- BH = Housing
+- N = Finance & Employment  
 - BD = Food
-- BH = Housing  
-- N = Employment
-- L = Healthcare
-- F = Legal
-- H = Education
-- BT = Transportation
-- P = Family/Children
+- L = Health Care
+- R = Mental Wellness
 - RX = Substance Use
-- YB-9000 = Youth Services
+- P = Children & Family
+- YB-9000 = Young Adults
+- H = Education
+- F = Legal Assistance
+- BV = Utilities
+- BT = Transportation
+
+**SUBCATEGORY CODES**: System now uses official detailed subcategory taxonomy codes (e.g., FT-4800 for Lawyers Referral Services) from official Santa Barbara 211 taxonomy database provided January 7, 2025.
 
 **VERIFIED RESULTS:** Successfully retrieving 10+ real Santa Barbara resources per category including Adam's Angels Food Program, Salvation Army Food Pantry, Food From The Heart Harvest Program, and housing services.
 
@@ -86,13 +90,14 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Smart Fallback**: Implemented taxonomy code → text search fallback ensuring maximum result coverage
 - **Distance Calculation Restored (August 5, 2025)**: Full distance calculation system operational with 33,782 zip code database, accurate Haversine formula, and distance-based sorting. Blue distance badges display correctly on resource cards when user enters location.
 
-### Legal Category Taxonomy Fix (August 7, 2025)
-- **RESOLVED**: Fixed legal category taxonomy code mapping from incorrect "F" to working "FT" taxonomy code
-- **Target Resource Located**: Successfully retrieved Santa Barbara County Bar Association Lawyer Referral Service (ID: 211santaba-69180683) using taxonomy code FT-4800 for lawyers-referral subcategory
-- **Taxonomy Code Corrections**: Updated legal-assistance category from taxonomyCode 'F' to 'FT' for broader legal service coverage
-- **API Endpoint Verification**: Confirmed GET requests to /keyword endpoint working correctly with proper headers and taxonomy codes
-- **Subcategory Search Success**: Verified subcategory filtering with lawyers-referral returns exactly the requested Bar Association resource
-- **Resource Retrieval**: System now correctly retrieves 80+ legal resources for FT taxonomy code with proper address and coordinate data
+### Official Taxonomy Integration (August 7, 2025)
+- **COMPLETED**: Integrated official Santa Barbara 211 taxonomy data from CSV files provided January 7, 2025
+- **Target Resource Located**: Successfully retrieved Santa Barbara County Bar Association Lawyer Referral Service (ID: 211santaba-69180683) using official taxonomy code FT-4800 for lawyers-referral subcategory
+- **Official Taxonomy System**: Created comprehensive taxonomy mapping using official category codes (F for Legal Assistance) and detailed subcategory codes (FT-4800, FC-8200.1550, etc.)
+- **Data Integrity**: System now prioritizes official taxonomy codes over legacy mappings, ensuring accurate resource discovery
+- **Subcategory Precision**: Verified subcategory filtering with official codes returns exact targeted resources
+- **Zip Code Display Fix**: Removed hardcoded 93101 default to show authentic resource locations instead of forced uniform zip codes
+- **Future Expansion Ready**: Taxonomy system designed to accommodate additional categories and subcategories as provided
 
 ## Recent Changes (August 2025)
 
