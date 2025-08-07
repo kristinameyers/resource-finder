@@ -135,7 +135,7 @@ export async function searchResourcesByKeyword(
       input: keyword,
       locationMode: 'Serving',
       distance: 25,
-      location: zipCode // API requires location - this should always be provided
+      location: zipCode || '93101' // API requires location - default to Santa Barbara for demo
     };
     
     if (latitude !== undefined && longitude !== undefined) {
@@ -312,8 +312,9 @@ export async function searchResourcesByTaxonomyCode(
       queryParams.set('location', `${latitude},${longitude}`);
       console.log(`Using coordinate location: ${latitude},${longitude}`);
     } else {
-      // No location provided - cannot search without location
-      throw new Error('Location is required - please provide either zipCode or coordinates');
+      // No location provided - provide a sensible default for demonstration purposes
+      console.log('Warning: No location provided, using Santa Barbara as default for demonstration');
+      queryParams.set('location', '93101'); // Default to Santa Barbara for demo purposes
     }
     
     const fullUrl = `${requestUrl}?${queryParams.toString()}`;
