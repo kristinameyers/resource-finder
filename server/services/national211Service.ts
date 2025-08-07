@@ -239,6 +239,25 @@ export async function searchAllResourcesByTaxonomyCode(
     }
   }
   
+  // Add distance calculations if user provided a zip code
+  if (zipCode && allResources.length > 0) {
+    console.log(`Calculating distances from user zip code: ${zipCode}`);
+    const { calculateDistanceFromZipCodes } = await import('../data/zipCodes');
+    
+    allResources = allResources.map(resource => {
+      if (resource.zipCode) {
+        const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
+        return {
+          ...resource,
+          distanceMiles: distance || undefined
+        };
+      }
+      return resource;
+    });
+    
+    console.log(`Added distance calculations to ${allResources.filter(r => r.distanceMiles !== undefined).length} resources`);
+  }
+
   console.log(`=== COMPLETED: Retrieved ${allResources.length} total resources for ${taxonomyCode} ===`);
   return { resources: allResources, total: Math.max(allResources.length, apiTotalCount) };
 }
@@ -946,6 +965,16 @@ export async function searchResources(
       latitude,
       longitude
     );
+    
+    // Sort by distance if user location is available
+    if ((zipCode || (latitude && longitude)) && result.resources.length > 0) {
+      result.resources.sort((a, b) => {
+        const distanceA = a.distanceMiles || 999999;
+        const distanceB = b.distanceMiles || 999999;
+        return distanceA - distanceB;
+      });
+      console.log(`Auto-sorted ${result.resources.length} resources by distance (closest first)`);
+    }
     
     return result;
     
