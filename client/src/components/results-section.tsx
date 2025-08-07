@@ -121,9 +121,9 @@ export default function ResultsSection({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {resources.map((resource) => (
+        {resources.map((resource, index) => (
           <ResourceCard 
-            key={resource.id} 
+            key={`${resource.id}-${resource.categoryId}-${index}`} 
             resource={resource} 
             category={getCategoryForResource(resource.categoryId)}
             subcategory={resource.subcategoryId ? getSubcategoryForResource(resource.subcategoryId) : undefined}

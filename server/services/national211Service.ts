@@ -703,13 +703,13 @@ function transformResource(apiResource: any): Resource {
     return days;
   }).join('\n');
   
-  // Debug: Check for specific iCarol fields
-  console.log('Checking for key fields:');
-  console.log('- phones/contacts:', !!apiResource.phones || !!apiResource.contacts);
-  console.log('- eligibility:', !!apiResource.eligibility);
-  console.log('- serviceAreas:', !!apiResource.serviceAreas);
-  console.log('- schedules:', !!apiResource.schedules);
-  console.log('- languages:', !!apiResource.languages);
+  // Debug: Check for specific iCarol fields (uncomment for debugging)
+  // console.log('Checking for key fields:');
+  // console.log('- phones/contacts:', !!apiResource.phones || !!apiResource.contacts);
+  // console.log('- eligibility:', !!apiResource.eligibility);
+  // console.log('- serviceAreas:', !!apiResource.serviceAreas);
+  // console.log('- schedules:', !!apiResource.schedules);
+  // console.log('- languages:', !!apiResource.languages);
 
   // Debug: Uncomment for address debugging
   // console.log(`Resource "${apiResource.nameService}": zipCode = ${address.postalCode}`);
