@@ -578,18 +578,18 @@ function transformResource(apiResource: any): Resource {
   // Debug: Log the full API resource structure to understand available fields (limited output)
   console.log('API Resource keys:', Object.keys(apiResource));
   
-  const address = apiResource.address || {};
+  // Fix address extraction - API uses different structure
+  // Extract address information from multiple possible locations
+  const address = apiResource.address || apiResource.addresses?.[0] || {};
+  const geoPoint = apiResource.geoPoint || {};
   const taxonomy = apiResource.taxonomy?.[0] || {};
   const detailedService = apiResource.detailedService || {};
   
-  console.log('Enhanced service data available:', !!detailedService && Object.keys(detailedService).length > 0);
-  if (detailedService && Object.keys(detailedService).length > 0) {
-    console.log('Detailed service fields:', Object.keys(detailedService));
-    console.log('Has phones:', !!detailedService.phones);
-    console.log('Has eligibility:', !!detailedService.eligibility);
-    console.log('Has applicationProcess:', !!detailedService.applicationProcess);
-    console.log('Has schedules:', !!detailedService.schedules);
-  }
+  // Address validation - API provides good address data
+  const hasValidAddress = address && Object.keys(address).length > 0;
+  
+  // Check for enhanced service data from detailed API calls
+  const hasDetailedService = detailedService && Object.keys(detailedService).length > 0;
   
   // Enhanced HTML cleaning function with list preservation
   const cleanHtml = (text: string) => {
@@ -725,16 +725,19 @@ function transformResource(apiResource: any): Resource {
     categoryId,
     subcategoryId: taxonomy.taxonomyTerm ? taxonomy.taxonomyTerm.toLowerCase().replace(/\s+/g, '-') : undefined,
     location: apiResource.nameLocation || address.city || 'Unknown location',
-    zipCode: address.postalCode || extractZipCodeFromAddress(address.streetAddress || '') || extractZipCodeFromDescription(apiResource.descriptionService),
+    zipCode: address.postalCode || 
+             extractZipCodeFromAddress(address.streetAddress || '') || 
+             extractZipCodeFromDescription(apiResource.descriptionService) || 
+             'Unknown',
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
     phone: phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
-    address: [
+    address: hasValidAddress ? [
       address.streetAddress,
       address.city,
       address.stateProvince,
       address.postalCode
-    ].filter(Boolean).join(', '),
+    ].filter(Boolean).join(', ') : 'Address not available',
     schedules: formatSchedules(detailedService.schedules) || 'Contact for hours',
     accessibility: cleanHtml(detailedService.accessibility?.description || '') || 'Contact for accessibility information',
     languages: detailedService.languages?.description ? [detailedService.languages.description] : apiResource.languages?.map((lang: any) => lang.name || lang) || ['English'],

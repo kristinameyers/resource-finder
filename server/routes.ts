@@ -280,11 +280,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // For 211 API resources, try to find them in recent searches
-      // The 211 API doesn't have reliable individual resource endpoints
+      // For 211 API resources, try to get detailed information
       if (useApi && id.includes('211santaba')) {
-        console.log(`211 API resource ${id} requested - checking local storage`);
-        // Return a message indicating this should be handled client-side
+        console.log(`211 API resource ${id} requested - fetching detailed info`);
+        try {
+          const resource = await getResourceById(id);
+          if (resource) {
+            return res.status(200).json({
+              resource,
+              source: '211_API_detailed'
+            });
+          }
+        } catch (apiError) {
+          console.error("Error fetching detailed 211 resource:", apiError);
+          // Fall back to local storage message
+        }
+        
+        // Fallback: Return a message indicating this should be handled client-side
         return res.status(200).json({
           message: "Resource should be available from recent search results",
           useLocalStorage: true,
