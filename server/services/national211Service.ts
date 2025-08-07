@@ -734,7 +734,7 @@ function transformResource(apiResource: any): Resource {
              extractZipCodeFromDescription(apiResource.descriptionService) ||
              extractZipCodeFromServiceAreas(apiResource.serviceAreas) ||
              getZipFromCoordinates(address.latitude, address.longitude) ||
-             '93101', // Default to Santa Barbara instead of 'Unknown' for distance calculations
+             undefined, // Let each resource keep its actual location, don't force a default
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
     phone: phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
