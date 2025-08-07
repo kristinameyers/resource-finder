@@ -99,6 +99,14 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Zip Code Display Fix**: Removed hardcoded 93101 default to show authentic resource locations instead of forced uniform zip codes
 - **Future Expansion Ready**: Taxonomy system designed to accommodate additional categories and subcategories as provided
 
+### Enhanced Navigation & User Experience (August 7, 2025)
+- **COMPLETED**: Fixed back navigation from resource details to preserve user search context
+- **Search Context Preservation**: Search filters (category, subcategory, location) now stored in localStorage when browsing resources
+- **Contextual Back Navigation**: "Back to resources" button returns users to their specific category search results instead of generic home page
+- **URL Parameter Support**: Added URL parameter parsing for direct links to filtered results (category, subcategory, zipCode)
+- **Distance Badge Logic**: Zip codes only display in resource cards when user has provided location for distance calculations
+- **User Flow Optimization**: Complete browsing flow from category selection → resource details → back to search results works seamlessly
+
 ## Recent Changes (August 2025)
 
 - **Typography Overhaul**: Completely replaced League Gothic with Roboto font family across both web and mobile applications. All text now uses Roboto Regular (400), Medium (500), and Bold (700) weights for consistency.
