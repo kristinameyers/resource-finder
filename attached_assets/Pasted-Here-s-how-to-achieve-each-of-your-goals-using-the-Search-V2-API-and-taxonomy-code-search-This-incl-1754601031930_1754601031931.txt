@@ -1,0 +1,104 @@
+Here’s how to achieve each of your goals using the Search V2 API and taxonomy code search. This includes API endpoints, sample request bodies, and how to extract/display the requested resource details.
+
+## 1. Display Resources Serving Santa Barbara, CA Using a Taxonomy as Keyword
+
+**API Endpoint:**  
+`POST /searchV2/search`
+
+**Sample JSON Request:**
+```json
+{
+  "keywords": ["bd-1800"],             // Replace with your actual taxonomy code
+  "keywordIsTaxonomyCode": true,       // Indicates you are using a taxonomy, not a free text keyword
+  "location": "Santa Barbara, CA"
+}
+```
+- To include children taxonomy codes, use `"bd-1800*"`.
+
+## 2. Display Resources Serving a Specific Zip Code with Taxonomy as Keyword
+
+**API Endpoint:**  
+`POST /searchV2/search`
+
+**Sample JSON Request:**
+```json
+{
+  "keywords": ["bd-1800"],
+  "keywordIsTaxonomyCode": true,
+  "location": "93101",                 // Replace with your target zip code
+  "locationType": "zip"
+}
+```
+- Use the zip code as the location. If supported, also specify `"locationType": "zip"` to be explicit; otherwise, just set `"location": "93101"`.
+
+## 3. Extract and Display Resource Details
+
+Assume the API’s response contains a list of resource objects. For each resource, extract these details for display:
+
+```js
+{
+  "streetAddress": resource.streetAddress,
+  "city": resource.city,
+  "county": resource.county,
+  "stateProvince": resource.stateProvince,
+  "postalCode": resource.postalCode,
+  "country": resource.country,
+  "latitude": resource.latitude,
+  "longitude": resource.longitude,
+  "eligibility": resource.eligibility,
+  "applicationProcess": resource.applicationProcess,
+  "documents": resource.documents, // may be an array or object depending on API
+  "fees": resource.fees,
+  "serviceAreas": resource.serviceAreas, // usually an array of objects
+  "phones": resource.phones,
+  "schedules": resource.schedules,
+  "url": resource.url,
+  "addresses": resource.addresses,
+  "languages": resource.languages,
+  "accessibility": resource.accessibility,
+  "email": resource.email
+}
+```
+**To Display (in React/JS, for example):**
+```jsx
+
+  {resource.name}
+  {resource.streetAddress}, {resource.city}, {resource.stateProvince} {resource.postalCode}
+  Eligibility: {resource.eligibility}
+  Application Process: {resource.applicationProcess}
+  Phone: {resource.phones?.[0]?.number}
+  Languages: {resource.languages?.description}
+  {/* And so on, for each field */}
+
+```
+- For arrays like `phones`, `addresses`, `serviceAreas`, or `schedules`, iterate through each item if you want to display all entries.
+
+### TL;DR (Summary of Steps)
+
+- **To search by city:** Set `"location": "Santa Barbara, CA"` in your POST body with `"keywordIsTaxonomyCode": true`.
+- **To search by ZIP:** Set `"location": "93101"` and (`"locationType": "zip"` if needed).
+- **To show details:** Map values from each response object to your UI using the provided property names.
+
+These examples use `POST /searchV2/search`, which is preferred for any customized or filtered search using taxonomy codes and locations.  
+You may further adjust the POST body with filters, paging, and the fields you want to select, as mentioned in your schema extract and prior guidance.[1]
+
+[1] https://apiportal.211.org
+[2] https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/
+[3] https://api.artic.edu
+[4] https://learn.liferay.com/w/dxp/integration/headless-apis/search-apis/search-api-basics
+[5] https://developer.dowjones.com/documents/site-docs-risk_and_compliance_apis-risk_and_compliance_2_0-risk_search_api
+[6] https://learn.microsoft.com/en-us/rest/api/appservice/web-apps/list?view=rest-appservice-2024-11-01
+[7] https://developer.x.com/en/docs/tutorials/building-high-quality-filters
+[8] https://www.ibm.com/docs/en/SS8S5A/pdf/UniversalAccess_5_2_0.pdf
+[9] https://developers.arcgis.com/rest/users-groups-and-items/search/
+[10] https://learn.microsoft.com/en-us/graph/api/resources/user?view=graph-rest-1.0
+[11] https://www.servicenow.com/docs/bundle/zurich-api-reference/page/integrate/inbound-rest/concept/c_ServiceCatalogAPI.html
+[12] https://secure.sos.state.or.us/oard/displayDivisionRules.action?selectedDivision=1728
+[13] https://developers.freshdesk.com/api/
+[14] https://www.cms.gov/files/document/guidelines-enhanced-direct-enrollment-audits-year-8-final.pdf
+[15] https://nominatim.org/release-docs/latest/api/Search/
+[16] https://www.ite.org/ITEORG/assets/File/Multimodal%20and%20Accessible%20White%20Paper_Eligibility_FINAL_2023-07-21.pdf
+[17] https://www.federalregister.gov/documents/2023/04/12/2023-07115/medicare-program-contract-year-2024-policy-and-technical-changes-to-the-medicare-advantage-program
+[18] https://www.fhlbmpf.com/docs/default-source/mpf-traditional-selling-guide/mpf-traditional-selling-guide.pdf?sfvrsn=be1724c4_26
+[19] https://www.congress.gov/bill/117th-congress/house-bill/2617
+[20] https://cloud.google.com/transform/101-real-world-generative-ai-use-cases-from-industry-leaders

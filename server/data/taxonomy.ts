@@ -238,7 +238,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'legal-assistance': {
     id: 'legal-assistance',
     name: 'Legal Assistance',
-    taxonomyCode: 'F',
+    taxonomyCode: 'FT',
     subcategories: [
       { id: 'criminal-courts', name: 'Criminal State Trial Courts', taxonomyCode: 'FC-8200.1550' },
       { id: 'juvenile-courts', name: 'Juvenile Justice Courts', taxonomyCode: 'FC-8200.3500-350' },

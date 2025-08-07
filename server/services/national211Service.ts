@@ -289,9 +289,9 @@ export async function searchResourcesByTaxonomyCode(
     console.log(`\n=== Searching 211 API ===`);
     console.log(`Taxonomy Code: ${taxonomyCode}`);
     
-    // Build request URL for the /keyword endpoint
+    // Build request URL for the /keyword endpoint (proven working method)
     const requestUrl = `${API_BASE_URL}/keyword`;
-    console.log('Testing /keyword endpoint...');
+    console.log('Using proven working /keyword endpoint...');
     
     // Build query parameters for the GET request
     const queryParams = new URLSearchParams({
@@ -300,9 +300,6 @@ export async function searchResourcesByTaxonomyCode(
       size: Math.min(limit, 10).toString(), // API seems to cap at 10
       skip: offset.toString()
     });
-    
-    // Don't set locationMode in query params - it goes in headers
-    // Don't set keywordIsTaxonomyCode in query params - it goes in headers
     
     // Add location parameter - API requires location, so we must have one
     if (zipCode) {

@@ -86,6 +86,14 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Smart Fallback**: Implemented taxonomy code → text search fallback ensuring maximum result coverage
 - **Distance Calculation Restored (August 5, 2025)**: Full distance calculation system operational with 33,782 zip code database, accurate Haversine formula, and distance-based sorting. Blue distance badges display correctly on resource cards when user enters location.
 
+### Legal Category Taxonomy Fix (August 7, 2025)
+- **RESOLVED**: Fixed legal category taxonomy code mapping from incorrect "F" to working "FT" taxonomy code
+- **Target Resource Located**: Successfully retrieved Santa Barbara County Bar Association Lawyer Referral Service (ID: 211santaba-69180683) using taxonomy code FT-4800 for lawyers-referral subcategory
+- **Taxonomy Code Corrections**: Updated legal-assistance category from taxonomyCode 'F' to 'FT' for broader legal service coverage
+- **API Endpoint Verification**: Confirmed GET requests to /keyword endpoint working correctly with proper headers and taxonomy codes
+- **Subcategory Search Success**: Verified subcategory filtering with lawyers-referral returns exactly the requested Bar Association resource
+- **Resource Retrieval**: System now correctly retrieves 80+ legal resources for FT taxonomy code with proper address and coordinate data
+
 ## Recent Changes (August 2025)
 
 - **Typography Overhaul**: Completely replaced League Gothic with Roboto font family across both web and mobile applications. All text now uses Roboto Regular (400), Medium (500), and Bold (700) weights for consistency.
