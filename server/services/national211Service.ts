@@ -490,15 +490,16 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     // Extract the actual service ID from the composite ID
     const serviceId = id.replace('211santaba-', '');
     
-    // Use the correct endpoint for resource details
-    const baseUrl = 'https://api.211.org/resources/v2';
-    const requestUrl = `${baseUrl}/services-at-location/${serviceId}`;
-    console.log(`Making 211 API V2 request to: ${requestUrl} for service ID ${serviceId}`);
+    // Use the correct endpoint for resource details - search endpoint with specific ID
+    const requestUrl = `${API_BASE_URL}?keywords=${id}&keywordIsTaxonomyCode=false&location=Santa%20Barbara%20County,%20CA&distance=100&size=1`;
+    console.log(`Making 211 API V2 request to: ${requestUrl} for resource ID ${id}`);
     
-    // Set headers with subscription key
+    // Set headers with subscription key for search-based resource details
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'Api-Key': SUBSCRIPTION_KEY || ''
+      'Api-Key': SUBSCRIPTION_KEY || '',
+      'locationMode': 'Serving',
+      'keywordIsTaxonomyCode': 'false'
     };
     
     console.log('Sending detail request with headers:', JSON.stringify(headers));
@@ -551,7 +552,8 @@ const taxonomyToCategory: { [key: string]: string } = {
   'YB-9000': 'young-adults',
   'H': 'education',
   'YB-8000': 'seniors-caregivers',
-  'F': 'legal-assistance',
+  'F': 'legal',
+  'FT': 'legal', // Lawyer referral services (FT-4800)
   'BV': 'utilities',
 };
 
