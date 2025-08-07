@@ -135,7 +135,7 @@ export async function searchResourcesByKeyword(
       input: keyword,
       locationMode: 'Serving',
       distance: 25,
-      location: zipCode || '90210' // Default location if none provided (API requires this)
+      location: zipCode // API requires location - this should always be provided
     };
     
     if (latitude !== undefined && longitude !== undefined) {
@@ -286,10 +286,8 @@ export async function searchResourcesByTaxonomyCode(
   offset: number = 0
 ): Promise<{ resources: Resource[], total: number }> {
   try {
-    console.log(`\n=== DEBUGGING 211 API ===`);
+    console.log(`\n=== Searching 211 API ===`);
     console.log(`Taxonomy Code: ${taxonomyCode}`);
-    console.log(`API Key Present: ${!!SUBSCRIPTION_KEY}`);
-    console.log(`API Base URL: ${API_BASE_URL}`);
     
     // Build request URL for the /keyword endpoint
     const requestUrl = `${API_BASE_URL}/keyword`;
@@ -306,13 +304,16 @@ export async function searchResourcesByTaxonomyCode(
     // Don't set locationMode in query params - it goes in headers
     // Don't set keywordIsTaxonomyCode in query params - it goes in headers
     
-    // Add location parameter
+    // Add location parameter - API requires location, so we must have one
     if (zipCode) {
       queryParams.set('location', zipCode);
+      console.log(`Using zip code location: ${zipCode}`);
     } else if (latitude !== undefined && longitude !== undefined) {
       queryParams.set('location', `${latitude},${longitude}`);
+      console.log(`Using coordinate location: ${latitude},${longitude}`);
     } else {
-      queryParams.set('location', '93101');
+      // No location provided - cannot search without location
+      throw new Error('Location is required - please provide either zipCode or coordinates');
     }
     
     const fullUrl = `${requestUrl}?${queryParams.toString()}`;
@@ -342,6 +343,7 @@ export async function searchResourcesByTaxonomyCode(
         console.log('API returned 404 with taxonomy search - trying text search fallback');
         
         // Try fallback with text search instead of taxonomy code
+        console.log(`Retrying with same location: ${queryParams.get('location')}`);
         const fallbackHeaders: HeadersInit = {
           'Accept': 'application/json',
           'Api-Key': SUBSCRIPTION_KEY || '',
