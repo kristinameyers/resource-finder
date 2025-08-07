@@ -74,6 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
                   if (distance !== null) {
                     distanceMiles = distance;
+                    // console.log(`Distance calculated: ${zipCode} to ${resource.zipCode} = ${distance} miles`);
+                  } else {
+                    console.log(`Failed to calculate distance: ${zipCode} to ${resource.zipCode} (coordinates not found)`);
                   }
                 }
                 
