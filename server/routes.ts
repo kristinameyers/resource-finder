@@ -61,16 +61,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           let resources = apiResult.resources;
             
-            // Calculate distances for all resources, even without userZipCode
-            if (resources.length > 0) {
+            // Only calculate distances when user has provided a location
+            if (zipCode && resources.length > 0) {
               const { calculateDistanceFromZipCodes } = await import('./data/zipCodes');
               
               // Add distance to each resource
               resources = resources.map(resource => {
                 let distanceMiles: number | undefined = undefined;
                 
-                // Try distance calculation if we have user location and resource location
-                if (zipCode && resource.zipCode) {
+                // Calculate distance if resource has a zip code
+                if (resource.zipCode) {
                   const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
                   if (distance !== null) {
                     distanceMiles = distance;

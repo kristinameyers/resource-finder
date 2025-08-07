@@ -55,7 +55,8 @@ export default function ResourceCard({ resource, category, subcategory }: Resour
           <div className="flex items-center gap-1 text-sm text-muted-foreground mt-4">
             <MapPin className="h-4 w-4" />
             <span>{resource.location}</span>
-            {resource.zipCode && <span className="text-xs">({resource.zipCode})</span>}
+            {/* Only show zip code when user has provided location (indicated by presence of distance calculation) */}
+            {resource.zipCode && resource.distanceMiles !== undefined && <span className="text-xs">({resource.zipCode})</span>}
             {resource.distanceMiles !== undefined && (
               <Badge variant="secondary" className="text-xs ml-auto bg-blue-50 text-blue-700 border-blue-200">
                 {resource.distanceMiles === 0 ? '0.0 mi' : `${resource.distanceMiles.toFixed(1)} mi`}
