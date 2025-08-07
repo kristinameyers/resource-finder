@@ -244,15 +244,27 @@ export async function searchAllResourcesByTaxonomyCode(
     console.log(`Calculating distances from user zip code: ${zipCode}`);
     const { calculateDistanceFromZipCodes } = await import('../data/zipCodes');
     
+    // Debug: Uncomment for distance debugging
+    // console.log(`First 3 resource zip codes:`, allResources.slice(0, 3).map(r => ({ name: r.name, zipCode: r.zipCode })));
+    
     allResources = allResources.map(resource => {
       if (resource.zipCode) {
-        const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
-        return {
-          ...resource,
-          distanceMiles: distance || undefined
-        };
+        if (resource.zipCode === zipCode) {
+          // For same zip code, set distance to 0
+          return {
+            ...resource,
+            distanceMiles: 0
+          };
+        } else {
+          const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
+          return {
+            ...resource,
+            distanceMiles: distance || undefined
+          };
+        }
+      } else {
+        return resource;
       }
-      return resource;
     });
     
     console.log(`Added distance calculations to ${allResources.filter(r => r.distanceMiles !== undefined).length} resources`);
@@ -699,6 +711,9 @@ function transformResource(apiResource: any): Resource {
   console.log('- schedules:', !!apiResource.schedules);
   console.log('- languages:', !!apiResource.languages);
 
+  // Debug: Uncomment for address debugging
+  // console.log(`Resource "${apiResource.nameService}": zipCode = ${address.postalCode}`);
+  
   // Create the transformed resource
   return {
     id: apiResource.idServiceAtLocation || apiResource.id,
