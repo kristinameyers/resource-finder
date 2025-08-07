@@ -312,9 +312,9 @@ export async function searchResourcesByTaxonomyCode(
       queryParams.set('location', `${latitude},${longitude}`);
       console.log(`Using coordinate location: ${latitude},${longitude}`);
     } else {
-      // No location provided - provide a sensible default for demonstration purposes
-      console.log('Warning: No location provided, using Santa Barbara as default for demonstration');
-      queryParams.set('location', '93101'); // Default to Santa Barbara for demo purposes
+      // No location provided - default to Santa Barbara for initial queries
+      console.log('No location provided, defaulting to Santa Barbara (93101)');
+      queryParams.set('location', '93101'); // Default to Santa Barbara
     }
     
     const fullUrl = `${requestUrl}?${queryParams.toString()}`;

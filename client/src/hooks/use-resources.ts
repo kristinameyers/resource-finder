@@ -58,10 +58,11 @@ export function useResources(
           );
         }
       } else {
+        // Default to Santa Barbara when no location specified
         result = await fetchResources(
           categoryId || undefined, 
           subcategoryId || undefined,
-          undefined,
+          "93101", // Default to Santa Barbara zip code
           undefined,
           useApi,
           sortBy
