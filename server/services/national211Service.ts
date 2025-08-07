@@ -312,9 +312,10 @@ export async function searchResourcesByTaxonomyCode(
       queryParams.set('location', `${latitude},${longitude}`);
       console.log(`Using coordinate location: ${latitude},${longitude}`);
     } else {
-      // No location provided - default to Santa Barbara for initial queries
-      console.log('No location provided, defaulting to Santa Barbara (93101)');
-      queryParams.set('location', '93101'); // Default to Santa Barbara
+      // No location provided - use county for broader search
+      console.log('No location provided, defaulting to Santa Barbara County');
+      queryParams.set('location', 'Santa Barbara County, CA'); // Search county wide
+      queryParams.set('distance', '100'); // Increase distance for county-wide search
     }
     
     const fullUrl = `${requestUrl}?${queryParams.toString()}`;
@@ -486,9 +487,13 @@ export async function getResourceById(id: string): Promise<Resource | null> {
   try {
     console.log(`Fetching resource with ID: ${id}`);
     
-    // Use the V2 API base URL for resource detail lookup
-    const requestUrl = `${API_BASE_URL}/detail?id=${id}`;
-    console.log(`Making 211 API V2 request to: ${requestUrl} for resource ${id}`);
+    // Extract the actual service ID from the composite ID
+    const serviceId = id.replace('211santaba-', '');
+    
+    // Use the correct endpoint for resource details
+    const baseUrl = 'https://api.211.org/resources/v2';
+    const requestUrl = `${baseUrl}/services-at-location/${serviceId}`;
+    console.log(`Making 211 API V2 request to: ${requestUrl} for service ID ${serviceId}`);
     
     // Set headers with subscription key
     const headers: HeadersInit = {
@@ -714,16 +719,7 @@ function transformResource(apiResource: any): Resource {
   // console.log('- schedules:', !!apiResource.schedules);
   // console.log('- languages:', !!apiResource.languages);
 
-  // Debug address extraction for resources showing "Unknown"
-  if (!address.postalCode && apiResource.nameService) {
-    console.log(`Missing zip code for ${apiResource.nameService}:`, {
-      hasAddress: !!address,
-      addressKeys: Object.keys(address),
-      addressData: address,
-      geoPoint: apiResource.geoPoint,
-      serviceAreas: apiResource.serviceAreas?.slice(0, 2) // First 2 service areas for debugging
-    });
-  }
+  // Skip debug logging to reduce console output
   
   // Create the transformed resource
   return {
@@ -738,6 +734,7 @@ function transformResource(apiResource: any): Resource {
              extractZipCodeFromAddress(address.streetAddress || '') || 
              extractZipCodeFromDescription(apiResource.descriptionService) ||
              extractZipCodeFromServiceAreas(apiResource.serviceAreas) ||
+             getZipFromCoordinates(address.latitude, address.longitude) ||
              '93101', // Default to Santa Barbara instead of 'Unknown' for distance calculations
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
     phone: phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
@@ -929,6 +926,28 @@ function extractZipCodeFromServiceAreas(serviceAreas: any[]): string | undefined
     const zipMatch = areaText.match(/\b\d{5}(-\d{4})?\b/);
     if (zipMatch) {
       return zipMatch[0].split('-')[0];
+    }
+  }
+  
+  return undefined;
+}
+
+// Rough coordinate-to-zip mapping for Santa Barbara County
+function getZipFromCoordinates(lat: string, lon: string): string | undefined {
+  if (!lat || !lon) return undefined;
+  
+  const latitude = parseFloat(lat);
+  const longitude = parseFloat(lon);
+  
+  // Rough Santa Barbara area zip code mapping based on coordinates
+  if (latitude >= 34.40 && latitude <= 34.50 && longitude >= -119.80 && longitude <= -119.60) {
+    // Santa Barbara city area
+    if (latitude >= 34.42 && latitude <= 34.44) {
+      return '93101'; // Downtown/central SB
+    } else if (latitude >= 34.44 && latitude <= 34.46) {
+      return '93110'; // Upper State Street area
+    } else {
+      return '93111'; // Goleta area
     }
   }
   

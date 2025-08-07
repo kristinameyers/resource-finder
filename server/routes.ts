@@ -286,10 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const resource = await getResourceById(id);
           if (resource) {
-            return res.status(200).json({
-              resource,
-              source: '211_API_detailed'
-            });
+            return res.status(200).json(resource);
           }
         } catch (apiError) {
           console.error("Error fetching detailed 211 resource:", apiError);
