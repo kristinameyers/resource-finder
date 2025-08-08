@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { fetchResourceById, fetchResourceDetails, fetchCategories, fetchSubcategories } from '@/lib/api';
+import type { PhoneDetails } from '@/../../shared/schema';
 import FavoriteButton from '@/components/favorite-button';
 
 export default function ResourceDetail() {
@@ -292,47 +293,72 @@ export default function ResourceDetail() {
             <CardTitle>Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Main Phone Number */}
-            {(resource.phoneNumbers?.main || resource.phone) && (
-              <div className="flex items-start">
-                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Phone</p>
-                  <p className="text-muted-foreground">{resource.phoneNumbers?.main || resource.phone}</p>
-                  <p className="text-xs text-muted-foreground">Main Phone Number</p>
+            {/* Comprehensive Phone Numbers from Query API */}
+            {resource.comprehensivePhones && resource.comprehensivePhones.length > 0 ? (
+              resource.comprehensivePhones.map((phone: PhoneDetails, index: number) => (
+                <div key={phone.id || index} className="flex items-start">
+                  <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">
+                      {phone.name || phone.type || "Phone"}
+                      {phone.isMain && <span className="ml-1 text-xs bg-primary text-primary-foreground px-1 rounded">Main</span>}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {phone.number}
+                      {phone.extension && <span className="ml-1 text-xs text-muted-foreground">ext. {phone.extension}</span>}
+                    </p>
+                    {phone.description && (
+                      <p className="text-xs text-muted-foreground">{phone.description}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Additional Phone Numbers */}
-            {resource.phoneNumbers?.fax && (
-              <div className="flex items-start">
-                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Fax</p>
-                  <p className="text-muted-foreground">{resource.phoneNumbers.fax}</p>
-                </div>
-              </div>
-            )}
-            
-            {resource.phoneNumbers?.tty && (
-              <div className="flex items-start">
-                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">TTY</p>
-                  <p className="text-muted-foreground">{resource.phoneNumbers.tty}</p>
-                </div>
-              </div>
-            )}
-            
-            {resource.phoneNumbers?.crisis && (
-              <div className="flex items-start">
-                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">Crisis Line</p>
-                  <p className="text-muted-foreground">{resource.phoneNumbers.crisis}</p>
-                </div>
-              </div>
+              ))
+            ) : (
+              // Fallback to basic phone numbers if comprehensive data not available
+              <>
+                {/* Main Phone Number */}
+                {(resource.phoneNumbers?.main || resource.phone) && (
+                  <div className="flex items-start">
+                    <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Phone</p>
+                      <p className="text-muted-foreground">{resource.phoneNumbers?.main || resource.phone}</p>
+                      <p className="text-xs text-muted-foreground">Main Phone Number</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Additional Phone Numbers */}
+                {resource.phoneNumbers?.fax && (
+                  <div className="flex items-start">
+                    <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Fax</p>
+                      <p className="text-muted-foreground">{resource.phoneNumbers.fax}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {resource.phoneNumbers?.tty && (
+                  <div className="flex items-start">
+                    <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">TTY</p>
+                      <p className="text-muted-foreground">{resource.phoneNumbers.tty}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {resource.phoneNumbers?.crisis && (
+                  <div className="flex items-start">
+                    <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Crisis Line</p>
+                      <p className="text-muted-foreground">{resource.phoneNumbers.crisis}</p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             
             {/* Hours of Operation */}

@@ -35,6 +35,18 @@ export type User = typeof users.$inferSelect;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
 export type Rating = typeof ratings.$inferSelect;
 
+// Phone number interface for comprehensive phone data from Query API
+export interface PhoneDetails {
+  id?: string;
+  name?: string;
+  type?: string;
+  number?: string;
+  extension?: string;
+  description?: string;
+  isMain?: boolean;
+  access?: any;
+}
+
 // Resource schema definition
 export interface Category {
   id: string;
@@ -91,6 +103,9 @@ export interface Resource {
     crisis?: string;
   };
   additionalLanguages?: string[]; // More detailed language support
+  
+  // Comprehensive phone data from Query API
+  comprehensivePhones?: PhoneDetails[];
 }
 
 export const resourceSchema = z.object({
@@ -123,6 +138,18 @@ export const resourceSchema = z.object({
   }).optional(),
   additionalLanguages: z.array(z.string()).optional(),
   eligibility: z.string().optional(),
+  
+  // Comprehensive phone data from Query API
+  comprehensivePhones: z.array(z.object({
+    id: z.string().optional(),
+    name: z.string().optional(),
+    type: z.string().optional(),
+    number: z.string().optional(),
+    extension: z.string().optional(),
+    description: z.string().optional(),
+    isMain: z.boolean().optional(),
+    access: z.any().optional(),
+  })).optional(),
 });
 
 export const categorySchema = z.object({

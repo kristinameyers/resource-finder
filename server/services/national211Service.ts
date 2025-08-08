@@ -419,6 +419,62 @@ export async function searchResourcesByTaxonomyCode(
 }
 
 /**
+ * Fetches comprehensive phone numbers for a resource using multiple Query API endpoints
+ */
+export async function getPhoneNumbers(serviceAtLocationId: string, serviceId?: string, organizationId?: string, locationId?: string): Promise<any[]> {
+  try {
+    console.log(`Fetching phone numbers for serviceAtLocation ID: ${serviceAtLocationId}`);
+    
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+      'Api-Key': SUBSCRIPTION_KEY || ''
+    };
+    
+    // Try multiple endpoints to get phone numbers
+    const endpoints: string[] = [
+      `${QUERY_API_BASE_URL}/phones-for-service-at-location/${serviceAtLocationId}`
+    ];
+    
+    if (serviceId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-service/${serviceId}`);
+    }
+    if (organizationId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-organization/${organizationId}`);
+    }
+    if (locationId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-location/${locationId}`);
+    }
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`Trying phone endpoint: ${endpoint}`);
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers
+        });
+        
+        if (response.ok) {
+          const phoneData = await response.json() as any;
+          console.log(`Phone numbers API successful from: ${endpoint}`);
+          console.log(`Found ${Array.isArray(phoneData) ? phoneData.length : 1} phone numbers`);
+          return Array.isArray(phoneData) ? phoneData : [phoneData];
+        } else {
+          console.log(`Phone endpoint failed with status: ${response.status}`);
+        }
+      } catch (error) {
+        console.log(`Error with endpoint ${endpoint}:`, error);
+      }
+    }
+    
+    console.log('All phone endpoints failed, returning empty array');
+    return [];
+  } catch (error) {
+    console.error('Error fetching phone numbers:', error);
+    return [];
+  }
+}
+
+/**
  * Fetches detailed resource information using the Service At Location Details endpoint
  */
 export async function getServiceAtLocationDetails(serviceAtLocationId: string): Promise<any | null> {
@@ -570,13 +626,26 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     
     // Now get comprehensive details using Service At Location Details endpoint
     let detailedInfo = null;
+    let phoneNumbers = [];
     if (resourceData.idServiceAtLocation) {
       console.log(`Fetching detailed info using serviceAtLocation ID: ${resourceData.idServiceAtLocation}`);
       detailedInfo = await getServiceAtLocationDetails(resourceData.idServiceAtLocation);
+      
+      // Fetch comprehensive phone numbers
+      phoneNumbers = await getPhoneNumbers(
+        resourceData.idServiceAtLocation,
+        resourceData.idService,
+        resourceData.idOrganization,
+        resourceData.idLocation
+      );
     }
     
-    // Merge basic and detailed information
-    const enhancedData = detailedInfo ? { ...resourceData, serviceDetails: detailedInfo } : resourceData;
+    // Merge basic and detailed information including phone numbers
+    const enhancedData = { 
+      ...resourceData, 
+      ...(detailedInfo ? { serviceDetails: detailedInfo } : {}),
+      ...(phoneNumbers.length > 0 ? { comprehensivePhones: phoneNumbers } : {})
+    };
     
     return transformResource(enhancedData);
   } catch (error) {
@@ -846,6 +915,9 @@ function transformResource(apiResource: any): Resource {
                        "Contact the organization to learn about eligibility requirements";
     })(),
     phoneNumbers: phoneNumbers,
+    
+    // Enhanced comprehensive phone numbers from Query API
+    comprehensivePhones: apiResource.comprehensivePhones || [],
     additionalLanguages: apiResource.interpretationServices || 
                         apiResource.interpretation_services || 
                         apiResource.languages_spoken || []
