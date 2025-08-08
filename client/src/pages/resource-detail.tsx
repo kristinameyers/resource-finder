@@ -176,7 +176,9 @@ export default function ResourceDetail() {
       
       {/* Resource title and badges */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">{resource.name}</h1>
+        <h1 className="text-3xl font-bold mb-2">
+          {detailedInfo?.serviceAtLocationName || detailedInfo?.serviceName || resource.name}
+        </h1>
         <div className="flex flex-wrap gap-2">
           {category && (
             <Badge variant="outline" className="bg-primary/10 highlight">
@@ -204,15 +206,7 @@ export default function ResourceDetail() {
         </CardContent>
       </Card>
       
-      {/* Resource Name (serviceName) */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Resource Name</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-lg font-semibold">{detailedInfo?.serviceName || resource.name}</p>
-        </CardContent>
-      </Card>
+
 
       {/* About this Resource (organizationDescription) */}
       <Card className="mb-6">
@@ -281,37 +275,7 @@ export default function ResourceDetail() {
           </CardContent>
         </Card>
       
-      {/* Service Areas */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Users className="h-5 w-5 mr-2 text-primary" />
-            Service Areas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="whitespace-pre-line">
-            {detailedInfo?.serviceAreas ? (
-              // Display service areas from API
-              Array.isArray(detailedInfo.serviceAreas) ? (
-                detailedInfo.serviceAreas.map((area: any, index: number) => (
-                  <div key={index} className="mb-2">
-                    {area.geoComponents?.county && (
-                      <p className="font-medium">{area.geoComponents.county}</p>
-                    )}
-                    {area.name && <p>{area.name}</p>}
-                    {area.description && <p className="text-sm text-muted-foreground">{area.description}</p>}
-                  </div>
-                ))
-              ) : (
-                <p>{detailedInfo.serviceAreas}</p>
-              )
-            ) : (
-              <p>Contact the organization for service area information</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+
       
       {/* Contact information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -328,7 +292,17 @@ export default function ResourceDetail() {
                   <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">{phone.name || "Phone"}</p>
-                    <p className="text-muted-foreground">{phone.number}</p>
+                    {/* Make phone clickable if not a fax */}
+                    {phone.number && !phone.name?.toLowerCase().includes('fax') && !phone.description?.toLowerCase().includes('fax') ? (
+                      <a 
+                        href={`tel:${phone.number.replace(/[^\d]/g, '')}`}
+                        className="text-primary hover:underline"
+                      >
+                        {phone.number}
+                      </a>
+                    ) : (
+                      <p className="text-muted-foreground">{phone.number}</p>
+                    )}
                     {phone.description && (
                       <p className="text-xs text-muted-foreground">{phone.description}</p>
                     )}
@@ -346,10 +320,23 @@ export default function ResourceDetail() {
                       {phone.name || phone.type || "Phone"}
                       {phone.isMain && <span className="ml-1 text-xs bg-primary text-primary-foreground px-1 rounded">Main</span>}
                     </p>
-                    <p className="text-muted-foreground">
-                      {phone.number}
-                      {phone.extension && <span className="ml-1 text-xs text-muted-foreground">ext. {phone.extension}</span>}
-                    </p>
+                    {/* Make phone clickable if not a fax */}
+                    {phone.number && !phone.name?.toLowerCase().includes('fax') && !phone.type?.toLowerCase().includes('fax') ? (
+                      <p className="text-muted-foreground">
+                        <a 
+                          href={`tel:${phone.number.replace(/[^\d]/g, '')}`}
+                          className="text-primary hover:underline"
+                        >
+                          {phone.number}
+                        </a>
+                        {phone.extension && <span className="ml-1 text-xs text-muted-foreground">ext. {phone.extension}</span>}
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        {phone.number}
+                        {phone.extension && <span className="ml-1 text-xs text-muted-foreground">ext. {phone.extension}</span>}
+                      </p>
+                    )}
                     {phone.description && (
                       <p className="text-xs text-muted-foreground">{phone.description}</p>
                     )}
@@ -365,7 +352,12 @@ export default function ResourceDetail() {
                     <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium">Phone</p>
-                      <p className="text-muted-foreground">{resource.phoneNumbers?.main || resource.phone}</p>
+                      <a 
+                        href={`tel:${(resource.phoneNumbers?.main || resource.phone).replace(/[^\d]/g, '')}`}
+                        className="text-primary hover:underline"
+                      >
+                        {resource.phoneNumbers?.main || resource.phone}
+                      </a>
                       <p className="text-xs text-muted-foreground">Main Phone Number</p>
                     </div>
                   </div>
@@ -387,7 +379,12 @@ export default function ResourceDetail() {
                     <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium">TTY</p>
-                      <p className="text-muted-foreground">{resource.phoneNumbers.tty}</p>
+                      <a 
+                        href={`tel:${resource.phoneNumbers.tty.replace(/[^\d]/g, '')}`}
+                        className="text-primary hover:underline"
+                      >
+                        {resource.phoneNumbers.tty}
+                      </a>
                     </div>
                   </div>
                 )}
@@ -397,7 +394,12 @@ export default function ResourceDetail() {
                     <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium">Crisis Line</p>
-                      <p className="text-muted-foreground">{resource.phoneNumbers.crisis}</p>
+                      <a 
+                        href={`tel:${resource.phoneNumbers.crisis.replace(/[^\d]/g, '')}`}
+                        className="text-primary hover:underline"
+                      >
+                        {resource.phoneNumbers.crisis}
+                      </a>
                     </div>
                   </div>
                 )}
@@ -470,19 +472,39 @@ export default function ResourceDetail() {
                 <MapPin className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium">Address</p>
-                  <p className="text-muted-foreground whitespace-pre-line">
+                  <div className="text-muted-foreground whitespace-pre-line">
                     {detailedInfo?.address ? (
-                      // Format address from service-at-location-details
-                      [
-                        detailedInfo.address.street,
-                        detailedInfo.address.city,
-                        detailedInfo.address.state,
-                        detailedInfo.address.postalCode
-                      ].filter(Boolean).join(', ')
+                      // Format address from service-at-location-details and make it clickable
+                      <a 
+                        href={`https://maps.apple.com/?q=${encodeURIComponent([
+                          detailedInfo.address.street,
+                          detailedInfo.address.city,
+                          detailedInfo.address.state,
+                          detailedInfo.address.postalCode
+                        ].filter(Boolean).join(', '))}`}
+                        className="text-primary hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {[
+                          detailedInfo.address.street,
+                          detailedInfo.address.city,
+                          detailedInfo.address.state,
+                          detailedInfo.address.postalCode
+                        ].filter(Boolean).join(', ')}
+                      </a>
                     ) : (
-                      resource.address
+                      // Make resource address clickable
+                      <a 
+                        href={`https://maps.apple.com/?q=${encodeURIComponent(resource.address)}`}
+                        className="text-primary hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {resource.address}
+                      </a>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
             )}
