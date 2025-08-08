@@ -644,7 +644,7 @@ function transformResource(apiResource: any): Resource {
   
   // Check for enhanced service data from detailed API calls
   const hasDetailedService = detailedService && Object.keys(detailedService).length > 0;
-  const hasServiceDetails = serviceDetails && Object.keys(serviceDetails).length > 0;
+  const hasServiceDetails = apiResource.serviceDetails && Object.keys(apiResource.serviceDetails).length > 0;
   
   // Enhanced HTML cleaning function with list preservation
   const cleanHtml = (text: string) => {
@@ -804,8 +804,8 @@ function transformResource(apiResource: any): Resource {
     
     // Enhanced fields with Service At Location Details integration
     applicationProcess: (() => {
-      if (hasServiceDetails && serviceDetails.applicationProcess) {
-        return cleanHtml(serviceDetails.applicationProcess);
+      if (hasServiceDetails && apiResource.serviceDetails.applicationProcess) {
+        return cleanHtml(apiResource.serviceDetails.applicationProcess);
       }
       return cleanHtml(detailedService.applicationProcess || 
                        apiResource.applicationProcess || 
@@ -813,8 +813,8 @@ function transformResource(apiResource: any): Resource {
                        "Contact the organization directly to learn about their application process";
     })(),
     documents: (() => {
-      if (hasServiceDetails && (serviceDetails.documents || serviceDetails.requiredDocuments)) {
-        return cleanHtml(serviceDetails.documents || serviceDetails.requiredDocuments);
+      if (hasServiceDetails && (apiResource.serviceDetails.documents || apiResource.serviceDetails.requiredDocuments)) {
+        return cleanHtml(apiResource.serviceDetails.documents || apiResource.serviceDetails.requiredDocuments);
       }
       return cleanHtml(detailedService.documents?.description || 
                        apiResource.documents || 
@@ -822,8 +822,8 @@ function transformResource(apiResource: any): Resource {
                        "Contact the organization to learn what documents you'll need";
     })(),
     fees: (() => {
-      if (hasServiceDetails && serviceDetails.fees) {
-        return cleanHtml(serviceDetails.fees);
+      if (hasServiceDetails && apiResource.serviceDetails.fees) {
+        return cleanHtml(apiResource.serviceDetails.fees);
       }
       return cleanHtml(detailedService.fees?.description || 
                        apiResource.fees || 
@@ -837,8 +837,8 @@ function transformResource(apiResource: any): Resource {
                       hoursOfOperation ||
                       "Contact the organization for their hours of operation",
     eligibility: (() => {
-      if (hasServiceDetails && serviceDetails.eligibility) {
-        return cleanHtml(serviceDetails.eligibility);
+      if (hasServiceDetails && apiResource.serviceDetails.eligibility) {
+        return cleanHtml(apiResource.serviceDetails.eligibility);
       }
       return cleanHtml(detailedService.eligibility?.description || 
                        extractEligibilityFromTaxonomy(apiResource.taxonomy) ||
@@ -1013,7 +1013,7 @@ function getZipFromCoordinates(lat: string, lon: string): string | undefined {
   if (latitude >= 34.40 && latitude <= 34.50 && longitude >= -119.80 && longitude <= -119.60) {
     // Santa Barbara city area
     if (latitude >= 34.42 && latitude <= 34.44) {
-      return null; // No default zip code for distance calculations
+      return undefined; // No default zip code for distance calculations
     } else if (latitude >= 34.44 && latitude <= 34.46) {
       return '93110'; // Upper State Street area
     } else {
@@ -1071,7 +1071,7 @@ export async function searchResources(
   // Use official taxonomy codes for both category and subcategory searches
   if (subcategory) {
     // Try official subcategory taxonomy code first
-    taxonomyCode = getOfficialSubcategoryCode(category, subcategory);
+    taxonomyCode = getOfficialSubcategoryCode(category, subcategory) || '';
     if (!taxonomyCode) {
       // Fallback to existing subcategory system
       taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
