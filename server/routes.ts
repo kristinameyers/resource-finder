@@ -296,8 +296,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Extract serviceAtLocation ID from composite ID
-      const serviceAtLocationId = id.replace('211santaba-', '');
+      // Keep the full serviceAtLocation ID with proper format
+      const serviceAtLocationId = id; // Keep the full ID as-is
       console.log(`Fetching detailed info for serviceAtLocation ID: ${serviceAtLocationId}`);
       if (serviceId) {
         console.log(`Service ID provided: ${serviceId}`);

@@ -204,15 +204,24 @@ export default function ResourceDetail() {
         </CardContent>
       </Card>
       
-      {/* Description */}
+      {/* Resource Name (serviceName) */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>About this resource</CardTitle>
+          <CardTitle>Resource Name</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-lg font-semibold">{detailedInfo?.serviceName || resource.name}</p>
+        </CardContent>
+      </Card>
+
+      {/* About this Resource (organizationDescription) */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>About this Resource</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="whitespace-pre-line">
-            {/* Use detailed description if available, otherwise use basic description */}
-            {(detailedInfo?.description || resource.description)?.split('\n').map((line: string, index: number) => {
+            {(detailedInfo?.organizationDescription || resource.description)?.split('\n').map((line: string, index: number) => {
               if (line.trim().startsWith('•')) {
                 return (
                   <div key={index} className="flex items-start mb-1">
@@ -224,64 +233,53 @@ export default function ResourceDetail() {
               return <p key={index} className="mb-2">{line}</p>;
             })}
           </div>
-          
-          {/* Show enhanced information if available from Service At Location Details */}
-          {detailedInfo && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-2">📋 Enhanced Information Available</h4>
-              <p className="text-sm text-blue-700">
-                This resource has comprehensive details including eligibility requirements, 
-                fees, application process, and required documents.
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
       
-      {/* Application Process, Documents, and Fees */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-2 text-primary" />
-              Application Process
+      {/* Application Process */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <CheckCircle className="h-5 w-5 mr-2 text-primary" />
+            Application Process
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="whitespace-pre-line text-sm">
+            {detailedInfo?.applicationProcess || "Contact the organization directly for application information"}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Documents */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="h-5 w-5 mr-2 text-primary" />
+            Documents
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="whitespace-pre-line text-sm">
+            {detailedInfo?.documentsRequired || "Contact the organization for required documentation"}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Fees */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <DollarSign className="h-5 w-5 mr-2 text-primary" />
+            Fees
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-line text-sm">
-              {detailedInfo?.applicationProcess || resource.applicationProcess || "Contact the organization directly for application information"}
+              {detailedInfo?.fees || "Contact the organization for fee information"}
             </p>
           </CardContent>
         </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FileText className="h-5 w-5 mr-2 text-primary" />
-              Documents
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-line text-sm">
-              {detailedInfo?.documents || detailedInfo?.requiredDocuments || resource.documents || "Contact the organization for required documentation"}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <DollarSign className="h-5 w-5 mr-2 text-primary" />
-              Fees
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-line text-sm">
-              {detailedInfo?.fees || resource.fees || "Contact the organization for fee information"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
       
       {/* Service Areas */}
       <Card className="mb-6">
@@ -292,9 +290,26 @@ export default function ResourceDetail() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-line">
-            {resource.serviceAreas || "Contact the organization for service area information"}
-          </p>
+          <div className="whitespace-pre-line">
+            {detailedInfo?.serviceAreas ? (
+              // Display service areas from API
+              Array.isArray(detailedInfo.serviceAreas) ? (
+                detailedInfo.serviceAreas.map((area: any, index: number) => (
+                  <div key={index} className="mb-2">
+                    {area.geoComponents?.county && (
+                      <p className="font-medium">{area.geoComponents.county}</p>
+                    )}
+                    {area.name && <p>{area.name}</p>}
+                    {area.description && <p className="text-sm text-muted-foreground">{area.description}</p>}
+                  </div>
+                ))
+              ) : (
+                <p>{detailedInfo.serviceAreas}</p>
+              )
+            ) : (
+              <p>Contact the organization for service area information</p>
+            )}
+          </div>
         </CardContent>
       </Card>
       
@@ -305,10 +320,24 @@ export default function ResourceDetail() {
             <CardTitle>Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Comprehensive Phone Numbers from Query API */}
-            {(detailedInfo?.comprehensivePhones && detailedInfo.comprehensivePhones.length > 0) || 
-             (resource.comprehensivePhones && resource.comprehensivePhones.length > 0) ? (
-              // Display comprehensive phone data from Query API (prioritize detailed info, fallback to resource)
+            {/* Service Phones from service-at-location-details */}
+            {detailedInfo?.servicePhones && detailedInfo.servicePhones.length > 0 ? (
+              // Display servicePhones from service-at-location-details endpoint
+              detailedInfo.servicePhones.map((phone: any, index: number) => (
+                <div key={index} className="flex items-start">
+                  <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">{phone.name || "Phone"}</p>
+                    <p className="text-muted-foreground">{phone.number}</p>
+                    {phone.description && (
+                      <p className="text-xs text-muted-foreground">{phone.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (detailedInfo?.comprehensivePhones && detailedInfo.comprehensivePhones.length > 0) || 
+               (resource.comprehensivePhones && resource.comprehensivePhones.length > 0) ? (
+              // Fallback to comprehensive phone data from Query API
               (detailedInfo?.comprehensivePhones || resource.comprehensivePhones).map((phone: PhoneDetails, index: number) => (
                 <div key={phone.id || index} className="flex items-start">
                   <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
@@ -384,14 +413,20 @@ export default function ResourceDetail() {
               </div>
             )}
             
-            {/* Hours of Operation */}
+            {/* Hours of Operation (serviceHoursText) */}
             <div className="flex items-start">
               <Clock className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Hours of Operation</p>
                 <div className="text-muted-foreground whitespace-pre-line">
-                  {(detailedInfo?.hours || detailedInfo?.schedule || resource.hoursOfOperation) ? (
-                    (detailedInfo?.hours || detailedInfo?.schedule || resource.hoursOfOperation).split('\n').map((line: string, index: number) => (
+                  {detailedInfo?.serviceHoursText ? (
+                    detailedInfo.serviceHoursText.split('\n').map((line: string, index: number) => (
+                      <div key={index} className="flex justify-between">
+                        <span>{line}</span>
+                      </div>
+                    ))
+                  ) : resource.hoursOfOperation ? (
+                    resource.hoursOfOperation.split('\n').map((line: string, index: number) => (
                       <div key={index} className="flex justify-between">
                         <span>{line}</span>
                       </div>
@@ -413,53 +448,66 @@ export default function ResourceDetail() {
               </div>
             )}
             
-            {resource.url && (
+            {(detailedInfo?.website || resource.url) && (
               <div className="flex items-start">
                 <Globe className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium">Website</p>
                   <a 
-                    href={resource.url}
+                    href={detailedInfo?.website || resource.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    {resource.url.replace(/^https?:\/\//, '')}
+                    {(detailedInfo?.website || resource.url)?.replace(/^https?:\/\//, '')}
                   </a>
                 </div>
               </div>
             )}
             
-            {resource.address && (
+            {(detailedInfo?.address || resource.address) && (
               <div className="flex items-start">
                 <MapPin className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium">Address</p>
-                  <p className="text-muted-foreground whitespace-pre-line">{resource.address}</p>
+                  <p className="text-muted-foreground whitespace-pre-line">
+                    {detailedInfo?.address ? (
+                      // Format address from service-at-location-details
+                      [
+                        detailedInfo.address.street,
+                        detailedInfo.address.city,
+                        detailedInfo.address.state,
+                        detailedInfo.address.postalCode
+                      ].filter(Boolean).join(', ')
+                    ) : (
+                      resource.address
+                    )}
+                  </p>
                 </div>
               </div>
             )}
             
-            {/* Languages */}
+            {/* Languages (languagesOffered) */}
             <div className="flex items-start">
               <Languages className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Languages</p>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {resource.languages && resource.languages.length > 0 ? (
+                  {detailedInfo?.languagesOffered && detailedInfo.languagesOffered.length > 0 ? (
+                    detailedInfo.languagesOffered.map((language: string) => (
+                      <Badge key={language} variant="secondary" className="text-xs">
+                        {language}
+                      </Badge>
+                    ))
+                  ) : resource.languages && resource.languages.length > 0 ? (
                     resource.languages.map((language: string) => (
                       <Badge key={language} variant="secondary" className="text-xs">
                         {language}
                       </Badge>
                     ))
                   ) : (
-                    <Badge variant="secondary" className="text-xs">English</Badge>
+                    <Badge variant="secondary" className="text-xs">Contact for language information</Badge>
                   )}
-                  {resource.additionalLanguages?.map((language: string) => (
-                    <Badge key={language} variant="outline" className="text-xs">
-                      {language}
-                    </Badge>
-                  ))}
                 </div>
               </div>
             </div>
@@ -482,22 +530,13 @@ export default function ResourceDetail() {
               </div>
             </div>
             
-            <div className="flex items-start">
-              <Calendar className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Schedule</p>
-                <p className="text-muted-foreground whitespace-pre-line">
-                  {resource.schedules || "Contact for hours"}
-                </p>
-              </div>
-            </div>
-            
+            {/* Accessibility (disabilitiesAccess) */}
             <div className="flex items-start">
               <Accessibility className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Accessibility</p>
-                <p className="text-muted-foreground">
-                  {resource.accessibility || "Contact for accessibility information"}
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {detailedInfo?.disabilitiesAccess || resource.accessibility || "Contact for accessibility information"}
                 </p>
               </div>
             </div>
