@@ -683,15 +683,26 @@ export async function getResourceById(id: string): Promise<Resource | null> {
     let phoneNumbers = [];
     if (resourceData.idServiceAtLocation) {
       console.log(`Fetching detailed info using serviceAtLocation ID: ${resourceData.idServiceAtLocation}`);
-      detailedInfo = await getServiceAtLocationDetails(resourceData.idServiceAtLocation);
       
-      // Fetch comprehensive phone numbers
-      phoneNumbers = await getPhoneNumbers(
-        resourceData.idServiceAtLocation,
-        resourceData.idService,
-        resourceData.idOrganization,
-        resourceData.idLocation
-      );
+      // Always try to fetch phone numbers even if Service At Location Details fails
+      try {
+        phoneNumbers = await getPhoneNumbers(
+          resourceData.idServiceAtLocation,
+          resourceData.idService,
+          resourceData.idOrganization,
+          resourceData.idLocation
+        );
+        console.log(`Retrieved ${phoneNumbers.length} phone numbers from Query API`);
+      } catch (phoneError) {
+        console.error('Error fetching phone numbers:', phoneError);
+      }
+      
+      // Try to get detailed info (this might fail with 404, but phone numbers should still work)
+      try {
+        detailedInfo = await getServiceAtLocationDetails(resourceData.idServiceAtLocation);
+      } catch (detailsError) {
+        console.log('Service At Location Details failed, continuing with basic data');
+      }
     }
     
     // Merge basic and detailed information including phone numbers
@@ -870,22 +881,51 @@ function transformResource(apiResource: any): Resource {
   // Extract additional iCarol API fields based on actual API structure
   console.log('Available API fields:', Object.keys(apiResource));
   
-  // Check for phone numbers in both detailed service and base resource
+  // Check for phone numbers from multiple sources:
+  // 1. Comprehensive phones from Query API (priority)
+  // 2. Detailed service phones
+  // 3. Base resource phones
+  const comprehensivePhones = apiResource.comprehensivePhones || [];
   const phones = detailedService.phones || apiResource.phones || [];
-  const phoneNumbers = phones.length > 0 ? {
-    main: phones.find((p: any) => p.isMain || p.type === 'Main')?.number || phones[0]?.number,
-    fax: phones.find((p: any) => p.type === 'Fax')?.number,
-    tty: phones.find((p: any) => p.type === 'TTY')?.number,
-    crisis: phones.find((p: any) => p.type === 'Crisis')?.number,
-  } : undefined;
+  
+  // Use comprehensive phones if available, otherwise fall back to basic phones
+  const phoneNumbers = comprehensivePhones.length > 0 ? undefined : (
+    phones.length > 0 ? {
+      main: phones.find((p: any) => p.isMain || p.type === 'Main')?.number || phones[0]?.number,
+      fax: phones.find((p: any) => p.type === 'Fax')?.number,
+      tty: phones.find((p: any) => p.type === 'TTY')?.number,
+      crisis: phones.find((p: any) => p.type === 'Crisis')?.number,
+    } : undefined
+  );
 
-  // Extract hours of operation with proper formatting
-  const hoursOfOperation = apiResource.schedules?.map((schedule: any) => {
-    const days = schedule.daysOfWeek || schedule.opensAt ? 
-      `${schedule.daysOfWeek || 'Monday-Friday'}: ${schedule.opensAt || '9am'}-${schedule.closesAt || '5pm'}` :
-      schedule.description;
-    return days;
-  }).join('\n');
+  // Extract hours of operation from multiple sources (prioritize detailed service data)
+  let hoursOfOperation = '';
+  
+  // First priority: detailed service information from Service At Location Details
+  if (hasServiceDetails && (apiResource.serviceDetails?.hours || apiResource.serviceDetails?.schedule)) {
+    hoursOfOperation = cleanHtml(apiResource.serviceDetails.hours || apiResource.serviceDetails.schedule);
+    console.log('Using hours from Service At Location Details');
+  } else if (detailedService?.schedules?.length > 0) {
+    // Second priority: detailed service schedules
+    hoursOfOperation = formatSchedules(detailedService.schedules);
+    console.log('Using hours from detailed service schedules');
+  } else if (apiResource.schedules?.length > 0) {
+    // Third priority: basic schedule information
+    hoursOfOperation = apiResource.schedules.map((schedule: any) => {
+      const days = schedule.daysOfWeek || schedule.opensAt ? 
+        `${schedule.daysOfWeek || 'Monday-Friday'}: ${schedule.opensAt || '9am'}-${schedule.closesAt || '5pm'}` :
+        schedule.description;
+      return days;
+    }).join('\n');
+    console.log('Using hours from basic schedules');
+  } else {
+    // Last resort: extract from description
+    const extractedHours = extractHoursFromDescription(apiResource.descriptionService || apiResource.description);
+    if (extractedHours) {
+      hoursOfOperation = cleanHtml(extractedHours);
+      console.log('Using hours extracted from description');
+    }
+  }
   
   // Debug: Check for specific iCarol fields (uncomment for debugging)
   // console.log('Checking for key fields:');
@@ -959,8 +999,8 @@ function transformResource(apiResource: any): Resource {
     serviceAreas: detailedService.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') ||
                   apiResource.serviceAreas?.map((area: any) => area.value || area.description || area.name).join(', ') || 
                   (apiResource.nameLocation ? `Serving ${apiResource.nameLocation} area` : "Contact for service area information"),
-    hoursOfOperation: formatSchedules(detailedService.schedules) || 
-                      hoursOfOperation ||
+    hoursOfOperation: hoursOfOperation || 
+                      formatSchedules(detailedService.schedules) ||
                       "Contact the organization for their hours of operation",
     eligibility: (() => {
       if (hasServiceDetails && apiResource.serviceDetails.eligibility) {
