@@ -50,14 +50,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Searching with category: ${categoryId}, subcategory: ${subcategoryId}`);
           
           // Use the searchResources function which handles taxonomy codes properly
-          const apiResult = await searchResources(
-            categoryId,
-            subcategoryId || null,
-            zipCode,
-            latitude,
-            longitude,
-            true
-          );
+          let apiResult;
+          try {
+            apiResult = await searchResources(
+              categoryId,
+              subcategoryId || null,
+              zipCode,
+              latitude,
+              longitude,
+              true
+            );
+          } catch (searchError) {
+            if (searchError instanceof Error && searchError.message.startsWith('RATE_LIMITED:')) {
+              console.log('Rate limit detected, returning rate limit response');
+              return res.status(429).json({
+                error: 'rate_limited',
+                message: 'API rate limit exceeded. Please wait a moment and try again.',
+                retryAfter: 30,
+                resources: [],
+                total: 0,
+                source: '211_API'
+              });
+            }
+            throw searchError;
+          }
           
           let resources = apiResult.resources;
             

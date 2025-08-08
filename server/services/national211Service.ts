@@ -275,6 +275,44 @@ export async function searchAllResourcesByTaxonomyCode(
 }
 
 /**
+ * Handles API rate limiting with exponential backoff retry
+ */
+async function handleRateLimitedRequest(requestFn: () => Promise<any>, maxRetries: number = 3): Promise<any> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await requestFn();
+      
+      if (response.status === 429) {
+        const rateLimitText = await response.text();
+        console.log(`Rate limit hit (attempt ${attempt + 1}/${maxRetries}):`, rateLimitText);
+        
+        // Extract wait time from error message if available
+        const waitTimeMatch = rateLimitText.match(/Try again in (\d+) seconds/);
+        const waitTime = waitTimeMatch ? parseInt(waitTimeMatch[1]) : Math.pow(2, attempt) * 1000;
+        
+        if (attempt < maxRetries - 1) {
+          console.log(`Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+          continue;
+        } else {
+          throw new Error(`Rate limit exceeded after ${maxRetries} attempts. ${rateLimitText}`);
+        }
+      }
+      
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+      console.log(`Request failed (attempt ${attempt + 1}/${maxRetries}):`, error);
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+    }
+  }
+  
+  throw new Error('Max retries exceeded');
+}
+
+/**
  * Searches for resources by taxonomy code (single page - internal method)
  */
 export async function searchResourcesByTaxonomyCode(
@@ -327,9 +365,11 @@ export async function searchResourcesByTaxonomyCode(
       };
       
       console.log('Trying GET method with correct parameters...');
-      let response = await fetch(fullUrl, {
-        method: 'GET',
-        headers
+      let response = await handleRateLimitedRequest(async () => {
+        return await fetch(fullUrl, {
+          method: 'GET',
+          headers
+        });
       });
       
       // Handle response - API returns 204 for empty results, 404 for no results with advanced mode
@@ -371,9 +411,11 @@ export async function searchResourcesByTaxonomyCode(
         const fallbackUrl = `${requestUrl}?${fallbackParams.toString()}`;
         console.log(`Trying text search fallback: ${fallbackUrl}`);
         
-        const fallbackResponse = await fetch(fallbackUrl, {
-          method: 'GET',
-          headers: fallbackHeaders
+        const fallbackResponse = await handleRateLimitedRequest(async () => {
+          return await fetch(fallbackUrl, {
+            method: 'GET',
+            headers: fallbackHeaders
+          });
         });
         
         if (fallbackResponse.ok) {
@@ -410,6 +452,14 @@ export async function searchResourcesByTaxonomyCode(
       };
     } catch (connectivityError) {
       console.error('API connectivity test failed:', connectivityError);
+      
+      // Check if this is a rate limit error and provide appropriate response
+      if (connectivityError instanceof Error && connectivityError.message.includes('Rate limit exceeded')) {
+        console.log('Rate limit exceeded - returning temporary empty results');
+        // Return a special marker to indicate rate limiting
+        throw new Error('RATE_LIMITED: ' + connectivityError.message);
+      }
+      
       return { resources: [], total: 0 };
     }
   } catch (error) {

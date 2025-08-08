@@ -3,7 +3,7 @@ import ResourceCard from "./resource-card";
 import ResourceCardSkeleton from "./resource-card-skeleton";
 import SortControl from "./sort-control";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Clock } from "lucide-react";
 
 interface ResultsSectionProps {
   resources: Resource[];
@@ -63,14 +63,39 @@ export default function ResultsSection({
 
   // Error state
   if (error) {
+    const isRateLimited = error.message?.includes('RATE_LIMITED');
+    
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-        <h3 className="font-semibold text-lg mb-2">Failed to load resources</h3>
+        {isRateLimited ? (
+          <Clock className="h-12 w-12 text-yellow-500 mb-4" />
+        ) : (
+          <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+        )}
+        <h3 className="font-semibold text-lg mb-2">
+          {isRateLimited ? 'Service Temporarily Busy' : 'Failed to load resources'}
+        </h3>
         <p className="text-muted-foreground mb-4 max-w-md">
-          There was an error loading the resources. Please try again.
+          {isRateLimited 
+            ? 'The resource database is experiencing high traffic. Please wait a moment and try again.'
+            : 'There was an error loading the resources. Please try again.'
+          }
         </p>
-        <Button onClick={onRetry}>Retry</Button>
+        <div className="space-x-2">
+          <Button onClick={onRetry}>
+            {isRateLimited ? 'Try Again' : 'Retry'}
+          </Button>
+          {isRateLimited && (
+            <Button onClick={onClearFilters} variant="outline">
+              Clear Filters
+            </Button>
+          )}
+        </div>
+        {isRateLimited && (
+          <p className="text-sm text-muted-foreground mt-4">
+            💡 Tip: Try selecting a different category or wait 30 seconds before retrying.
+          </p>
+        )}
       </div>
     );
   }

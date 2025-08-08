@@ -61,6 +61,13 @@ export async function fetchResources(
   
   try {
     const response = await apiRequest('GET', url);
+    
+    // Handle rate limiting
+    if (response.status === 429) {
+      const errorData = await response.json();
+      throw new Error(`RATE_LIMITED: ${errorData.message || 'API rate limit exceeded. Please wait and try again.'}`);
+    }
+    
     const data = await response.json() as EnhancedResourcesResponse;
     return {
       resources: data.resources,
