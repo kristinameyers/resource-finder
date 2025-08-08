@@ -766,6 +766,19 @@ function transformResource(apiResource: any): Resource {
   // Debug: Log the full API resource structure to understand available fields (limited output)
   console.log('API Resource keys:', Object.keys(apiResource));
   
+  // Debug: Check for the specific fields user requested
+  if (apiResource.servicePhones) {
+    console.log('✓ Found servicePhones field:', apiResource.servicePhones.length, 'phones');
+  } else {
+    console.log('✗ servicePhones field not found');
+  }
+  
+  if (apiResource.serviceHoursText) {
+    console.log('✓ Found serviceHoursText field:', apiResource.serviceHoursText.substring(0, 100) + '...');
+  } else {
+    console.log('✗ serviceHoursText field not found');
+  }
+  
   // Fix address extraction - API uses different structure
   // Extract address information from multiple possible locations
   const address = apiResource.address || apiResource.addresses?.[0] || {};
@@ -882,35 +895,43 @@ function transformResource(apiResource: any): Resource {
   console.log('Available API fields:', Object.keys(apiResource));
   
   // Check for phone numbers from multiple sources:
-  // 1. Comprehensive phones from Query API (priority)
-  // 2. Detailed service phones
-  // 3. Base resource phones
+  // 1. servicePhones field (priority - as requested by user)
+  // 2. Comprehensive phones from Query API
+  // 3. Detailed service phones
+  // 4. Base resource phones
+  const servicePhones = apiResource.servicePhones || [];
   const comprehensivePhones = apiResource.comprehensivePhones || [];
   const phones = detailedService.phones || apiResource.phones || [];
   
-  // Use comprehensive phones if available, otherwise fall back to basic phones
-  const phoneNumbers = comprehensivePhones.length > 0 ? undefined : (
-    phones.length > 0 ? {
-      main: phones.find((p: any) => p.isMain || p.type === 'Main')?.number || phones[0]?.number,
-      fax: phones.find((p: any) => p.type === 'Fax')?.number,
-      tty: phones.find((p: any) => p.type === 'TTY')?.number,
-      crisis: phones.find((p: any) => p.type === 'Crisis')?.number,
-    } : undefined
+  // Prioritize servicePhones field, then comprehensive phones, then basic phones
+  const phoneNumbers = servicePhones.length > 0 ? undefined : (
+    comprehensivePhones.length > 0 ? undefined : (
+      phones.length > 0 ? {
+        main: phones.find((p: any) => p.isMain || p.type === 'Main')?.number || phones[0]?.number,
+        fax: phones.find((p: any) => p.type === 'Fax')?.number,
+        tty: phones.find((p: any) => p.type === 'TTY')?.number,
+        crisis: phones.find((p: any) => p.type === 'Crisis')?.number,
+      } : undefined
+    )
   );
 
-  // Extract hours of operation from multiple sources (prioritize detailed service data)
+  // Extract hours of operation from multiple sources (prioritize serviceHoursText as requested by user)
   let hoursOfOperation = '';
   
-  // First priority: detailed service information from Service At Location Details
-  if (hasServiceDetails && (apiResource.serviceDetails?.hours || apiResource.serviceDetails?.schedule)) {
+  // First priority: serviceHoursText field (as requested by user)
+  if (apiResource.serviceHoursText) {
+    hoursOfOperation = cleanHtml(apiResource.serviceHoursText);
+    console.log('Using hours from serviceHoursText field');
+  } else if (hasServiceDetails && (apiResource.serviceDetails?.hours || apiResource.serviceDetails?.schedule)) {
+    // Second priority: detailed service information from Service At Location Details
     hoursOfOperation = cleanHtml(apiResource.serviceDetails.hours || apiResource.serviceDetails.schedule);
     console.log('Using hours from Service At Location Details');
   } else if (detailedService?.schedules?.length > 0) {
-    // Second priority: detailed service schedules
+    // Third priority: detailed service schedules
     hoursOfOperation = formatSchedules(detailedService.schedules);
     console.log('Using hours from detailed service schedules');
   } else if (apiResource.schedules?.length > 0) {
-    // Third priority: basic schedule information
+    // Fourth priority: basic schedule information
     hoursOfOperation = apiResource.schedules.map((schedule: any) => {
       const days = schedule.daysOfWeek || schedule.opensAt ? 
         `${schedule.daysOfWeek || 'Monday-Friday'}: ${schedule.opensAt || '9am'}-${schedule.closesAt || '5pm'}` :
@@ -953,7 +974,7 @@ function transformResource(apiResource: any): Resource {
              getZipFromCoordinates(address.latitude, address.longitude) ||
              undefined, // Let each resource keep its actual location, don't force a default
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
-    phone: phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
+    phone: servicePhones[0]?.number || phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
     address: hasValidAddress ? [
       address.streetAddress,
@@ -1013,8 +1034,8 @@ function transformResource(apiResource: any): Resource {
     })(),
     phoneNumbers: phoneNumbers,
     
-    // Enhanced comprehensive phone numbers from Query API
-    comprehensivePhones: apiResource.comprehensivePhones || [],
+    // Enhanced comprehensive phone numbers (prioritize servicePhones, then comprehensivePhones)
+    comprehensivePhones: servicePhones.length > 0 ? servicePhones : (apiResource.comprehensivePhones || []),
     
     // Note: Phone extraction from description available if needed
     additionalLanguages: apiResource.interpretationServices || 
