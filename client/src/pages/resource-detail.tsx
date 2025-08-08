@@ -39,28 +39,18 @@ export default function ResourceDetail() {
     queryKey: ['/api/resources', id],
     queryFn: async () => {
       if (!id) {
-        console.error('No resource ID provided');
         throw new Error('Resource ID is required');
       }
       
-      console.log('Looking for resource with ID:', id);
-      
       // First try to get resource from localStorage (from recent search results)
       const storedResources = localStorage.getItem('recentResources');
-      console.log('Stored resources found:', !!storedResources);
       
       if (storedResources) {
         try {
           const resources = JSON.parse(storedResources);
-          console.log('Parsed resources count:', resources.length);
-          console.log('Resource IDs in storage:', resources.map((r: any) => r.id));
-          
           const foundResource = resources.find((r: any) => r.id === id);
           if (foundResource) {
-            console.log('Found resource in localStorage:', id);
             return foundResource;
-          } else {
-            console.log('Resource not found in localStorage:', id);
           }
         } catch (parseError) {
           console.error('Error parsing stored resources:', parseError);
@@ -68,7 +58,6 @@ export default function ResourceDetail() {
       }
       
       // If not in localStorage, this means direct link access - show error
-      console.error('Resource not found in localStorage, showing error');
       throw new Error('Resource not found. Please search for resources first.');
     },
     enabled: !!id

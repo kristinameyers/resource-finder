@@ -74,6 +74,20 @@ The application adopts a modern full-stack architecture, separating frontend and
 
 ## Recent Changes (August 2025)
 
+### GitHub Deployment Infrastructure (August 8, 2025)
+- **COMPLETED**: Created comprehensive GitHub deployment infrastructure including README.md, DEPLOYMENT.md, LICENSE, and automated GitHub Actions workflow
+- **Deployment Files**: Complete documentation for pushing to GitHub repository and deploying to multiple platforms (GitHub Pages, Vercel, Netlify, Railway)
+- **Automated Workflow**: GitHub Actions workflow for continuous deployment with proper environment variable handling
+- **Project Documentation**: Comprehensive README with installation instructions, API configuration, and technology stack details
+
+### Service At Location Details Integration (August 8, 2025)
+- **COMPLETED**: Integrated National 211 Service At Location Details endpoint for comprehensive resource information
+- **Enhanced Resource Data**: Added detailed information including eligibility requirements, fees, application process, required documents, and hours of operation
+- **Query API Phone Integration**: Implemented comprehensive phone number fetching from multiple Query API endpoints (phones-for-service-at-location, phones-for-service, phones-for-organization, phones-for-location)
+- **Rate Limiting Handling**: Added exponential backoff retry mechanism for API rate limiting with proper user feedback
+- **HTML Content Cleaning**: Enhanced HTML sanitization to remove unwanted data attributes and formatting artifacts from resource descriptions
+- **Resource Detail Access Fix**: Fixed "resource not found" errors by improving localStorage-based resource retrieval for navigation from search results
+
 ### National 211 API Integration Breakthrough (August 5, 2025)
 - **RESOLVED**: Major API authentication and endpoint discovery completed successfully 
 - **Working Endpoint**: `/keyword` endpoint at https://api.211.org/resources/v2/search/keyword confirmed functional
@@ -107,7 +121,7 @@ The application adopts a modern full-stack architecture, separating frontend and
 - **Distance Badge Logic**: Zip codes only display in resource cards when user has provided location for distance calculations
 - **User Flow Optimization**: Complete browsing flow from category selection → resource details → back to search results works seamlessly
 
-## Recent Changes (August 2025)
+### Previous Enhancement Work (August 2025)
 
 - **Typography Overhaul**: Completely replaced League Gothic with Roboto font family across both web and mobile applications. All text now uses Roboto Regular (400), Medium (500), and Bold (700) weights for consistency.
 - **Category Card Design Fix**: Resolved background color extension issue for Food and Education category cards by replacing shadcn Card components with direct div structure, ensuring colors extend fully to card edges.
