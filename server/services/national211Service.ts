@@ -507,6 +507,10 @@ export async function getPhoneNumbers(serviceAtLocationId: string, serviceId?: s
           const phoneData = await response.json() as any;
           console.log(`Phone numbers API successful from: ${endpoint}`);
           console.log(`Found ${Array.isArray(phoneData) ? phoneData.length : 1} phone numbers`);
+          // Log the phone data structure for debugging
+          if (Array.isArray(phoneData) && phoneData.length > 0) {
+            console.log('Sample phone data:', JSON.stringify(phoneData[0], null, 2));
+          }
           return Array.isArray(phoneData) ? phoneData : [phoneData];
         } else {
           console.log(`Phone endpoint failed with status: ${response.status}`);
@@ -780,6 +784,9 @@ function transformResource(apiResource: any): Resource {
       .replace(/<\/p>/gi, '\n')
       .replace(/<p[^>]*>/gi, '')
       .replace(/<br[^>]*>/gi, '\n')
+      // Remove problematic data attribute tags first
+      .replace(/<[^>]*data-block-id[^>]*>/gi, '')
+      .replace(/<[^>]*data-pm-slice[^>]*>/gi, '')
       // Remove all remaining HTML tags
       .replace(/<[^>]*>/g, '')
       // Remove common HTML entities
@@ -968,6 +975,8 @@ function transformResource(apiResource: any): Resource {
     
     // Enhanced comprehensive phone numbers from Query API
     comprehensivePhones: apiResource.comprehensivePhones || [],
+    
+    // Note: Phone extraction from description available if needed
     additionalLanguages: apiResource.interpretationServices || 
                         apiResource.interpretation_services || 
                         apiResource.languages_spoken || []
@@ -978,6 +987,26 @@ function extractPhoneFromDescription(description: string): string | undefined {
   if (!description) return undefined;
   const phoneMatch = description.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
   return phoneMatch?.[0];
+}
+
+function extractPhonesFromDescription(description: string): string[] {
+  if (!description) return [];
+  
+  const phoneNumbers: string[] = [];
+  const phonePatterns = [
+    /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g,          // 123-456-7890, 123.456.7890, 1234567890
+    /\(\d{3}\)\s*\d{3}[-.\s]?\d{4}/g,            // (123) 456-7890
+    /\b\d{3}\s+\d{3}\s+\d{4}\b/g                // 123 456 7890
+  ];
+  
+  phonePatterns.forEach(pattern => {
+    const matches = description.match(pattern);
+    if (matches) {
+      phoneNumbers.push(...matches);
+    }
+  });
+  
+  return [...new Set(phoneNumbers)]; // Remove duplicates
 }
 
 function extractEmailFromDescription(description: string): string | undefined {

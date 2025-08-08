@@ -34,24 +34,14 @@ export default function ResourceDetail() {
   const { id } = useParams();
   const { toast } = useToast();
   
-  // For 211 API resources, we need to get all resources since individual lookups don't work
-  // Store the current category and resources in localStorage for navigation
+  // Always fetch resource data from API to get comprehensive info including phone numbers
   const resourceQuery = useQuery({
     queryKey: ['/api/resources', id],
     queryFn: async () => {
       if (!id) throw new Error('Resource ID is required');
       
-      // Try to get resource from localStorage first (from recent search results)
-      const storedResources = localStorage.getItem('recentResources');
-      if (storedResources) {
-        const resources = JSON.parse(storedResources);
-        const foundResource = resources.find((r: any) => r.id === id);
-        if (foundResource) {
-          return foundResource;
-        }
-      }
-      
-      // Fallback to API call
+      // Always call API to get enhanced data with phone numbers
+      console.log('Fetching enhanced resource data for:', id);
       return await fetchResourceById(id, true);
     },
     enabled: !!id
@@ -295,6 +285,7 @@ export default function ResourceDetail() {
           <CardContent className="space-y-4">
             {/* Comprehensive Phone Numbers from Query API */}
             {resource.comprehensivePhones && resource.comprehensivePhones.length > 0 ? (
+              // Display comprehensive phone data from Query API
               resource.comprehensivePhones.map((phone: PhoneDetails, index: number) => (
                 <div key={phone.id || index} className="flex items-start">
                   <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
@@ -313,7 +304,7 @@ export default function ResourceDetail() {
                   </div>
                 </div>
               ))
-            ) : (
+            ) : resource.phone || resource.phoneNumbers ? (
               // Fallback to basic phone numbers if comprehensive data not available
               <>
                 {/* Main Phone Number */}
@@ -359,6 +350,15 @@ export default function ResourceDetail() {
                   </div>
                 )}
               </>
+            ) : (
+              // No phone numbers available
+              <div className="flex items-start">
+                <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Phone</p>
+                  <p className="text-muted-foreground">Contact information not available</p>
+                </div>
+              </div>
             )}
             
             {/* Hours of Operation */}
