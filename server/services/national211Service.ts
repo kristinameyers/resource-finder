@@ -169,7 +169,46 @@ export async function searchResourcesByKeyword(
       return [];
     }
     
-    return data.results.map(transformResource);
+    // Transform basic resources
+    const basicResources = data.results.map(transformResource);
+    
+    // Enhance resources with detailed service information to get servicePhones and serviceHoursText
+    const enhancedResources = await Promise.all(
+      basicResources.map(async (resource) => {
+        try {
+          // Extract service ID from the resource
+          const originalApiResource = data.results.find((r: any) => (r.idServiceAtLocation || r.id) === resource.id.replace('211santaba-', ''));
+          const serviceId = originalApiResource?.idService;
+          
+          if (serviceId) {
+            console.log(`Fetching detailed service info for resource ${resource.id} with service ID ${serviceId}`);
+            const detailedServiceInfo = await getServiceDetails(serviceId);
+            
+            if (detailedServiceInfo) {
+              // Merge detailed service info into the resource
+              return {
+                ...resource,
+                // Update phone from servicePhones if available
+                phone: detailedServiceInfo.servicePhones?.[0]?.number || resource.phone,
+                // Update hours from serviceHoursText if available
+                hoursOfOperation: detailedServiceInfo.serviceHoursText ? 
+                  detailedServiceInfo.serviceHoursText : resource.hoursOfOperation,
+                // Add comprehensive phones from detailed service info
+                comprehensivePhones: detailedServiceInfo.servicePhones || resource.comprehensivePhones || [],
+                // Store the full detailed service info for frontend use
+                detailedServiceInfo
+              };
+            }
+          }
+        } catch (error) {
+          console.error(`Error enhancing resource ${resource.id}:`, error);
+        }
+        
+        return resource;
+      })
+    );
+    
+    return enhancedResources;
   } catch (error) {
     console.error('Error searching resources by keyword:', error);
     throw error;
@@ -466,6 +505,49 @@ export async function searchResourcesByTaxonomyCode(
     console.error('Error searching resources by taxonomy:', error);
     throw error;
   }
+}
+
+/**
+ * Fetches comprehensive service details from Query API services endpoint
+ */
+export async function getServiceDetails(serviceId: string): Promise<any> {
+  console.log(`Fetching detailed service info for service ID: ${serviceId}`);
+  
+  const headers: HeadersInit = {
+    'Accept': 'application/json',
+    'Api-Key': SUBSCRIPTION_KEY || ''
+  };
+  
+  try {
+    const endpoint = `${QUERY_API_BASE_URL}/services/${serviceId}`;
+    console.log(`Trying services endpoint: ${endpoint}`);
+    
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers
+    });
+    
+    if (response.ok) {
+      const serviceDetails = await response.json();
+      console.log(`Retrieved detailed service info from services endpoint`);
+      
+      // Check for servicePhones and serviceHoursText in response
+      if (serviceDetails.servicePhones) {
+        console.log(`✓ Found servicePhones in service details:`, serviceDetails.servicePhones.length, 'phones');
+      }
+      if (serviceDetails.serviceHoursText) {
+        console.log(`✓ Found serviceHoursText in service details:`, serviceDetails.serviceHoursText.substring(0, 100) + '...');
+      }
+      
+      return serviceDetails;
+    } else {
+      console.log(`Services endpoint failed with status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error fetching service details:`, error);
+  }
+  
+  return null;
 }
 
 /**
@@ -899,7 +981,7 @@ function transformResource(apiResource: any): Resource {
   // 2. Comprehensive phones from Query API
   // 3. Detailed service phones
   // 4. Base resource phones
-  const servicePhones = apiResource.servicePhones || [];
+  const servicePhones = apiResource.servicePhones || apiResource.detailedServiceInfo?.servicePhones || [];
   const comprehensivePhones = apiResource.comprehensivePhones || [];
   const phones = detailedService.phones || apiResource.phones || [];
   
@@ -919,8 +1001,8 @@ function transformResource(apiResource: any): Resource {
   let hoursOfOperation = '';
   
   // First priority: serviceHoursText field (as requested by user)
-  if (apiResource.serviceHoursText) {
-    hoursOfOperation = cleanHtml(apiResource.serviceHoursText);
+  if (apiResource.serviceHoursText || apiResource.detailedServiceInfo?.serviceHoursText) {
+    hoursOfOperation = cleanHtml(apiResource.serviceHoursText || apiResource.detailedServiceInfo?.serviceHoursText);
     console.log('Using hours from serviceHoursText field');
   } else if (hasServiceDetails && (apiResource.serviceDetails?.hours || apiResource.serviceDetails?.schedule)) {
     // Second priority: detailed service information from Service At Location Details
@@ -974,7 +1056,7 @@ function transformResource(apiResource: any): Resource {
              getZipFromCoordinates(address.latitude, address.longitude) ||
              undefined, // Let each resource keep its actual location, don't force a default
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
-    phone: servicePhones[0]?.number || phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
+    phone: servicePhones[0]?.number || apiResource.detailedServiceInfo?.servicePhones?.[0]?.number || phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
     address: hasValidAddress ? [
       address.streetAddress,
