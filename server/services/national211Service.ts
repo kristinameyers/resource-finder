@@ -476,9 +476,9 @@ export async function searchResourcesByTaxonomyCode(
  * Fetches comprehensive service details from Query API services endpoint
  */
 export async function getServiceDetails(serviceId: string): Promise<any> {
-  // Clean the service ID to remove any prefix
-  const cleanServiceId = serviceId?.toString().replace('211santaba-', '');
-  console.log(`Fetching detailed service info for service ID: ${serviceId} (cleaned: ${cleanServiceId})`);
+  // Ensure the service ID has the proper 211santaba- prefix format
+  const fullServiceId = serviceId.startsWith('211santaba-') ? serviceId : `211santaba-${serviceId}`;
+  console.log(`Fetching detailed service info for service ID: ${serviceId} (formatted: ${fullServiceId})`);
   
   const headers: HeadersInit = {
     'Accept': 'application/json',
@@ -486,7 +486,7 @@ export async function getServiceDetails(serviceId: string): Promise<any> {
   };
   
   try {
-    const endpoint = `${QUERY_API_BASE_URL}/services/${cleanServiceId}`;
+    const endpoint = `${QUERY_API_BASE_URL}/services/${fullServiceId}`;
     console.log(`Trying services endpoint: ${endpoint}`);
     
     const response = await fetch(endpoint, {
@@ -522,32 +522,38 @@ export async function getServiceDetails(serviceId: string): Promise<any> {
  */
 export async function getPhoneNumbers(serviceAtLocationId: string, serviceId?: string, organizationId?: string, locationId?: string): Promise<any[]> {
   try {
-    // Clean all IDs to remove any prefix
-    const cleanServiceAtLocationId = serviceAtLocationId?.toString().replace('211santaba-', '');
-    const cleanServiceId = serviceId?.toString().replace('211santaba-', '');
-    const cleanOrganizationId = organizationId?.toString().replace('211santaba-', '');
-    const cleanLocationId = locationId?.toString().replace('211santaba-', '');
+    // Ensure all IDs have the proper 211santaba- prefix format
+    const formatId = (id: string | undefined) => {
+      if (!id || id === 'undefined' || id === 'null') return undefined;
+      return id.startsWith('211santaba-') ? id : `211santaba-${id}`;
+    };
     
-    console.log(`Fetching phone numbers for serviceAtLocation ID: ${serviceAtLocationId} (cleaned: ${cleanServiceAtLocationId})`);
+    const fullServiceAtLocationId = formatId(serviceAtLocationId);
+    const fullServiceId = formatId(serviceId);
+    const fullOrganizationId = formatId(organizationId);
+    const fullLocationId = formatId(locationId);
+    
+    console.log(`Fetching phone numbers for serviceAtLocation ID: ${serviceAtLocationId} (formatted: ${fullServiceAtLocationId})`);
     
     const headers: HeadersInit = {
       'Accept': 'application/json',
       'Api-Key': SUBSCRIPTION_KEY || ''
     };
     
-    // Try multiple endpoints to get phone numbers with cleaned IDs
-    const endpoints: string[] = [
-      `${QUERY_API_BASE_URL}/phones-for-service-at-location/${cleanServiceAtLocationId}`
-    ];
+    // Try multiple endpoints to get phone numbers with proper formatted IDs
+    const endpoints: string[] = [];
     
-    if (cleanServiceId) {
-      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-service/${cleanServiceId}`);
+    if (fullServiceAtLocationId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-service-at-location/${fullServiceAtLocationId}`);
     }
-    if (cleanOrganizationId) {
-      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-organization/${cleanOrganizationId}`);
+    if (fullServiceId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-service/${fullServiceId}`);
     }
-    if (cleanLocationId) {
-      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-location/${cleanLocationId}`);
+    if (fullOrganizationId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-organization/${fullOrganizationId}`);
+    }
+    if (fullLocationId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-location/${fullLocationId}`);
     }
     
     for (const endpoint of endpoints) {
@@ -590,8 +596,13 @@ export async function getServiceAtLocationDetails(serviceAtLocationId: string): 
   try {
     console.log(`Fetching detailed info for serviceAtLocation ID: ${serviceAtLocationId}`);
     
+    // Ensure the ID has the proper 211santaba- prefix format
+    const fullServiceAtLocationId = serviceAtLocationId.startsWith('211santaba-') 
+      ? serviceAtLocationId 
+      : `211santaba-${serviceAtLocationId}`;
+    
     // Use the Service At Location Details endpoint as specified by the user
-    const requestUrl = `${QUERY_API_BASE_URL}/serviceAtLocationDetails/${serviceAtLocationId}`;
+    const requestUrl = `${QUERY_API_BASE_URL}/service-at-location-details/${fullServiceAtLocationId}`;
     console.log(`Calling Service At Location Details endpoint: ${requestUrl}`);
     
     const headers: HeadersInit = {
@@ -693,8 +704,8 @@ export async function getResourceById(id: string): Promise<Resource | null> {
   try {
     console.log(`Fetching comprehensive resource details for ID: ${id}`);
     
-    // Extract the serviceAtLocation ID from the composite ID
-    const serviceAtLocationId = id.replace('211santaba-', '');
+    // Keep the serviceAtLocation ID with the proper prefix format
+    const serviceAtLocationId = id.startsWith('211santaba-') ? id : `211santaba-${id}`;
     
     // First get basic resource info from search endpoint
     const requestUrl = `${API_BASE_URL}/keyword?keywords=${id}&keywordIsTaxonomyCode=false&location=Santa%20Barbara%20County,%20CA&distance=100&size=1`;
@@ -1016,10 +1027,6 @@ function transformResource(apiResource: any): Resource {
   // Create the transformed resource
   return {
     id: apiResource.idServiceAtLocation || apiResource.id,
-    // Preserve service ID for detailed information fetching (clean numeric IDs)
-    serviceId: apiResource.idService?.toString().replace('211santaba-', ''),
-    organizationId: apiResource.idOrganization?.toString().replace('211santaba-', ''),
-    locationId: apiResource.idLocation?.toString().replace('211santaba-', ''),
     name: apiResource.nameService || apiResource.nameServiceAtLocation || apiResource.name || 'Unnamed Service',
     description: cleanDescription,
     categoryId,
