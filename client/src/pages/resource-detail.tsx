@@ -300,9 +300,10 @@ export default function ResourceDetail() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Comprehensive Phone Numbers from Query API */}
-            {resource.comprehensivePhones && resource.comprehensivePhones.length > 0 ? (
-              // Display comprehensive phone data from Query API
-              resource.comprehensivePhones.map((phone: PhoneDetails, index: number) => (
+            {(detailedInfo?.comprehensivePhones && detailedInfo.comprehensivePhones.length > 0) || 
+             (resource.comprehensivePhones && resource.comprehensivePhones.length > 0) ? (
+              // Display comprehensive phone data from Query API (prioritize detailed info, fallback to resource)
+              (detailedInfo?.comprehensivePhones || resource.comprehensivePhones).map((phone: PhoneDetails, index: number) => (
                 <div key={phone.id || index} className="flex items-start">
                   <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                   <div>

@@ -299,24 +299,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const serviceAtLocationId = id.replace('211santaba-', '');
       console.log(`Fetching detailed info for serviceAtLocation ID: ${serviceAtLocationId}`);
       
+      // Try to get Service At Location Details first
+      let detailedInfo: any = null;
       try {
-        const detailedInfo = await getServiceAtLocationDetails(serviceAtLocationId);
-        
-        if (detailedInfo) {
-          return res.status(200).json({
-            details: detailedInfo,
-            source: '211_API_Details'
-          });
-        } else {
-          return res.status(404).json({
-            message: "Detailed resource information not found"
-          });
-        }
+        detailedInfo = await getServiceAtLocationDetails(serviceAtLocationId);
+        console.log(`Service At Location Details ${detailedInfo ? 'retrieved successfully' : 'not found'}`);
       } catch (apiError) {
-        console.error("Error fetching detailed resource info:", apiError);
-        return res.status(500).json({
-          message: "Error fetching detailed resource information",
-          error: (apiError as Error).message
+        console.error("Service At Location Details failed:", apiError);
+        // Continue with phone number fallback below
+      }
+      
+      // Always try to get comprehensive phone numbers regardless of Service At Location Details success
+      const { getPhoneNumbers } = await import('./services/national211Service');
+      let comprehensivePhones: any[] = [];
+      
+      try {
+        console.log(`Fetching comprehensive phone numbers for serviceAtLocationId: ${serviceAtLocationId}`);
+        comprehensivePhones = await getPhoneNumbers(serviceAtLocationId);
+        console.log(`Retrieved ${comprehensivePhones.length} comprehensive phone numbers`);
+      } catch (phoneError) {
+        console.error("Error fetching comprehensive phone numbers:", phoneError);
+      }
+      
+      // Combine detailed info with comprehensive phone data
+      if (detailedInfo || comprehensivePhones.length > 0) {
+        const combinedDetails = {
+          ...detailedInfo,
+          comprehensivePhones: comprehensivePhones.length > 0 ? comprehensivePhones : undefined
+        };
+        
+        return res.status(200).json({
+          details: combinedDetails,
+          source: '211_API_Details_Enhanced'
+        });
+      } else {
+        return res.status(404).json({
+          message: "Detailed resource information not found"
         });
       }
     } catch (error) {
