@@ -476,7 +476,9 @@ export async function searchResourcesByTaxonomyCode(
  * Fetches comprehensive service details from Query API services endpoint
  */
 export async function getServiceDetails(serviceId: string): Promise<any> {
-  console.log(`Fetching detailed service info for service ID: ${serviceId}`);
+  // Clean the service ID to remove any prefix
+  const cleanServiceId = serviceId?.toString().replace('211santaba-', '');
+  console.log(`Fetching detailed service info for service ID: ${serviceId} (cleaned: ${cleanServiceId})`);
   
   const headers: HeadersInit = {
     'Accept': 'application/json',
@@ -484,7 +486,7 @@ export async function getServiceDetails(serviceId: string): Promise<any> {
   };
   
   try {
-    const endpoint = `${QUERY_API_BASE_URL}/services/${serviceId}`;
+    const endpoint = `${QUERY_API_BASE_URL}/services/${cleanServiceId}`;
     console.log(`Trying services endpoint: ${endpoint}`);
     
     const response = await fetch(endpoint, {
@@ -520,26 +522,32 @@ export async function getServiceDetails(serviceId: string): Promise<any> {
  */
 export async function getPhoneNumbers(serviceAtLocationId: string, serviceId?: string, organizationId?: string, locationId?: string): Promise<any[]> {
   try {
-    console.log(`Fetching phone numbers for serviceAtLocation ID: ${serviceAtLocationId}`);
+    // Clean all IDs to remove any prefix
+    const cleanServiceAtLocationId = serviceAtLocationId?.toString().replace('211santaba-', '');
+    const cleanServiceId = serviceId?.toString().replace('211santaba-', '');
+    const cleanOrganizationId = organizationId?.toString().replace('211santaba-', '');
+    const cleanLocationId = locationId?.toString().replace('211santaba-', '');
+    
+    console.log(`Fetching phone numbers for serviceAtLocation ID: ${serviceAtLocationId} (cleaned: ${cleanServiceAtLocationId})`);
     
     const headers: HeadersInit = {
       'Accept': 'application/json',
       'Api-Key': SUBSCRIPTION_KEY || ''
     };
     
-    // Try multiple endpoints to get phone numbers
+    // Try multiple endpoints to get phone numbers with cleaned IDs
     const endpoints: string[] = [
-      `${QUERY_API_BASE_URL}/phones-for-service-at-location/${serviceAtLocationId}`
+      `${QUERY_API_BASE_URL}/phones-for-service-at-location/${cleanServiceAtLocationId}`
     ];
     
-    if (serviceId) {
-      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-service/${serviceId}`);
+    if (cleanServiceId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-service/${cleanServiceId}`);
     }
-    if (organizationId) {
-      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-organization/${organizationId}`);
+    if (cleanOrganizationId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-organization/${cleanOrganizationId}`);
     }
-    if (locationId) {
-      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-location/${locationId}`);
+    if (cleanLocationId) {
+      endpoints.push(`${QUERY_API_BASE_URL}/phones-for-location/${cleanLocationId}`);
     }
     
     for (const endpoint of endpoints) {
@@ -1008,10 +1016,10 @@ function transformResource(apiResource: any): Resource {
   // Create the transformed resource
   return {
     id: apiResource.idServiceAtLocation || apiResource.id,
-    // Preserve service ID for detailed information fetching
-    serviceId: apiResource.idService,
-    organizationId: apiResource.idOrganization,
-    locationId: apiResource.idLocation,
+    // Preserve service ID for detailed information fetching (clean numeric IDs)
+    serviceId: apiResource.idService?.toString().replace('211santaba-', ''),
+    organizationId: apiResource.idOrganization?.toString().replace('211santaba-', ''),
+    locationId: apiResource.idLocation?.toString().replace('211santaba-', ''),
     name: apiResource.nameService || apiResource.nameServiceAtLocation || apiResource.name || 'Unnamed Service',
     description: cleanDescription,
     categoryId,
