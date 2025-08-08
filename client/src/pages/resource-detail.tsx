@@ -34,15 +34,42 @@ export default function ResourceDetail() {
   const { id } = useParams();
   const { toast } = useToast();
   
-  // Always fetch resource data from API to get comprehensive info including phone numbers
+  // Get basic resource data from localStorage (from search results), then enhance with API data
   const resourceQuery = useQuery({
     queryKey: ['/api/resources', id],
     queryFn: async () => {
-      if (!id) throw new Error('Resource ID is required');
+      if (!id) {
+        console.error('No resource ID provided');
+        throw new Error('Resource ID is required');
+      }
       
-      // Always call API to get enhanced data with phone numbers
-      console.log('Fetching enhanced resource data for:', id);
-      return await fetchResourceById(id, true);
+      console.log('Looking for resource with ID:', id);
+      
+      // First try to get resource from localStorage (from recent search results)
+      const storedResources = localStorage.getItem('recentResources');
+      console.log('Stored resources found:', !!storedResources);
+      
+      if (storedResources) {
+        try {
+          const resources = JSON.parse(storedResources);
+          console.log('Parsed resources count:', resources.length);
+          console.log('Resource IDs in storage:', resources.map((r: any) => r.id));
+          
+          const foundResource = resources.find((r: any) => r.id === id);
+          if (foundResource) {
+            console.log('Found resource in localStorage:', id);
+            return foundResource;
+          } else {
+            console.log('Resource not found in localStorage:', id);
+          }
+        } catch (parseError) {
+          console.error('Error parsing stored resources:', parseError);
+        }
+      }
+      
+      // If not in localStorage, this means direct link access - show error
+      console.error('Resource not found in localStorage, showing error');
+      throw new Error('Resource not found. Please search for resources first.');
     },
     enabled: !!id
   });
