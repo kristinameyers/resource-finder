@@ -68,9 +68,15 @@ export default function ResourceDetail() {
     queryKey: ['/api/resource-details', id],
     queryFn: async () => {
       if (!id || !id.includes('211santaba')) return null;
-      return await fetchResourceDetails(id);
+      
+      // Get service ID from resource data for enhanced details
+      const resource = resourceQuery.data;
+      const serviceId = resource?.serviceId;
+      
+      console.log(`Fetching details for resource ${id}`, serviceId ? `with service ID ${serviceId}` : 'without service ID');
+      return await fetchResourceDetails(id, serviceId);
     },
-    enabled: !!id && id.includes('211santaba')
+    enabled: !!id && id.includes('211santaba') && !resourceQuery.isLoading
   });
 
   // Get search context from localStorage for back navigation

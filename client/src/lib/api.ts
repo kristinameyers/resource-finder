@@ -194,9 +194,10 @@ export function getCurrentLocation(): Promise<{ latitude: number; longitude: num
 }
 
 // Fetch detailed resource information using Service At Location Details endpoint
-export async function fetchResourceDetails(id: string): Promise<any> {
+export async function fetchResourceDetails(id: string, serviceId?: string): Promise<any> {
   try {
-    const response = await apiRequest('GET', `/api/resources/${id}/details`);
+    const queryParams = serviceId ? `?serviceId=${serviceId}` : '';
+    const response = await apiRequest('GET', `/api/resources/${id}/details${queryParams}`);
     if (response.status === 404) {
       return null; // No detailed information available
     }

@@ -288,6 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/resources/:id/details", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
+      const { serviceId } = req.query; // Get service ID from query params
       
       if (!id) {
         return res.status(400).json({
@@ -298,6 +299,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract serviceAtLocation ID from composite ID
       const serviceAtLocationId = id.replace('211santaba-', '');
       console.log(`Fetching detailed info for serviceAtLocation ID: ${serviceAtLocationId}`);
+      if (serviceId) {
+        console.log(`Service ID provided: ${serviceId}`);
+      }
       
       // Try to get Service At Location Details first
       let detailedInfo: any = null;
@@ -306,13 +310,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Service At Location Details ${detailedInfo ? 'retrieved successfully' : 'not found'}`);
       } catch (apiError) {
         console.error("Service At Location Details failed:", apiError);
-        // Continue with phone number fallback below
+        // Continue with service details fallback below
       }
       
-      // Always try to get comprehensive phone numbers regardless of Service At Location Details success
-      const { getPhoneNumbers } = await import('./services/national211Service');
+      // Try to get detailed service information with servicePhones and serviceHoursText
+      const { getServiceDetails, getPhoneNumbers } = await import('./services/national211Service');
+      let serviceDetails: any = null;
       let comprehensivePhones: any[] = [];
       
+      // If we have a service ID, fetch detailed service information
+      if (serviceId && typeof serviceId === 'string') {
+        try {
+          console.log(`Fetching detailed service info with service ID: ${serviceId}`);
+          serviceDetails = await getServiceDetails(serviceId);
+          if (serviceDetails) {
+            console.log(`Successfully retrieved service details with servicePhones and serviceHoursText`);
+          }
+        } catch (serviceError) {
+          console.error("Error fetching service details:", serviceError);
+        }
+      }
+      
+      // Always try to get comprehensive phone numbers as fallback
       try {
         console.log(`Fetching comprehensive phone numbers for serviceAtLocationId: ${serviceAtLocationId}`);
         comprehensivePhones = await getPhoneNumbers(serviceAtLocationId);
@@ -321,11 +340,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error fetching comprehensive phone numbers:", phoneError);
       }
       
-      // Combine detailed info with comprehensive phone data
-      if (detailedInfo || comprehensivePhones.length > 0) {
+      // Combine all available information
+      if (detailedInfo || comprehensivePhones.length > 0 || serviceDetails) {
         const combinedDetails = {
           ...detailedInfo,
-          comprehensivePhones: comprehensivePhones.length > 0 ? comprehensivePhones : undefined
+          ...serviceDetails,
+          comprehensivePhones: serviceDetails?.servicePhones || comprehensivePhones.length > 0 ? (serviceDetails?.servicePhones || comprehensivePhones) : undefined
         };
         
         return res.status(200).json({

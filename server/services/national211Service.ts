@@ -169,46 +169,11 @@ export async function searchResourcesByKeyword(
       return [];
     }
     
-    // Transform basic resources
+    // Transform basic resources - keep this simple and fast
     const basicResources = data.results.map(transformResource);
     
-    // Enhance resources with detailed service information to get servicePhones and serviceHoursText
-    const enhancedResources = await Promise.all(
-      basicResources.map(async (resource) => {
-        try {
-          // Extract service ID from the resource
-          const originalApiResource = data.results.find((r: any) => (r.idServiceAtLocation || r.id) === resource.id.replace('211santaba-', ''));
-          const serviceId = originalApiResource?.idService;
-          
-          if (serviceId) {
-            console.log(`Fetching detailed service info for resource ${resource.id} with service ID ${serviceId}`);
-            const detailedServiceInfo = await getServiceDetails(serviceId);
-            
-            if (detailedServiceInfo) {
-              // Merge detailed service info into the resource
-              return {
-                ...resource,
-                // Update phone from servicePhones if available
-                phone: detailedServiceInfo.servicePhones?.[0]?.number || resource.phone,
-                // Update hours from serviceHoursText if available
-                hoursOfOperation: detailedServiceInfo.serviceHoursText ? 
-                  detailedServiceInfo.serviceHoursText : resource.hoursOfOperation,
-                // Add comprehensive phones from detailed service info
-                comprehensivePhones: detailedServiceInfo.servicePhones || resource.comprehensivePhones || [],
-                // Store the full detailed service info for frontend use
-                detailedServiceInfo
-              };
-            }
-          }
-        } catch (error) {
-          console.error(`Error enhancing resource ${resource.id}:`, error);
-        }
-        
-        return resource;
-      })
-    );
-    
-    return enhancedResources;
+    console.log(`Transformed ${basicResources.length} resources from 211 API`);
+    return basicResources;
   } catch (error) {
     console.error('Error searching resources by keyword:', error);
     throw error;
@@ -528,7 +493,7 @@ export async function getServiceDetails(serviceId: string): Promise<any> {
     });
     
     if (response.ok) {
-      const serviceDetails = await response.json();
+      const serviceDetails = await response.json() as any;
       console.log(`Retrieved detailed service info from services endpoint`);
       
       // Check for servicePhones and serviceHoursText in response
@@ -1010,7 +975,7 @@ function transformResource(apiResource: any): Resource {
     console.log('Using hours from Service At Location Details');
   } else if (detailedService?.schedules?.length > 0) {
     // Third priority: detailed service schedules
-    hoursOfOperation = formatSchedules(detailedService.schedules);
+    hoursOfOperation = formatSchedules(detailedService.schedules) || '';
     console.log('Using hours from detailed service schedules');
   } else if (apiResource.schedules?.length > 0) {
     // Fourth priority: basic schedule information
@@ -1043,6 +1008,10 @@ function transformResource(apiResource: any): Resource {
   // Create the transformed resource
   return {
     id: apiResource.idServiceAtLocation || apiResource.id,
+    // Preserve service ID for detailed information fetching
+    serviceId: apiResource.idService,
+    organizationId: apiResource.idOrganization,
+    locationId: apiResource.idLocation,
     name: apiResource.nameService || apiResource.nameServiceAtLocation || apiResource.name || 'Unnamed Service',
     description: cleanDescription,
     categoryId,
@@ -1149,7 +1118,7 @@ function extractPhonesFromDescription(description: string): string[] {
     }
   });
   
-  return [...new Set(phoneNumbers)]; // Remove duplicates
+  return Array.from(new Set(phoneNumbers)); // Remove duplicates
 }
 
 function extractEmailFromDescription(description: string): string | undefined {
