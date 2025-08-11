@@ -8,16 +8,22 @@ import { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import ResourceDetail from "@/pages/resource-detail";
+import About from "@/pages/about";
+import { BottomNavigation } from "@/components/BottomNavigation";
 
 function Router() {
   return (
-    <Switch>
-      {/* Add pages below */}
-      <Route path="/" component={Home} />
-      <Route path="/resources/:id" component={ResourceDetail} />
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        {/* Add pages below */}
+        <Route path="/" component={Home} />
+        <Route path="/resources/:id" component={ResourceDetail} />
+        <Route path="/about" component={About} />
+        {/* Fallback to 404 */}
+        <Route component={NotFound} />
+      </Switch>
+      <BottomNavigation />
+    </>
   );
 }
 

@@ -194,7 +194,7 @@ export default function Home() {
         </div>
       </header>
       
-      <main className="flex-grow container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
+      <main className="flex-grow container mx-auto px-4 py-8 bg-gray-50 min-h-screen pb-24">
         {/* Data source toggle */}
         <div className="flex items-center justify-end mb-4 gap-2">
           <div className="flex items-center space-x-2">

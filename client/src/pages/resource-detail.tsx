@@ -165,7 +165,7 @@ export default function ResourceDetail() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-4 md:p-6">
+    <div className="container max-w-4xl mx-auto p-4 md:p-6 pb-24">
       {/* Back button */}
       <Button variant="ghost" asChild className="mb-4">
         <Link href={getBackNavigationUrl()}>
