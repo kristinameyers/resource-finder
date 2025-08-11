@@ -1,7 +1,6 @@
-import { Home, Phone, User, Heart } from "lucide-react";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
+import { Search, Heart, Phone, Users, Accessibility } from "lucide-react";
 
 export function BottomNavigation() {
   const [location] = useLocation();
@@ -14,7 +13,7 @@ export function BottomNavigation() {
     {
       id: "search",
       label: "Search",
-      icon: Home,
+      icon: Search,
       path: "/",
       onClick: undefined
     },
@@ -35,15 +34,22 @@ export function BottomNavigation() {
     {
       id: "about",
       label: "About Us",
-      icon: User,
+      icon: Users,
       path: "/about",
+      onClick: undefined
+    },
+    {
+      id: "accessibility",
+      label: "Accessibility",
+      icon: Accessibility,
+      path: "/accessibility",
       onClick: undefined
     }
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40" style={{ backgroundColor: "#539ED0" }}>
-      <div className="flex justify-around items-center py-3 px-4 max-w-lg mx-auto">
+      <div className="flex justify-around items-center py-3 px-2 max-w-2xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.path === "/" ? location === "/" : location.startsWith(item.path);
@@ -53,13 +59,22 @@ export function BottomNavigation() {
               <button
                 key={item.id}
                 onClick={item.onClick}
-                className="flex flex-col items-center justify-center p-3 min-w-[65px] h-auto shadow-md hover:shadow-lg transition-all duration-200 rounded-lg"
+                className="flex flex-col items-center justify-center p-2 min-w-[55px] h-auto rounded-lg transition-all duration-150 transform active:scale-95 hover:scale-105"
                 style={{ 
                   backgroundColor: "#005191",
-                  color: "#ffffff"
+                  color: "#ffffff",
+                  boxShadow: "0 2px 8px rgba(0,81,145,0.3)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,81,145,0.4)";
+                  e.currentTarget.style.backgroundColor = "#0066b3";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,81,145,0.3)";
+                  e.currentTarget.style.backgroundColor = "#005191";
                 }}
               >
-                <Icon size={18} className="mb-1" />
+                <Icon size={20} className="mb-1" />
                 <span className="text-xs font-medium" style={{ color: "#ffffff" }}>{item.label}</span>
               </button>
             );
@@ -68,13 +83,22 @@ export function BottomNavigation() {
           return (
             <Link key={item.id} href={item.path}>
               <button
-                className="flex flex-col items-center justify-center p-3 min-w-[65px] h-auto shadow-md hover:shadow-lg transition-all duration-200 rounded-lg"
+                className="flex flex-col items-center justify-center p-2 min-w-[55px] h-auto rounded-lg transition-all duration-150 transform active:scale-95 hover:scale-105"
                 style={{ 
                   backgroundColor: "#005191",
-                  color: "#ffffff"
+                  color: "#ffffff",
+                  boxShadow: "0 2px 8px rgba(0,81,145,0.3)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,81,145,0.4)";
+                  e.currentTarget.style.backgroundColor = "#0066b3";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,81,145,0.3)";
+                  e.currentTarget.style.backgroundColor = "#005191";
                 }}
               >
-                <Icon size={18} className="mb-1" />
+                <Icon size={20} className="mb-1" />
                 <span className="text-xs font-medium" style={{ color: "#ffffff" }}>{item.label}</span>
               </button>
             </Link>
