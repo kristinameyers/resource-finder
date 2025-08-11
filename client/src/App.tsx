@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import ResourceDetail from "@/pages/resource-detail";
 import About from "@/pages/about";
+import Favorites from "@/pages/favorites";
 import { BottomNavigation } from "@/components/BottomNavigation";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
         {/* Add pages below */}
         <Route path="/" component={Home} />
         <Route path="/resources/:id" component={ResourceDetail} />
+        <Route path="/favorites" component={Favorites} />
         <Route path="/about" component={About} />
         {/* Fallback to 404 */}
         <Route component={NotFound} />
