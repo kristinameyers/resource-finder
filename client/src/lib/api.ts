@@ -29,7 +29,8 @@ export async function fetchResources(
   zipCode?: string,
   coordinates?: { latitude: number; longitude: number },
   useApi: boolean = true,
-  sortBy: 'relevance' | 'distance' | 'name' = 'relevance'
+  sortBy: 'relevance' | 'distance' | 'name' = 'relevance',
+  keyword?: string
 ): Promise<{resources: Resource[], total: number, source: string}> {
   const queryParams = new URLSearchParams();
   
@@ -56,6 +57,11 @@ export async function fetchResources(
   
   // Add sort parameter
   queryParams.append('sortBy', sortBy);
+  
+  // Add keyword parameter for keyword search
+  if (keyword) {
+    queryParams.append('keyword', keyword);
+  }
   
   const url = `/api/resources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   

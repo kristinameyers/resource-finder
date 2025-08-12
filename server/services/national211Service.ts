@@ -118,7 +118,7 @@ function transformICarolResource(icarolItem: any): Resource {
 }
 
 /**
- * Searches for resources by keyword (fallback for compatibility)
+ * Searches for resources by keyword using National 211 API V2
  */
 export async function searchResourcesByKeyword(
   keyword: string,

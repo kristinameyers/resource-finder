@@ -9,8 +9,9 @@ import { useSubcategories } from "@/hooks/use-subcategories";
 import { useLocation, LocationState } from "@/hooks/use-location";
 import { useQuery } from "@tanstack/react-query";
 import { type Category, type Subcategory } from "@shared/schema";
-import { Loader2, ChevronLeft, Database } from "lucide-react";
+import { Loader2, ChevronLeft, Database, Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { fetchCategories } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 
@@ -32,6 +33,10 @@ export default function Home() {
   // State for selected filters
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(urlFilters.categoryId);
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string | null>(urlFilters.subcategoryId);
+  
+  // State for keyword search
+  const [keywordQuery, setKeywordQuery] = useState<string>('');
+  const [searchType, setSearchType] = useState<'category' | 'keyword'>('category');
   
   // Category & location hooks
   const { locationState, requestCurrentLocation, setLocationByZipCode, clearLocation } = useLocation();
@@ -121,11 +126,12 @@ export default function Home() {
     error: resourcesError,
     refetch: refetchResources
   } = useResources(
-    selectedCategoryId,
-    selectedSubcategoryId,
+    searchType === 'keyword' ? null : selectedCategoryId,
+    searchType === 'keyword' ? null : selectedSubcategoryId,
     getLocationParam(),
     useNational211Api,
-    sortBy
+    sortBy,
+    searchType === 'keyword' ? keywordQuery.trim() : undefined
   );
   
   // Category change handler
@@ -168,13 +174,35 @@ export default function Home() {
   const handleClearFilters = () => {
     setSelectedCategoryId(null);
     setSelectedSubcategoryId(null);
+    setKeywordQuery('');
+    setSearchType('category');
     clearLocation();
+  };
+
+  // Keyword search handler
+  const handleKeywordSearch = () => {
+    if (keywordQuery.trim()) {
+      setSearchType('keyword');
+      setSelectedCategoryId(null);
+      setSelectedSubcategoryId(null);
+    }
+  };
+
+  // Handle enter key in search input
+  const handleKeywordInputKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleKeywordSearch();
+    }
   };
   
   // Back to categories button handler
   const handleBackToCategories = () => {
     setSelectedCategoryId(null);
     setSelectedSubcategoryId(null);
+    if (searchType === 'keyword') {
+      setKeywordQuery('');
+      setSearchType('category');
+    }
   };
   
   return (
@@ -245,7 +273,51 @@ export default function Home() {
           />
         )}
         
-        {selectedCategoryId ? (
+        {/* Keyword Search Section - Below Resource Filters */}
+        <div className="mb-6">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  type="text"
+                  placeholder="Enter keyword (e.g., childcare, food help, housing)"
+                  value={keywordQuery}
+                  onChange={(e) => setKeywordQuery(e.target.value)}
+                  onKeyPress={handleKeywordInputKeyPress}
+                  className="pl-10 pr-4 py-3 text-lg border-gray-300 focus:border-[#005191] focus:ring-[#005191]"
+                />
+              </div>
+              <Button
+                onClick={handleKeywordSearch}
+                disabled={!keywordQuery.trim()}
+                className="px-6 py-3 bg-[#005191] hover:bg-[#0066b3] text-white rounded-lg flex items-center gap-2 shadow-sm"
+              >
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </div>
+            {searchType === 'keyword' && keywordQuery && (
+              <div className="mt-3 flex items-center gap-2">
+                <Badge variant="outline" className="bg-blue-50 text-[#005191]">
+                  Keyword search: "{keywordQuery}"
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setKeywordQuery('');
+                    setSearchType('category');
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {selectedCategoryId || (searchType === 'keyword' && keywordQuery.trim()) ? (
           // Show results when a category is selected
           <>
             <div className="mb-4">
@@ -255,7 +327,7 @@ export default function Home() {
                 onClick={handleBackToCategories}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                Back to Categories
+                {searchType === 'keyword' ? 'Back to Search' : 'Back to Categories'}
               </Button>
             </div>
             

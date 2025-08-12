@@ -38,9 +38,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
       const useApi = req.query.useApi === 'true';
       const sortBy = req.query.sortBy as 'relevance' | 'distance' | 'name' || 'relevance';
+      const keyword = req.query.keyword ? String(req.query.keyword) : undefined;
 
+      // Handle keyword search using 211 API
+      if (useApi && keyword) {
+        try {
+          console.log(`Keyword search: "${keyword}"`);
+          console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
+          
+          const apiResult = await searchResourcesByKeyword(
+            keyword,
+            zipCode || undefined,
+            latitude,
+            longitude
+          );
+
+          console.log(`211 API returned ${apiResult.length} total resources for keyword: ${keyword}`);
+          
+          return res.json({
+            resources: apiResult,
+            total: apiResult.length,
+            source: '211 API'
+          });
+        } catch (searchError) {
+          if (searchError instanceof Error && searchError.message.startsWith('RATE_LIMITED:')) {
+            console.log('Rate limit detected, returning rate limit response');
+            return res.status(429).json({
+              error: 'rate_limited',
+              message: 'API rate limit exceeded. Please wait a moment and try again.',
+              retryAfter: 30,
+              resources: [],
+              total: 0,
+              source: '211_API'
+            });
+          }
+          console.error('Error in keyword search:', searchError);
+          throw searchError;
+        }
+      }
+      
       // If useApi flag is true and we have a categoryId, use the 211 API
-      if (useApi && categoryId) {
+      else if (useApi && categoryId) {
         try {
           console.log(`Selected category: ${categoryId}, Subcategory: ${subcategoryId}`);
           console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
