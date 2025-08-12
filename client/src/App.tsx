@@ -38,7 +38,7 @@ function App() {
     // Show splash screen while app initializes
     const initializeApp = async () => {
       // Wait for a minimum time to show the splash screen
-      const minLoadTime = new Promise(resolve => setTimeout(resolve, 2500));
+      const minLoadTime = new Promise(resolve => setTimeout(resolve, 1000));
       
       // You can add actual initialization tasks here if needed
       // For example: preloading categories, checking auth, etc.
