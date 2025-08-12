@@ -36,6 +36,7 @@ The application employs a modern full-stack architecture with a clear separation
 - ✅ **Favorites System**: Complete user favorites functionality with localStorage persistence
 - ✅ **Search & Filtering**: Category-based search with location services and distance calculations
 - ✅ **Professional UI/UX**: Consistent brand colors, Roboto typography, and responsive design
+- ✅ **Keyword Search Pagination**: Comprehensive pagination system for keyword searches with detailed logging and API analysis
 
 ### Key Features & Design Patterns
 - **Anonymous Access**: No user authentication is required for core functionality.
@@ -45,6 +46,7 @@ The application employs a modern full-stack architecture with a clear separation
 - **Data Flow**: Resources are discovered via categories or location, enriched with local data and voting information.
 - **Favorites System**: Uses local device storage (localStorage) for user favorites.
 - **Taxonomy Integration**: Utilizes official 211 taxonomy data for precise API queries, including detailed subcategory codes from Santa Barbara 211. Implements a smart fallback strategy from taxonomy code search to text search.
+- **Keyword Search Implementation**: Complete keyword search functionality with comprehensive pagination system. Discovered and documented that Santa Barbara 211 API limits keyword searches to 10 most relevant results (by API design), while category searches return full pagination (50-200+ results). System includes detailed logging, progress tracking, and distance calculations.
 - **Comprehensive Resource Details**: Displays detailed information including application process, required documents, fees, service areas, contact information, and hours, sourced from the National 211 Service At Location Details endpoint. Includes HTML content cleaning for descriptions.
 - **Navigation & User Experience**: Features 5-tab bottom navigation (Search, Favorites, Call, About Us, Accessibility) with Material UI-style hover/click effects including smooth scaling and shadow animations. Preserves search context when navigating between pages, supports URL parameters for direct links, and provides seamless user experience across all features.
 - **Accessibility Compliance**: Comprehensive accessibility settings page with font size controls (small/medium/large), display modes (default/high contrast), motion reduction, screen reader optimizations, and haptic feedback controls. All settings persist in localStorage and apply instantly.
