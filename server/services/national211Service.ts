@@ -129,31 +129,42 @@ export async function searchResourcesByKeyword(
   try {
     console.log(`Searching for resources with keyword: ${keyword}`);
     
-    // Use POST method with JSON body based on API requirements
-    const postBody: any = {
-      search: keyword,
-      input: keyword,
-      locationMode: 'Serving',
-      distance: 25,
-      location: zipCode || 'Santa Barbara County, CA' // API requires location - use county when no zip provided
-    };
+    // Use the same proven working /keyword endpoint that taxonomy search uses
+    const requestUrl = `${API_BASE_URL}/keyword`;
+    console.log('Using proven working /keyword endpoint for keyword search...');
     
-    if (latitude !== undefined && longitude !== undefined) {
-      postBody.longitude_latitude = `lon:${longitude}_lat:${latitude}`;
-      delete postBody.location; // Use coordinates instead of location
+    // Build query parameters using the same format as working taxonomy search
+    const queryParams = new URLSearchParams({
+      keywords: keyword, // Free text keyword instead of taxonomy code
+      distance: '25',
+      size: '10' // Start with reasonable page size
+    });
+    
+    // Add location parameter using same logic as working taxonomy search
+    if (zipCode) {
+      queryParams.set('location', zipCode);
+      console.log(`Using zip code location: ${zipCode}`);
+    } else if (latitude !== undefined && longitude !== undefined) {
+      queryParams.set('location', `${latitude},${longitude}`);
+      console.log(`Using coordinate location: ${latitude},${longitude}`);
+    } else {
+      // No location provided - use county for broader search (same as taxonomy search)
+      console.log('No location provided, defaulting to Santa Barbara County');
+      queryParams.set('location', 'Santa Barbara County, CA'); // Search county wide
+      queryParams.set('distance', '100'); // Increase distance for county-wide search
     }
     
-    console.log(`Making 211 API keyword request with POST method`);
-    console.log(`Request body:`, JSON.stringify(postBody));
+    const fullUrl = `${requestUrl}?${queryParams.toString()}`;
+    console.log(`Request URL: ${fullUrl}`);
     
-    const response = await fetch(API_BASE_URL, {
-      method: 'POST',
+    const response = await fetch(fullUrl, {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Api-Key': SUBSCRIPTION_KEY || '',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(postBody)
+        'locationMode': 'Serving',
+        'keywordIsTaxonomyCode': 'false' // Set to false for keyword search
+      }
     });
     
     if (!response.ok) {
@@ -169,10 +180,10 @@ export async function searchResourcesByKeyword(
       return [];
     }
     
-    // Transform basic resources - keep this simple and fast
+    // Transform basic resources using the same logic as taxonomy search
     const basicResources = data.results.map(transformResource);
     
-    console.log(`Transformed ${basicResources.length} resources from 211 API`);
+    console.log(`Transformed ${basicResources.length} resources from 211 API keyword search`);
     return basicResources;
   } catch (error) {
     console.error('Error searching resources by keyword:', error);
