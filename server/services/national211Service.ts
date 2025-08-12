@@ -118,14 +118,16 @@ function transformICarolResource(icarolItem: any): Resource {
 }
 
 /**
- * Searches for resources by keyword using National 211 API V2
+ * Searches for resources by keyword using National 211 API V2 with pagination
  */
 export async function searchResourcesByKeyword(
   keyword: string,
   zipCode?: string,
   latitude?: number,
-  longitude?: number
-): Promise<Resource[]> {
+  longitude?: number,
+  size = 10,
+  offset = 0
+): Promise<{ resources: Resource[], total: number }> {
   try {
     console.log(`Searching for resources with keyword: ${keyword}`);
     
@@ -137,7 +139,8 @@ export async function searchResourcesByKeyword(
     const queryParams = new URLSearchParams({
       keywords: keyword, // Free text keyword instead of taxonomy code
       distance: '25',
-      size: '10' // Start with reasonable page size
+      size: size.toString(),
+      offset: offset.toString()
     });
     
     // Add location parameter using same logic as working taxonomy search
@@ -175,20 +178,119 @@ export async function searchResourcesByKeyword(
     
     const data: any = await response.json();
     console.log(`API response received with ${data.results?.length || 0} resources`);
+    console.log(`Total available results: ${data.totalCount || 0}`);
     
     if (!data.results || data.results.length === 0) {
-      return [];
+      return { resources: [], total: 0 };
     }
     
     // Transform basic resources using the same logic as taxonomy search
     const basicResources = data.results.map(transformResource);
     
     console.log(`Transformed ${basicResources.length} resources from 211 API keyword search`);
-    return basicResources;
+    return { 
+      resources: basicResources, 
+      total: data.totalCount || basicResources.length 
+    };
   } catch (error) {
     console.error('Error searching resources by keyword:', error);
     throw error;
   }
+}
+
+/**
+ * Searches for ALL resources by keyword (retrieves all pages)
+ */
+export async function searchAllResourcesByKeyword(
+  keyword: string,
+  zipCode?: string,
+  latitude?: number,
+  longitude?: number
+): Promise<{ resources: Resource[], total: number }> {
+  console.log(`\n=== FETCHING ALL RESOURCES FOR KEYWORD: ${keyword} ===`);
+  
+  let allResources: Resource[] = [];
+  let currentPage = 0;
+  const pageSize = 10; // API seems to cap at 10 resources per page
+  let hasMoreResults = true;
+  let apiTotalCount = 0;
+  
+  while (hasMoreResults) {
+    try {
+      const offset = currentPage * pageSize;
+      console.log(`Fetching page ${currentPage + 1} (offset: ${offset})`);
+      
+      const pageResult = await searchResourcesByKeyword(
+        keyword,
+        zipCode,
+        latitude,
+        longitude,
+        pageSize,
+        offset
+      );
+      
+      // Store the total count from API on first page
+      if (currentPage === 0) {
+        apiTotalCount = pageResult.total;
+        console.log(`API reports total of ${apiTotalCount} resources available for keyword: ${keyword}`);
+      }
+      
+      if (pageResult.resources.length === 0) {
+        hasMoreResults = false;
+        console.log(`No more results found at page ${currentPage + 1}`);
+      } else {
+        allResources.push(...pageResult.resources);
+        console.log(`Retrieved ${pageResult.resources.length} resources from page ${currentPage + 1}`);
+        console.log(`Total resources so far: ${allResources.length} / ${apiTotalCount}`);
+        
+        // Check if we've gotten all available resources based on API total count
+        if (allResources.length >= apiTotalCount) {
+          hasMoreResults = false;
+          console.log(`Retrieved all ${allResources.length} available resources for keyword`);
+        } else if (pageResult.resources.length < pageSize) {
+          // Also stop if we get fewer results than expected (backup condition)
+          hasMoreResults = false;
+          console.log(`Got ${pageResult.resources.length} < ${pageSize}, reached end of results`);
+        } else {
+          currentPage++;
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching page ${currentPage + 1}:`, error);
+      hasMoreResults = false;
+    }
+  }
+  
+  // Add distance calculations if user provided a zip code
+  if (zipCode && allResources.length > 0) {
+    console.log(`Calculating distances from user zip code: ${zipCode}`);
+    const { calculateDistanceFromZipCodes } = await import('../data/zipCodes');
+    
+    allResources = allResources.map(resource => {
+      const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode || '');
+      return {
+        ...resource,
+        distance: distance !== null ? Number(distance.toFixed(1)) : null
+      };
+    });
+    
+    // Sort by distance if we have distance data
+    allResources.sort((a, b) => {
+      if (a.distance === null && b.distance === null) return 0;
+      if (a.distance === null) return 1;
+      if (b.distance === null) return -1;
+      return a.distance - b.distance;
+    });
+    
+    console.log(`Applied distance calculations and sorting for ${allResources.length} resources`);
+  }
+  
+  console.log(`=== KEYWORD SEARCH COMPLETE: ${allResources.length} total resources ===\n`);
+  
+  return {
+    resources: allResources,
+    total: apiTotalCount
+  };
 }
 
 /**

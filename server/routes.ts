@@ -3,7 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { resourceSchema } from "@shared/schema";
-import { searchResourcesByTaxonomyCode, searchResourcesByKeyword, getResourceById, getServiceAtLocationDetails, searchResources } from "./services/national211Service";
+import { 
+  searchResourcesByTaxonomyCode, 
+  searchResourcesByKeyword, 
+  searchAllResourcesByKeyword,
+  getResourceById, 
+  getServiceAtLocationDetails, 
+  searchResources 
+} from "./services/national211Service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -46,18 +53,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Keyword search: "${keyword}"`);
           console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
           
-          const apiResult = await searchResourcesByKeyword(
+          const apiResult = await searchAllResourcesByKeyword(
             keyword,
             zipCode || undefined,
             latitude,
             longitude
           );
 
-          console.log(`211 API returned ${apiResult.length} total resources for keyword: ${keyword}`);
+          console.log(`211 API returned ${apiResult.resources.length} total resources for keyword: ${keyword}`);
           
           return res.json({
-            resources: apiResult,
-            total: apiResult.length,
+            resources: apiResult.resources,
+            total: apiResult.total,
             source: '211 API'
           });
         } catch (searchError) {

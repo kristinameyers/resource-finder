@@ -88,6 +88,7 @@ export interface Resource {
   thumbsDown?: number; // Number of thumbs down votes
   userVote?: 'up' | 'down' | null; // Current user's vote for this resource
   distanceMiles?: number; // Distance from user's location in miles
+  distance?: number; // Distance for API calculations
   
   // Enhanced iCarol API fields
   applicationProcess?: string; // How to apply for services
