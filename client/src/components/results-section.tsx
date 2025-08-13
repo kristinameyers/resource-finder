@@ -4,6 +4,7 @@ import ResourceCardSkeleton from "./resource-card-skeleton";
 import SortControl from "./sort-control";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2, Clock } from "lucide-react";
+import { useTranslatedText } from "@/components/TranslatedText";
 
 interface ResultsSectionProps {
   resources: Resource[];
@@ -34,6 +35,13 @@ export default function ResultsSection({
   onSortChange,
   hasLocation
 }: ResultsSectionProps) {
+  const { text: loadingResourcesText } = useTranslatedText("Loading resources...");
+  const { text: noResourcesText } = useTranslatedText("No resources found");
+  const { text: errorLoadingText } = useTranslatedText("Error loading resources");
+  const { text: tryAgainText } = useTranslatedText("Try Again");
+  const { text: clearFiltersText } = useTranslatedText("Clear Filters");
+  const { text: foundText } = useTranslatedText("Found");
+  const { text: resourcesText } = useTranslatedText("resources");
   // Find category and subcategory objects for a resource
   const getCategoryForResource = (categoryId: string) => {
     return categories.find(c => c.id === categoryId);
@@ -50,7 +58,7 @@ export default function ResultsSection({
       <div className="space-y-6">
         <div className="flex items-center gap-2 mb-4">
           <Loader2 className="h-5 w-5 text-primary animate-spin" />
-          <h2 className="text-xl font-semibold">Loading resources...</h2>
+          <h2 className="text-xl font-semibold">{loadingResourcesText}</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (

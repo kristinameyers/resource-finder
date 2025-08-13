@@ -28,6 +28,7 @@ import {
 import { LocationState } from "@/hooks/use-location";
 import { Check, Loader2, MapPin } from "lucide-react";
 import * as icons from "lucide-react";
+import { useTranslatedText } from "@/components/TranslatedText";
 
 interface FilterSectionProps {
   categories: Category[];

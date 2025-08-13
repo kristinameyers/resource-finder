@@ -29,8 +29,23 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchResourceById, fetchResourceDetails, fetchCategories, fetchSubcategories } from '@/lib/api';
 import type { PhoneDetails } from '@/../../shared/schema';
 import FavoriteButton from '@/components/favorite-button';
+import { useTranslatedText } from "@/components/TranslatedText";
 
 export default function ResourceDetail() {
+  // Translation hooks
+  const { text: backToResourcesText } = useTranslatedText("Back to resources");
+  const { text: loadingText } = useTranslatedText("Loading...");
+  const { text: errorText } = useTranslatedText("Error loading resource");
+  const { text: contactInfoText } = useTranslatedText("Contact Information");
+  const { text: callText } = useTranslatedText("Call");
+  const { text: websiteText } = useTranslatedText("Visit Website");
+  const { text: hoursText } = useTranslatedText("Hours");
+  const { text: accessibilityText } = useTranslatedText("Accessibility");
+  const { text: languagesText } = useTranslatedText("Languages");
+  const { text: applicationProcessText } = useTranslatedText("Application Process");
+  const { text: requiredDocsText } = useTranslatedText("Required Documents");
+  const { text: feesText } = useTranslatedText("Fees");
+  const { text: serviceAreasText } = useTranslatedText("Service Areas");
   const { id } = useParams();
   const { toast } = useToast();
   
@@ -170,7 +185,7 @@ export default function ResourceDetail() {
       <Button variant="ghost" asChild className="mb-4">
         <Link href={getBackNavigationUrl()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to resources
+          {backToResourcesText}
         </Link>
       </Button>
       

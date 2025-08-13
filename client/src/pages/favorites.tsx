@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCategories, fetchSubcategories } from "@/lib/api";
 import { type Category, type Subcategory } from "@shared/schema";
+import { useTranslatedText } from "@/components/TranslatedText";
 
 interface FavoriteResource {
   id: string;
@@ -25,6 +26,14 @@ interface FavoriteResource {
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState<FavoriteResource[]>([]);
+  
+  // Translation hooks
+  const { text: favoritesText } = useTranslatedText("My Favorites");
+  const { text: noFavoritesText } = useTranslatedText("No favorites yet");
+  const { text: noFavoritesDescText } = useTranslatedText("Start by adding resources to your favorites when browsing.");
+  const { text: removeText } = useTranslatedText("Remove from favorites");
+  const { text: callText } = useTranslatedText("Call");
+  const { text: viewDetailsText } = useTranslatedText("View Details");
 
   // Fetch categories and subcategories for display
   const { data: categoriesData } = useQuery({
@@ -90,16 +99,16 @@ export default function Favorites() {
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="text-center mb-8">
             <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Favorites</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{favoritesText}</h1>
             <p className="text-lg text-gray-600 mb-8">
-              You haven't saved any resources yet.
+              {noFavoritesText}
             </p>
           </div>
 
           <Card>
             <CardContent className="p-8 text-center">
               <p className="text-gray-600 mb-6">
-                Start by browsing resources and clicking the heart icon to save them here for quick access.
+                {noFavoritesDescText}
               </p>
               <Button asChild>
                 <Link href="/">
@@ -119,7 +128,7 @@ export default function Favorites() {
         {/* Header */}
         <div className="text-center mb-8">
           <Heart className="w-16 h-16 mx-auto mb-4 text-red-500" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Favorites</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{favoritesText}</h1>
           <p className="text-lg text-gray-600">
             {favorites.length} saved resource{favorites.length !== 1 ? 's' : ''}
           </p>

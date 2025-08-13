@@ -14,8 +14,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchCategories } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
+import { useTranslatedText } from "@/components/TranslatedText";
 
 export default function Home() {
+  // Translation hooks for all text content
+  const { text: loadingText } = useTranslatedText("Loading...");
+  const { text: localDataText } = useTranslatedText("Local Data");
+  const { text: api211Text } = useTranslatedText("211 API");
+  const { text: searchPlaceholderText } = useTranslatedText("Enter keyword (e.g., childcare, food help, housing)");
+  const { text: keywordSearchText } = useTranslatedText("Keyword search");
+  const { text: clearText } = useTranslatedText("Clear");
+  const { text: backToSearchText } = useTranslatedText("Back to Search");
+  const { text: backToCategoriesText } = useTranslatedText("Back to Categories");
+  const { text: footerText } = useTranslatedText("Resource Finder");
+  const { text: footerSubtext } = useTranslatedText("Find local resources and services");
+
   // Initialize state from URL parameters or localStorage
   const initializeFiltersFromUrl = () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -216,7 +229,7 @@ export default function Home() {
           {(isLoadingCategories || isLoadingResources) && (
             <div className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-[#005191]" />
-              <span className="text-base text-[#005191] font-medium">Loading...</span>
+              <span className="text-base text-[#005191] font-medium">{loadingText}</span>
             </div>
           )}
         </div>
@@ -233,7 +246,7 @@ export default function Home() {
               onClick={() => setUseNational211Api(false)}
             >
               <Database className="h-4 w-4" />
-              Local Data
+              {localDataText}
             </Button>
             <Button 
               variant={useNational211Api ? "default" : "outline"}
@@ -242,7 +255,7 @@ export default function Home() {
               onClick={() => setUseNational211Api(true)}
             >
               <Database className="h-4 w-4" />
-              211 API
+              {api211Text}
             </Button>
           </div>
           
@@ -281,7 +294,7 @@ export default function Home() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   type="text"
-                  placeholder="Enter keyword (e.g., childcare, food help, housing)"
+                  placeholder={searchPlaceholderText}
                   value={keywordQuery}
                   onChange={(e) => setKeywordQuery(e.target.value)}
                   onKeyPress={handleKeywordInputKeyPress}
@@ -299,7 +312,7 @@ export default function Home() {
             {searchType === 'keyword' && keywordQuery && (
               <div className="mt-3 flex items-center gap-2">
                 <Badge variant="outline" className="bg-blue-50 text-[#005191]">
-                  Keyword search: "{keywordQuery}"
+                  {keywordSearchText}: "{keywordQuery}"
                 </Badge>
                 <Button
                   variant="ghost"
@@ -310,7 +323,7 @@ export default function Home() {
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
-                  Clear
+                  {clearText}
                 </Button>
               </div>
             )}
@@ -327,7 +340,7 @@ export default function Home() {
                 onClick={handleBackToCategories}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
-                {searchType === 'keyword' ? 'Back to Search' : 'Back to Categories'}
+                {searchType === 'keyword' ? backToSearchText : backToCategoriesText}
               </Button>
             </div>
             
@@ -366,7 +379,7 @@ export default function Home() {
       <footer className="bg-muted py-6">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-muted-foreground">
-            Resource Finder &copy; {new Date().getFullYear()} | Find local resources and services
+            {footerText} &copy; {new Date().getFullYear()} | {footerSubtext}
           </p>
         </div>
       </footer>

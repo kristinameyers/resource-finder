@@ -1,29 +1,34 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, Mail, MapPin, Globe } from "lucide-react";
+import { useTranslatedText } from "@/components/TranslatedText";
 
 export default function About() {
+  const { text: aboutTitleText } = useTranslatedText("About 2-1-1");
+  const { text: aboutSubtitleText } = useTranslatedText("Connecting people with the resources they need, when they need them most.");
+  const { text: missionTitleText } = useTranslatedText("Our Mission");
+  const { text: missionDescText } = useTranslatedText("2-1-1 is a comprehensive information and referral service that connects people with local resources in their community. We provide access to essential services including housing assistance, food programs, healthcare, employment resources, and emergency support - all available 24/7 by simply dialing 2-1-1.");
+  const { text: servicesTitleText } = useTranslatedText("What We Offer");
+  const { text: essentialServicesText } = useTranslatedText("Essential Services");
+  const { text: supportServicesText } = useTranslatedText("Support Services");
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">About 2-1-1</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{aboutTitleText}</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Connecting people with the resources they need, when they need them most.
+            {aboutSubtitleText}
           </p>
         </div>
 
         {/* Mission Card */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-xl text-blue-900">Our Mission</CardTitle>
+            <CardTitle className="text-xl text-blue-900">{missionTitleText}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-700 leading-relaxed">
-              2-1-1 is a comprehensive information and referral service that connects people 
-              with local resources in their community. We provide access to essential services 
-              including housing assistance, food programs, healthcare, employment resources, 
-              and emergency support - all available 24/7 by simply dialing 2-1-1.
+              {missionDescText}
             </p>
           </CardContent>
         </Card>
@@ -31,12 +36,12 @@ export default function About() {
         {/* Services Card */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-xl text-blue-900">What We Offer</CardTitle>
+            <CardTitle className="text-xl text-blue-900">{servicesTitleText}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Essential Services</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">{essentialServicesText}</h4>
                 <ul className="text-gray-700 space-y-1">
                   <li>• Housing & Shelter Assistance</li>
                   <li>• Food & Nutrition Programs</li>
@@ -45,7 +50,7 @@ export default function About() {
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Support Services</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">{supportServicesText}</h4>
                 <ul className="text-gray-700 space-y-1">
                   <li>• Legal Assistance</li>
                   <li>• Transportation Services</li>
