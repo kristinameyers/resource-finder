@@ -9,7 +9,7 @@ import { Settings, Globe, Check, Eye, Palette, Volume2, Smartphone, Type, Access
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
-  const { currentLanguage, setLanguage, translate, translateBatch } = useLanguage();
+  const { currentLanguage, setLanguage, translate, translateBatch, clearTranslationCache } = useLanguage();
   const [translatedTexts, setTranslatedTexts] = useState<Record<string, string>>({});
   
   // Accessibility settings state
@@ -446,6 +446,37 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Developer Tools - Hidden in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                {translatedTexts["Developer Tools"] || "Developer Tools"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    {translatedTexts["Clear Translation Cache"] || "Clear Translation Cache"}
+                  </label>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {translatedTexts["Removes all cached translations"] || "Removes all cached translations"}
+                  </p>
+                </div>
+                <Button
+                  onClick={clearTranslationCache}
+                  variant="outline"
+                  size="sm"
+                >
+                  {translatedTexts["Clear Cache"] || "Clear Cache"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Info Card */}
         <Card>

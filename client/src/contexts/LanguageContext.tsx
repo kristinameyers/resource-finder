@@ -8,6 +8,7 @@ export interface LanguageContextType {
   translate: (text: string) => Promise<string>;
   translateBatch: (texts: string[], targetLanguage: Language) => Promise<string[]>;
   isTranslating: boolean;
+  clearTranslationCache: () => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -29,29 +30,50 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationCache, setTranslationCache] = useState<Map<string, string>>(new Map());
   
+  // Cache version for invalidation - uses stable version that changes with app updates
+  const CACHE_VERSION = 'v1.0.1';
+  const CACHE_KEY = 'translation-cache';
+  const CACHE_VERSION_KEY = 'translation-cache-version';
+  
   // Load cached translations from localStorage on mount
   useEffect(() => {
     const loadCachedTranslations = () => {
       try {
-        const cached = localStorage.getItem('translation-cache');
+        const cachedVersion = localStorage.getItem(CACHE_VERSION_KEY);
+        const currentVersion = CACHE_VERSION;
+        
+        // Check if cache version matches current build
+        if (cachedVersion !== currentVersion) {
+          console.log('Cache version mismatch - clearing translation cache');
+          localStorage.removeItem(CACHE_KEY);
+          localStorage.setItem(CACHE_VERSION_KEY, currentVersion);
+          return;
+        }
+        
+        const cached = localStorage.getItem(CACHE_KEY);
         if (cached) {
           const parsedCache = JSON.parse(cached);
           setTranslationCache(new Map(Object.entries(parsedCache)));
+          console.log(`Loaded ${Object.keys(parsedCache).length} cached translations`);
         }
       } catch (error) {
         console.error('Failed to load translation cache:', error);
+        // Clear corrupted cache
+        localStorage.removeItem(CACHE_KEY);
+        localStorage.removeItem(CACHE_VERSION_KEY);
       }
     };
     
     loadCachedTranslations();
-  }, []);
+  }, [CACHE_VERSION]);
   
   // Save translations to localStorage when cache updates
   useEffect(() => {
     const saveCacheToStorage = () => {
       try {
         const cacheObject = Object.fromEntries(translationCache);
-        localStorage.setItem('translation-cache', JSON.stringify(cacheObject));
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cacheObject));
+        localStorage.setItem(CACHE_VERSION_KEY, CACHE_VERSION);
       } catch (error) {
         console.error('Failed to save translation cache:', error);
       }
@@ -60,7 +82,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     if (translationCache.size > 0) {
       saveCacheToStorage();
     }
-  }, [translationCache]);
+  }, [translationCache, CACHE_VERSION]);
 
   // Load saved language preference
   useEffect(() => {
@@ -76,6 +98,14 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     // Don't clear cache when switching languages - keep for performance
     // Stop any ongoing translations
     setIsTranslating(false);
+  };
+  
+  // Function to manually clear cache (useful for development)
+  const clearTranslationCache = () => {
+    setTranslationCache(new Map());
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_VERSION_KEY);
+    console.log('Translation cache cleared manually');
   };
 
   // Batch translation function for multiple texts
@@ -226,6 +256,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         translate,
         translateBatch,
         isTranslating,
+        clearTranslationCache,
       }}
     >
       {children}
