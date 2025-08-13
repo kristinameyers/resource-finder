@@ -11,6 +11,7 @@ import {
   getServiceAtLocationDetails, 
   searchResources 
 } from "./services/national211Service";
+import { translateText, getSupportedLanguages } from "./services/translationService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -566,6 +567,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching votes:", error);
       res.status(500).json({ error: "Failed to fetch votes" });
+    }
+  });
+
+  // Translation API endpoint
+  app.post("/api/translate", async (req: Request, res: Response) => {
+    try {
+      const { text, targetLanguage } = req.body;
+      
+      if (!text || !targetLanguage) {
+        return res.status(400).json({
+          message: "Text and target language are required"
+        });
+      }
+      
+      if (!['es', 'tl'].includes(targetLanguage)) {
+        return res.status(400).json({
+          message: "Supported languages are: es (Spanish), tl (Tagalog)"
+        });
+      }
+      
+      const result = await translateText({
+        text,
+        targetLanguage: targetLanguage as 'es' | 'tl'
+      });
+      
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("Translation error:", error);
+      return res.status(500).json({
+        message: "Translation failed",
+        error: (error as Error).message
+      });
+    }
+  });
+
+  // Get supported languages endpoint
+  app.get("/api/languages", async (req: Request, res: Response) => {
+    try {
+      const languages = getSupportedLanguages();
+      return res.status(200).json({ languages });
+    } catch (error) {
+      console.error("Error getting languages:", error);
+      return res.status(500).json({
+        message: "Error retrieving supported languages"
+      });
     }
   });
 

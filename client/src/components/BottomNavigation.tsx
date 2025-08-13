@@ -1,9 +1,16 @@
 import { useLocation } from "wouter";
 import { Link } from "wouter";
-import { Search, Heart, Phone, Users, Accessibility } from "lucide-react";
+import { Search, Heart, Phone, Users, Settings, Accessibility } from "lucide-react";
+import { useTranslatedText } from "@/components/TranslatedText";
 
 export function BottomNavigation() {
   const [location] = useLocation();
+  const { text: searchText } = useTranslatedText("Search");
+  const { text: favoritesText } = useTranslatedText("Favorites");
+  const { text: callText } = useTranslatedText("Call");
+  const { text: aboutText } = useTranslatedText("About Us");
+  const { text: settingsText } = useTranslatedText("Settings");
+  const { text: accessibilityText } = useTranslatedText("Accessibility");
 
   const handleCallClick = () => {
     window.location.href = "tel:18004001572";
@@ -12,35 +19,42 @@ export function BottomNavigation() {
   const navItems = [
     {
       id: "search",
-      label: "Search",
+      label: searchText,
       icon: Search,
       path: "/",
       onClick: undefined
     },
     {
       id: "favorites",
-      label: "Favorites",
+      label: favoritesText,
       icon: Heart,
       path: "/favorites",
       onClick: undefined
     },
     {
       id: "call",
-      label: "Call",
+      label: callText,
       icon: Phone,
       path: "#",
       onClick: handleCallClick
     },
     {
       id: "about",
-      label: "About Us",
+      label: aboutText,
       icon: Users,
       path: "/about",
       onClick: undefined
     },
     {
+      id: "settings",
+      label: settingsText,
+      icon: Settings,
+      path: "/settings",
+      onClick: undefined
+    },
+    {
       id: "accessibility",
-      label: "Accessibility",
+      label: accessibilityText,
       icon: Accessibility,
       path: "/accessibility",
       onClick: undefined
