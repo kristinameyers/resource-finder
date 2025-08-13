@@ -10,7 +10,7 @@ export function BottomNavigation() {
   const { text: callText } = useTranslatedText("Call");
   const { text: aboutText } = useTranslatedText("About Us");
   const { text: settingsText } = useTranslatedText("Settings");
-  const { text: accessibilityText } = useTranslatedText("Accessibility");
+
 
   const handleCallClick = () => {
     window.location.href = "tel:18004001572";
@@ -50,13 +50,6 @@ export function BottomNavigation() {
       label: settingsText,
       icon: Settings,
       path: "/settings",
-      onClick: undefined
-    },
-    {
-      id: "accessibility",
-      label: accessibilityText,
-      icon: Accessibility,
-      path: "/accessibility",
       onClick: undefined
     }
   ];

@@ -4,6 +4,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Accessibility font size classes */
+.font-small {
+  font-size: 14px;
+}
+
+.font-medium {
+  font-size: 16px;
+}
+
+.font-large {
+  font-size: 18px;
+}
+
+/* High contrast mode */
+.high-contrast {
+  filter: contrast(150%);
+}
+
+.high-contrast * {
+  --tw-text-opacity: 1 !important;
+  --tw-bg-opacity: 1 !important;
+}
+
+/* Reduced motion */
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* Import Roboto font */
 @font-face {
   font-family: 'Roboto';
