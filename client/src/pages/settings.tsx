@@ -9,7 +9,7 @@ import { Settings, Globe, Check, Eye, Palette, Volume2, Smartphone, Type, Access
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
-  const { currentLanguage, setLanguage, translate } = useLanguage();
+  const { currentLanguage, setLanguage, translate, translateBatch } = useLanguage();
   const [translatedTexts, setTranslatedTexts] = useState<Record<string, string>>({});
   
   // Accessibility settings state
@@ -115,37 +115,18 @@ export default function SettingsPage() {
       const textsToTranslate = Object.keys(defaultTexts);
       const translations: Record<string, string> = { ...defaultTexts };
       
-      // For non-English languages, translate in smaller batches to reduce errors
-      for (let i = 0; i < textsToTranslate.length; i += 3) {
-        if (isCancelled) break;
+      // Use the new batch translation function for better performance
+      try {
+        const batchResults = await translateBatch(textsToTranslate, currentLanguage);
         
-        const batch = textsToTranslate.slice(i, i + 3);
-        
-        try {
-          const batchTranslations = await Promise.allSettled(
-            batch.map(text => translate(text))
-          );
-          
-          if (!isCancelled) {
-            batch.forEach((text, index) => {
-              const result = batchTranslations[index];
-              if (result.status === 'fulfilled') {
-                translations[text] = result.value;
-              } else {
-                console.error('Translation failed for:', text, result.reason);
-                // Keep original text as fallback
-              }
-            });
-          }
-          
-          // Small delay between batches to prevent API overload
-          if (i + 3 < textsToTranslate.length && !isCancelled) {
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
-        } catch (error) {
-          console.error('Batch translation error:', error);
-          // Continue with original texts for failed batch
+        if (!isCancelled) {
+          textsToTranslate.forEach((text, index) => {
+            translations[text] = batchResults[index] || text;
+          });
         }
+      } catch (error) {
+        console.error('Batch translation error:', error);
+        // Continue with original texts for failed batch
       }
       
       if (!isCancelled) {

@@ -6,6 +6,7 @@ export interface LanguageContextType {
   currentLanguage: Language;
   setLanguage: (language: Language) => void;
   translate: (text: string) => Promise<string>;
+  translateBatch: (texts: string[], targetLanguage: Language) => Promise<string[]>;
   isTranslating: boolean;
 }
 
@@ -27,6 +28,39 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationCache, setTranslationCache] = useState<Map<string, string>>(new Map());
+  
+  // Load cached translations from localStorage on mount
+  useEffect(() => {
+    const loadCachedTranslations = () => {
+      try {
+        const cached = localStorage.getItem('translation-cache');
+        if (cached) {
+          const parsedCache = JSON.parse(cached);
+          setTranslationCache(new Map(Object.entries(parsedCache)));
+        }
+      } catch (error) {
+        console.error('Failed to load translation cache:', error);
+      }
+    };
+    
+    loadCachedTranslations();
+  }, []);
+  
+  // Save translations to localStorage when cache updates
+  useEffect(() => {
+    const saveCacheToStorage = () => {
+      try {
+        const cacheObject = Object.fromEntries(translationCache);
+        localStorage.setItem('translation-cache', JSON.stringify(cacheObject));
+      } catch (error) {
+        console.error('Failed to save translation cache:', error);
+      }
+    };
+    
+    if (translationCache.size > 0) {
+      saveCacheToStorage();
+    }
+  }, [translationCache]);
 
   // Load saved language preference
   useEffect(() => {
@@ -39,14 +73,96 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const setLanguage = (language: Language) => {
     setCurrentLanguage(language);
     localStorage.setItem('app-language', language);
-    // Clear translation cache when language changes
-    setTranslationCache(new Map());
+    // Don't clear cache when switching languages - keep for performance
     // Stop any ongoing translations
     setIsTranslating(false);
   };
 
+  // Batch translation function for multiple texts
+  const translateBatch = async (texts: string[], targetLanguage: Language): Promise<string[]> => {
+    if (targetLanguage === 'en' || texts.length === 0) {
+      return texts;
+    }
+
+    const uncachedTexts: string[] = [];
+    const uncachedIndices: number[] = [];
+    const results: string[] = new Array(texts.length);
+
+    // Check cache for all texts first
+    texts.forEach((text, index) => {
+      const cacheKey = `${text}-${targetLanguage}`;
+      if (translationCache.has(cacheKey)) {
+        results[index] = translationCache.get(cacheKey)!;
+      } else if (text && text.trim() !== '') {
+        uncachedTexts.push(text.trim());
+        uncachedIndices.push(index);
+      } else {
+        results[index] = text;
+      }
+    });
+
+    // If all texts are cached or empty, return immediately
+    if (uncachedTexts.length === 0) {
+      return results;
+    }
+
+    try {
+      setIsTranslating(true);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      const response = await fetch('/api/translate-batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          texts: uncachedTexts,
+          targetLanguage: targetLanguage,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const result = await response.json();
+        const translations = result.translations || uncachedTexts;
+        
+        // Cache and assign translations
+        uncachedIndices.forEach((originalIndex, batchIndex) => {
+          const translatedText = translations[batchIndex] || uncachedTexts[batchIndex];
+          const cacheKey = `${uncachedTexts[batchIndex]}-${targetLanguage}`;
+          
+          setTranslationCache(prev => new Map(prev).set(cacheKey, translatedText));
+          results[originalIndex] = translatedText;
+        });
+      } else {
+        // Fallback to original texts on API error
+        uncachedIndices.forEach((originalIndex, batchIndex) => {
+          results[originalIndex] = uncachedTexts[batchIndex];
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Batch translation request was aborted');
+      } else {
+        console.error('Batch translation error:', error);
+      }
+      // Fallback to original texts
+      uncachedIndices.forEach((originalIndex, batchIndex) => {
+        results[originalIndex] = uncachedTexts[batchIndex];
+      });
+    } finally {
+      setIsTranslating(false);
+    }
+
+    return results;
+  };
+
   const translate = async (text: string): Promise<string> => {
-    // Return original text for English or empty strings
+    // Short-circuit for English or empty strings
     if (currentLanguage === 'en' || !text || text.trim() === '') {
       return text;
     }
@@ -108,6 +224,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         currentLanguage,
         setLanguage,
         translate,
+        translateBatch,
         isTranslating,
       }}
     >

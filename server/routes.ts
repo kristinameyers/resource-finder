@@ -602,6 +602,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch translation endpoint for better performance
+  app.post("/api/translate-batch", async (req: Request, res: Response) => {
+    try {
+      const { texts, targetLanguage } = req.body;
+      
+      if (!texts || !Array.isArray(texts) || !targetLanguage) {
+        return res.status(400).json({
+          message: "Texts array and target language are required"
+        });
+      }
+      
+      if (!['es', 'tl'].includes(targetLanguage)) {
+        return res.status(400).json({
+          message: "Supported languages are: es (Spanish), tl (Tagalog)"
+        });
+      }
+
+      // Filter out empty texts
+      const validTexts = texts.filter(text => text && text.trim() !== '');
+      
+      if (validTexts.length === 0) {
+        return res.status(200).json({ translations: texts });
+      }
+
+      // Use the existing translateText function for each text
+      // In a production app, you'd use Google Translate's batch API for better efficiency
+      const translationPromises = validTexts.map(text => 
+        translateText({
+          text,
+          targetLanguage: targetLanguage as 'es' | 'tl'
+        })
+      );
+      
+      const translationResults = await Promise.allSettled(translationPromises);
+      const translations = translationResults.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value.translatedText || validTexts[index];
+        } else {
+          console.error(`Translation failed for text "${validTexts[index]}":`, result.reason);
+          return validTexts[index]; // Fallback to original text
+        }
+      });
+      
+      // Map back to original array structure
+      let translationIndex = 0;
+      const finalResults = texts.map(text => {
+        if (text && text.trim() !== '') {
+          return translations[translationIndex++];
+        }
+        return text;
+      });
+
+      return res.status(200).json({ translations: finalResults });
+    } catch (error) {
+      console.error("Batch translation error:", error);
+      return res.status(500).json({
+        message: "Batch translation failed",
+        error: (error as Error).message
+      });
+    }
+  });
+
   // Get supported languages endpoint
   app.get("/api/languages", async (req: Request, res: Response) => {
     try {
