@@ -42,6 +42,14 @@ export default function ResultsSection({
   const { text: clearFiltersText } = useTranslatedText("Clear Filters");
   const { text: foundText } = useTranslatedText("Found");
   const { text: resourcesText } = useTranslatedText("resources");
+  const { text: serviceTemporarilyBusyText } = useTranslatedText("Service Temporarily Busy");
+  const { text: failedToLoadResourcesText } = useTranslatedText("Failed to load resources");
+  const { text: resourceDatabaseBusyText } = useTranslatedText("The resource database is experiencing high traffic. Please wait a moment and try again.");
+  const { text: errorLoadingDetailsText } = useTranslatedText("There was an error loading the resources. Please try again.");
+  const { text: retryText } = useTranslatedText("Retry");
+  const { text: noResourcesMatchText } = useTranslatedText("No resources match your current filters. Try changing your filters or clearing them.");
+  const { text: tipText } = useTranslatedText("💡 Tip: Try selecting a different category or wait 30 seconds before retrying.");
+  const { text: liveDataText } = useTranslatedText("Live 211 Data");
   // Find category and subcategory objects for a resource
   const getCategoryForResource = (categoryId: string) => {
     return categories.find(c => c.id === categoryId);
@@ -81,27 +89,27 @@ export default function ResultsSection({
           <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
         )}
         <h3 className="font-semibold text-lg mb-2">
-          {isRateLimited ? 'Service Temporarily Busy' : 'Failed to load resources'}
+          {isRateLimited ? serviceTemporarilyBusyText : failedToLoadResourcesText}
         </h3>
         <p className="text-muted-foreground mb-4 max-w-md">
           {isRateLimited 
-            ? 'The resource database is experiencing high traffic. Please wait a moment and try again.'
-            : 'There was an error loading the resources. Please try again.'
+            ? resourceDatabaseBusyText
+            : errorLoadingDetailsText
           }
         </p>
         <div className="space-x-2">
           <Button onClick={onRetry}>
-            {isRateLimited ? 'Try Again' : 'Retry'}
+            {isRateLimited ? tryAgainText : retryText}
           </Button>
           {isRateLimited && (
             <Button onClick={onClearFilters} variant="outline">
-              Clear Filters
+              {clearFiltersText}
             </Button>
           )}
         </div>
         {isRateLimited && (
           <p className="text-sm text-muted-foreground mt-4">
-            💡 Tip: Try selecting a different category or wait 30 seconds before retrying.
+            {tipText}
           </p>
         )}
       </div>
@@ -112,11 +120,11 @@ export default function ResultsSection({
   if (resources.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <h3 className="font-semibold text-lg mb-2">No resources found</h3>
+        <h3 className="font-semibold text-lg mb-2">{noResourcesText}</h3>
         <p className="text-muted-foreground mb-4 max-w-md">
-          No resources match your current filters. Try changing your filters or clearing them.
+          {noResourcesMatchText}
         </p>
-        <Button onClick={onClearFilters}>Clear Filters</Button>
+        <Button onClick={onClearFilters}>{clearFiltersText}</Button>
       </div>
     );
   }
@@ -135,7 +143,7 @@ export default function ResultsSection({
               {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
             </h2>
             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-              Live 211 Data
+              {liveDataText}
             </span>
           </div>
           <div className="flex items-center gap-4">

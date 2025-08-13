@@ -62,6 +62,24 @@ export default function FilterSection({
   isLoadingSubcategories,
   isLoadingLocation
 }: FilterSectionProps) {
+  // Translation hooks
+  const { text: resourceFiltersText } = useTranslatedText("Resource Filters");
+  const { text: findResourcesText } = useTranslatedText("Find resources by category and location");
+  const { text: categoryText } = useTranslatedText("Category");
+  const { text: allCategoriesText } = useTranslatedText("All Categories");
+  const { text: locationText } = useTranslatedText("Location");
+  const { text: useMyLocationText } = useTranslatedText("Use My Location");
+  const { text: enterZipCodeText } = useTranslatedText("Enter zip code");
+  const { text: subcategoryText } = useTranslatedText("Subcategory");
+  const { text: allSubcategoriesText } = useTranslatedText("All Subcategories");
+  const { text: loadingSubcategoriesText } = useTranslatedText("Loading subcategories...");
+  const { text: noSubcategoriesText } = useTranslatedText("No subcategories available");
+  const { text: selectSubcategoryText } = useTranslatedText("Select a subcategory");
+  const { text: clearText } = useTranslatedText("Clear");
+  const { text: usingCurrentLocationText } = useTranslatedText("Using your current location");
+  const { text: coordinatesDetectedText } = useTranslatedText("Coordinates detected");
+  const { text: zipCodeText } = useTranslatedText("Zip code");
+  const { text: locationNotFoundText } = useTranslatedText("Location not found for this zip code");
   const [zipCode, setZipCode] = useState("");
   
   // Keep local zip code state in sync with location state
@@ -132,15 +150,15 @@ export default function FilterSection({
         <AccordionItem value="filters">
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
             <div className="flex flex-col items-start text-left">
-              <h3 className="text-lg font-semibold text-[#005191]">Resource Filters</h3>
-              <p className="text-sm text-gray-600 font-normal">Find resources by category and location</p>
+              <h3 className="text-lg font-semibold text-[#005191]">{resourceFiltersText}</h3>
+              <p className="text-sm text-gray-600 font-normal">{findResourcesText}</p>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-6">
             <div className="space-y-4">
               {/* Category Filter */}
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-sm font-medium text-[#005191]">Category</Label>
+                <Label htmlFor="category" className="text-sm font-medium text-[#005191]">{categoryText}</Label>
                 <Select 
                   value={selectedCategoryId || "all"} 
                   onValueChange={handleCategoryChange}
@@ -150,7 +168,7 @@ export default function FilterSection({
                   </SelectTrigger>
                   <SelectContent className="max-h-80">
                     <SelectGroup>
-                      <SelectItem value="all" className="font-medium">All Categories</SelectItem>
+                      <SelectItem value="all" className="font-medium">{allCategoriesText}</SelectItem>
                       {categories.map((category) => (
                         <SelectItem key={category.id} value={category.id} className="py-3">
                           <div className="flex items-center">
@@ -168,7 +186,7 @@ export default function FilterSection({
               {selectedCategoryId && (
                 <div className="space-y-2">
                   <Label htmlFor="subcategory" className="text-sm font-medium text-[#005191]">
-                    Subcategory
+                    {subcategoryText}
                     {isLoadingSubcategories && (
                       <Loader2 className="h-3 w-3 ml-2 inline animate-spin text-[#256BAE]" />
                     )}
@@ -181,15 +199,15 @@ export default function FilterSection({
                     <SelectTrigger id="subcategory" className="h-12 border-2 border-[#256BAE]/20 hover:border-[#256BAE]/40 focus:border-[#256BAE] focus:ring-[#256BAE]/20 disabled:opacity-50">
                       <SelectValue placeholder={
                         isLoadingSubcategories 
-                          ? "Loading subcategories..." 
+                          ? loadingSubcategoriesText 
                           : subcategories.length === 0 
-                            ? "No subcategories available" 
-                            : "Select a subcategory"
+                            ? noSubcategoriesText 
+                            : selectSubcategoryText
                       } className="text-gray-700" />
                     </SelectTrigger>
                     <SelectContent className="max-h-80">
                       <SelectGroup>
-                        <SelectItem value="all" className="font-medium">All Subcategories</SelectItem>
+                        <SelectItem value="all" className="font-medium">{allSubcategoriesText}</SelectItem>
                         {subcategories.map((subcategory) => (
                           <SelectItem key={subcategory.id} value={subcategory.id} className="py-2">
                             <span className="font-medium">{subcategory.name}</span>
@@ -203,16 +221,16 @@ export default function FilterSection({
               
               {/* Location Filter */}
               <div className="pt-4 border-t border-[#256BAE]/20">
-                <Label className="mb-3 block text-sm font-medium text-[#005191]">Location</Label>
+                <Label className="mb-3 block text-sm font-medium text-[#005191]">{locationText}</Label>
                 
                 {/* Current location status */}
                 {locationState.type === 'coordinates' && (
                   <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
                     <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
                     <div className="text-sm">
-                      <div className="font-medium text-[#005191]">Using your current location</div>
+                      <div className="font-medium text-[#005191]">{usingCurrentLocationText}</div>
                       <div className="text-xs text-gray-600">
-                        {locationState.location ? locationState.location.name : 'Coordinates detected'}
+                        {locationState.location ? locationState.location.name : coordinatesDetectedText}
                       </div>
                     </div>
                     <Button 
@@ -221,7 +239,7 @@ export default function FilterSection({
                       className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
                       onClick={handleClearLocation}
                     >
-                      Clear
+                      {clearText}
                     </Button>
                   </div>
                 )}
@@ -231,11 +249,11 @@ export default function FilterSection({
                   <div className="mb-3 p-3 bg-[#256BAE]/10 border border-[#256BAE]/20 rounded-lg flex items-center">
                     <MapPin className="h-4 w-4 mr-2 text-[#005191]" />
                     <div className="text-sm">
-                      <div className="font-medium text-[#005191]">Zip code: {locationState.zipCode}</div>
+                      <div className="font-medium text-[#005191]">{zipCodeText}: {locationState.zipCode}</div>
                       <div className="text-xs text-gray-600">
                         {locationState.location 
                           ? locationState.location.name 
-                          : 'Location not found for this zip code'}
+                          : locationNotFoundText}
                       </div>
                     </div>
                     <Button 
@@ -244,7 +262,7 @@ export default function FilterSection({
                       className="ml-auto text-[#005191] hover:bg-[#256BAE]/20 font-medium" 
                       onClick={handleClearLocation}
                     >
-                      Clear
+                      {clearText}
                     </Button>
                   </div>
                 )}
@@ -273,14 +291,14 @@ export default function FilterSection({
                       ) : (
                         <MapPin className="h-4 w-4 mr-2" />
                       )}
-                      Use My Location
+                      {useMyLocationText}
                     </Button>
                     
                     <div className="relative w-full flex items-center">
                       <form onSubmit={handleZipCodeSubmit} className="w-full flex">
                         <Input
                           type="text"
-                          placeholder="Enter zip code"
+                          placeholder={enterZipCodeText}
                           value={zipCode}
                           onChange={(e) => setZipCode(e.target.value)}
                           disabled={isLoadingLocation}
