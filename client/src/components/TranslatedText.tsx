@@ -34,11 +34,17 @@ export function TranslatedText({ text, className, fallback }: TranslatedTextProp
       }
     };
 
-    translateText().catch(error => {
-      console.error('Async translation error:', error);
-      setTranslatedText(fallback || text);
-      setIsLoading(false);
-    });
+    const runTranslation = async () => {
+      try {
+        await translateText();
+      } catch (error) {
+        console.error('Async translation error:', error);
+        setTranslatedText(fallback || text);
+        setIsLoading(false);
+      }
+    };
+    
+    runTranslation();
   }, [text, currentLanguage, translate, fallback]);
 
   return (
@@ -75,11 +81,17 @@ export function useTranslatedText(text: string) {
       }
     };
 
-    translateText().catch(error => {
-      console.error('Async translation error:', error);
-      setTranslatedText(text);
-      setIsLoading(false);
-    });
+    const runTranslation = async () => {
+      try {
+        await translateText();
+      } catch (error) {
+        console.error('Async translation error:', error);
+        setTranslatedText(text);
+        setIsLoading(false);
+      }
+    };
+    
+    runTranslation();
   }, [text, currentLanguage, translate]);
 
   return { text: translatedText, isLoading };

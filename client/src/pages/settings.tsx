@@ -72,10 +72,92 @@ export default function SettingsPage() {
 
   // Translate page content
   useEffect(() => {
+    let isCancelled = false;
+    
     const translatePageContent = async () => {
+      const defaultTexts: Record<string, string> = {
+        'Settings': 'Settings',
+        'Language': 'Language',
+        'Choose your preferred language': 'Choose your preferred language',
+        'Current Language': 'Current Language',
+        'Resource Finder Settings': 'Resource Finder Settings',
+        'Configure your app preferences': 'Configure your app preferences',
+        'Accessibility': 'Accessibility',
+        'Customize display and interaction settings': 'Customize display and interaction settings',
+        'Font Size': 'Font Size',
+        'Make text easier to read': 'Make text easier to read',
+        'Small': 'Small',
+        'Medium': 'Medium', 
+        'Large': 'Large',
+        'Display Mode': 'Display Mode',
+        'Choose how content appears': 'Choose how content appears',
+        'Default': 'Default',
+        'High Contrast': 'High Contrast',
+        'Motion': 'Motion',
+        'Reduce animations and transitions': 'Reduce animations and transitions',
+        'Reduce Motion': 'Reduce Motion',
+        'Screen Reader': 'Screen Reader',
+        'Optimize for screen reader users': 'Optimize for screen reader users',
+        'Enable Screen Reader Mode': 'Enable Screen Reader Mode',
+        'Haptic Feedback': 'Haptic Feedback',
+        'Vibration feedback for interactions': 'Vibration feedback for interactions',
+        'Enable Haptic Feedback': 'Enable Haptic Feedback',
+        'Settings are automatically saved and will be remembered next time you visit.': 'Settings are automatically saved and will be remembered next time you visit.'
+      };
+
       if (currentLanguage === 'en') {
-        // Set default English texts
-        const englishTexts: Record<string, string> = {
+        if (!isCancelled) {
+          setTranslatedTexts(defaultTexts);
+        }
+        return;
+      }
+
+      const textsToTranslate = Object.keys(defaultTexts);
+      const translations: Record<string, string> = { ...defaultTexts };
+      
+      // For non-English languages, translate in smaller batches to reduce errors
+      for (let i = 0; i < textsToTranslate.length; i += 3) {
+        if (isCancelled) break;
+        
+        const batch = textsToTranslate.slice(i, i + 3);
+        
+        try {
+          const batchTranslations = await Promise.allSettled(
+            batch.map(text => translate(text))
+          );
+          
+          if (!isCancelled) {
+            batch.forEach((text, index) => {
+              const result = batchTranslations[index];
+              if (result.status === 'fulfilled') {
+                translations[text] = result.value;
+              } else {
+                console.error('Translation failed for:', text, result.reason);
+                // Keep original text as fallback
+              }
+            });
+          }
+          
+          // Small delay between batches to prevent API overload
+          if (i + 3 < textsToTranslate.length && !isCancelled) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (error) {
+          console.error('Batch translation error:', error);
+          // Continue with original texts for failed batch
+        }
+      }
+      
+      if (!isCancelled) {
+        setTranslatedTexts(translations);
+      }
+    };
+
+    translatePageContent().catch(error => {
+      console.error('Translation page content error:', error);
+      if (!isCancelled) {
+        // Fallback to English
+        setTranslatedTexts({
           'Settings': 'Settings',
           'Language': 'Language',
           'Choose your preferred language': 'Choose your preferred language',
@@ -103,73 +185,13 @@ export default function SettingsPage() {
           'Vibration feedback for interactions': 'Vibration feedback for interactions',
           'Enable Haptic Feedback': 'Enable Haptic Feedback',
           'Settings are automatically saved and will be remembered next time you visit.': 'Settings are automatically saved and will be remembered next time you visit.'
-        };
-        setTranslatedTexts(englishTexts);
-        return;
+        });
       }
+    });
 
-      const textsToTranslate = [
-        'Settings',
-        'Language', 
-        'Choose your preferred language',
-        'Current Language',
-        'Resource Finder Settings',
-        'Configure your app preferences',
-        'Accessibility',
-        'Customize display and interaction settings',
-        'Font Size',
-        'Make text easier to read',
-        'Small',
-        'Medium', 
-        'Large',
-        'Display Mode',
-        'Choose how content appears',
-        'Default',
-        'High Contrast',
-        'Motion',
-        'Reduce animations and transitions',
-        'Reduce Motion',
-        'Screen Reader',
-        'Optimize for screen reader users',
-        'Enable Screen Reader Mode',
-        'Haptic Feedback',
-        'Vibration feedback for interactions',
-        'Enable Haptic Feedback',
-        'Settings are automatically saved and will be remembered next time you visit.'
-      ];
-
-      const translations: Record<string, string> = {};
-      
-      // Translate texts in batches to avoid overwhelming the API
-      for (let i = 0; i < textsToTranslate.length; i += 5) {
-        const batch = textsToTranslate.slice(i, i + 5);
-        
-        try {
-          const batchTranslations = await Promise.all(
-            batch.map(text => translate(text))
-          );
-          
-          batch.forEach((text, index) => {
-            translations[text] = batchTranslations[index];
-          });
-          
-          // Small delay between batches to prevent API overload
-          if (i + 5 < textsToTranslate.length) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        } catch (error) {
-          console.error('Batch translation error:', error);
-          // Fallback to original texts for failed batch
-          batch.forEach(text => {
-            translations[text] = text;
-          });
-        }
-      }
-      
-      setTranslatedTexts(translations);
+    return () => {
+      isCancelled = true;
     };
-
-    translatePageContent();
   }, [currentLanguage, translate]);
 
   const handleLanguageChange = (languageCode: string) => {

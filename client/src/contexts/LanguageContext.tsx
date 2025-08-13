@@ -41,6 +41,8 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     localStorage.setItem('app-language', language);
     // Clear translation cache when language changes
     setTranslationCache(new Map());
+    // Stop any ongoing translations
+    setIsTranslating(false);
   };
 
   const translate = async (text: string): Promise<string> => {
@@ -58,6 +60,10 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     try {
       setIsTranslating(true);
       
+      // Create an AbortController for this request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: {
@@ -67,7 +73,10 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
           text: text.trim(),
           targetLanguage: currentLanguage,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         console.error(`Translation API error: ${response.status} ${response.statusText}`);
@@ -82,7 +91,11 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       
       return translatedText;
     } catch (error) {
-      console.error('Translation error:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Translation request was aborted');
+      } else {
+        console.error('Translation error:', error);
+      }
       return text; // Return original text on error
     } finally {
       setIsTranslating(false);
