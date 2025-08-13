@@ -73,13 +73,46 @@ export default function SettingsPage() {
   // Translate page content
   useEffect(() => {
     const translatePageContent = async () => {
+      if (currentLanguage === 'en') {
+        // Set default English texts
+        const englishTexts: Record<string, string> = {
+          'Settings': 'Settings',
+          'Language': 'Language',
+          'Choose your preferred language': 'Choose your preferred language',
+          'Current Language': 'Current Language',
+          'Resource Finder Settings': 'Resource Finder Settings',
+          'Configure your app preferences': 'Configure your app preferences',
+          'Accessibility': 'Accessibility',
+          'Customize display and interaction settings': 'Customize display and interaction settings',
+          'Font Size': 'Font Size',
+          'Make text easier to read': 'Make text easier to read',
+          'Small': 'Small',
+          'Medium': 'Medium', 
+          'Large': 'Large',
+          'Display Mode': 'Display Mode',
+          'Choose how content appears': 'Choose how content appears',
+          'Default': 'Default',
+          'High Contrast': 'High Contrast',
+          'Motion': 'Motion',
+          'Reduce animations and transitions': 'Reduce animations and transitions',
+          'Reduce Motion': 'Reduce Motion',
+          'Screen Reader': 'Screen Reader',
+          'Optimize for screen reader users': 'Optimize for screen reader users',
+          'Enable Screen Reader Mode': 'Enable Screen Reader Mode',
+          'Haptic Feedback': 'Haptic Feedback',
+          'Vibration feedback for interactions': 'Vibration feedback for interactions',
+          'Enable Haptic Feedback': 'Enable Haptic Feedback',
+          'Settings are automatically saved and will be remembered next time you visit.': 'Settings are automatically saved and will be remembered next time you visit.'
+        };
+        setTranslatedTexts(englishTexts);
+        return;
+      }
+
       const textsToTranslate = [
         'Settings',
-        'Language',
+        'Language', 
         'Choose your preferred language',
         'Current Language',
-        'Save Changes',
-        'Language settings have been saved successfully.',
         'Resource Finder Settings',
         'Configure your app preferences',
         'Accessibility',
@@ -101,13 +134,38 @@ export default function SettingsPage() {
         'Enable Screen Reader Mode',
         'Haptic Feedback',
         'Vibration feedback for interactions',
-        'Enable Haptic Feedback'
+        'Enable Haptic Feedback',
+        'Settings are automatically saved and will be remembered next time you visit.'
       ];
 
       const translations: Record<string, string> = {};
-      for (const text of textsToTranslate) {
-        translations[text] = await translate(text);
+      
+      // Translate texts in batches to avoid overwhelming the API
+      for (let i = 0; i < textsToTranslate.length; i += 5) {
+        const batch = textsToTranslate.slice(i, i + 5);
+        
+        try {
+          const batchTranslations = await Promise.all(
+            batch.map(text => translate(text))
+          );
+          
+          batch.forEach((text, index) => {
+            translations[text] = batchTranslations[index];
+          });
+          
+          // Small delay between batches to prevent API overload
+          if (i + 5 < textsToTranslate.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        } catch (error) {
+          console.error('Batch translation error:', error);
+          // Fallback to original texts for failed batch
+          batch.forEach(text => {
+            translations[text] = text;
+          });
+        }
       }
+      
       setTranslatedTexts(translations);
     };
 

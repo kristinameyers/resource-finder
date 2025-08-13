@@ -44,8 +44,8 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   };
 
   const translate = async (text: string): Promise<string> => {
-    // Return original text for English
-    if (currentLanguage === 'en') {
+    // Return original text for English or empty strings
+    if (currentLanguage === 'en' || !text || text.trim() === '') {
       return text;
     }
 
@@ -64,13 +64,14 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text,
+          text: text.trim(),
           targetLanguage: currentLanguage,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Translation failed');
+        console.error(`Translation API error: ${response.status} ${response.statusText}`);
+        return text; // Return original text on API error
       }
 
       const result = await response.json();

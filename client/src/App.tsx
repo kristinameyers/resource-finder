@@ -27,7 +27,6 @@ function Router() {
         {/* Fallback to 404 */}
         <Route component={NotFound} />
       </Switch>
-      <BottomNavigation />
     </>
   );
 }
@@ -55,9 +54,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AnimatePresence>
-        {isLoading && <SplashScreen isVisible={isLoading} />}
-      </AnimatePresence>
-        {!isLoading && <Router />}
+          {isLoading && <SplashScreen isVisible={isLoading} />}
+        </AnimatePresence>
+        {!isLoading && (
+          <>
+            <Router />
+            <BottomNavigation />
+          </>
+        )}
         <Toaster />
       </LanguageProvider>
     </QueryClientProvider>

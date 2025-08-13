@@ -17,7 +17,7 @@ export function TranslatedText({ text, className, fallback }: TranslatedTextProp
 
   useEffect(() => {
     const translateText = async () => {
-      if (currentLanguage === 'en') {
+      if (currentLanguage === 'en' || !text || text.trim() === '') {
         setTranslatedText(text);
         return;
       }
@@ -34,7 +34,11 @@ export function TranslatedText({ text, className, fallback }: TranslatedTextProp
       }
     };
 
-    translateText();
+    translateText().catch(error => {
+      console.error('Async translation error:', error);
+      setTranslatedText(fallback || text);
+      setIsLoading(false);
+    });
   }, [text, currentLanguage, translate, fallback]);
 
   return (
@@ -54,7 +58,7 @@ export function useTranslatedText(text: string) {
 
   useEffect(() => {
     const translateText = async () => {
-      if (currentLanguage === 'en') {
+      if (currentLanguage === 'en' || !text || text.trim() === '') {
         setTranslatedText(text);
         return;
       }
@@ -71,7 +75,11 @@ export function useTranslatedText(text: string) {
       }
     };
 
-    translateText();
+    translateText().catch(error => {
+      console.error('Async translation error:', error);
+      setTranslatedText(text);
+      setIsLoading(false);
+    });
   }, [text, currentLanguage, translate]);
 
   return { text: translatedText, isLoading };
