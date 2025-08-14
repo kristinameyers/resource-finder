@@ -31,6 +31,18 @@ import type { PhoneDetails } from '@/../../shared/schema';
 import FavoriteButton from '@/components/favorite-button';
 import { useTranslatedText } from "@/components/TranslatedText";
 
+// Helper component for translating resource content
+function TranslatedResourceText({ text }: { text: string }) {
+  const { text: translatedText } = useTranslatedText(text);
+  return <>{translatedText}</>;
+}
+
+// Helper component for translating category badges
+function TranslatedCategoryName({ name }: { name: string }) {
+  const { text } = useTranslatedText(name);
+  return <>{text}</>;
+}
+
 export default function ResourceDetail() {
   // Translation hooks
   const { text: backToResourcesText } = useTranslatedText("Back to resources");
@@ -46,6 +58,18 @@ export default function ResourceDetail() {
   const { text: requiredDocsText } = useTranslatedText("Required Documents");
   const { text: feesText } = useTranslatedText("Fees");
   const { text: serviceAreasText } = useTranslatedText("Service Areas");
+  const { text: saveToFavoritesText } = useTranslatedText("Save to Favorites");
+  const { text: aboutThisResourceText } = useTranslatedText("About this Resource");
+  const { text: eligibilityText } = useTranslatedText("Eligibility");
+  const { text: contactText } = useTranslatedText("Contact");
+  const { text: descriptionText } = useTranslatedText("Description");
+  const { text: phoneText } = useTranslatedText("Phone");
+  const { text: emailText } = useTranslatedText("Email");
+  const { text: documentsText } = useTranslatedText("Documents");
+  const { text: contactOrganizationText } = useTranslatedText("Contact the organization directly for application information");
+  const { text: contactForDocumentsText } = useTranslatedText("Contact the organization for required documentation");
+  const { text: contactForFeesText } = useTranslatedText("Contact the organization for fee information");
+  const { text: serviceLocationText } = useTranslatedText("Service Location");
   const { id } = useParams();
   const { toast } = useToast();
   
@@ -197,12 +221,12 @@ export default function ResourceDetail() {
         <div className="flex flex-wrap gap-2">
           {category && (
             <Badge variant="outline" className="bg-primary/10 highlight">
-              {category.name}
+              <TranslatedCategoryName name={category.name} />
             </Badge>
           )}
           {subcategory && (
             <Badge variant="outline" className="bg-secondary/10">
-              {subcategory.name}
+              <TranslatedCategoryName name={subcategory.name} />
             </Badge>
           )}
         </div>
@@ -211,7 +235,7 @@ export default function ResourceDetail() {
       {/* Favorites Section */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Save to Favorites</CardTitle>
+          <CardTitle>{saveToFavoritesText}</CardTitle>
         </CardHeader>
         <CardContent>
           <FavoriteButton 
@@ -226,7 +250,7 @@ export default function ResourceDetail() {
       {/* About this Resource (organizationDescription) */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>About this Resource</CardTitle>
+          <CardTitle>{aboutThisResourceText}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="whitespace-pre-line">
@@ -235,11 +259,11 @@ export default function ResourceDetail() {
                 return (
                   <div key={index} className="flex items-start mb-1">
                     <span className="text-primary mr-2 mt-1">•</span>
-                    <span>{line.replace('•', '').trim()}</span>
+                    <span><TranslatedResourceText text={line.replace('•', '').trim()} /></span>
                   </div>
                 );
               }
-              return <p key={index} className="mb-2">{line}</p>;
+              return <p key={index} className="mb-2"><TranslatedResourceText text={line} /></p>;
             })}
           </div>
         </CardContent>
@@ -250,12 +274,16 @@ export default function ResourceDetail() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <CheckCircle className="h-5 w-5 mr-2 text-primary" />
-            Application Process
+            {applicationProcessText}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="whitespace-pre-line text-sm">
-            {detailedInfo?.applicationProcess || "Contact the organization directly for application information"}
+            {detailedInfo?.applicationProcess ? (
+              <TranslatedResourceText text={detailedInfo.applicationProcess} />
+            ) : (
+              contactOrganizationText
+            )}
           </p>
         </CardContent>
       </Card>
@@ -265,12 +293,16 @@ export default function ResourceDetail() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <FileText className="h-5 w-5 mr-2 text-primary" />
-            Documents
+            {documentsText}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="whitespace-pre-line text-sm">
-            {detailedInfo?.documentsRequired || "Contact the organization for required documentation"}
+            {detailedInfo?.documentsRequired ? (
+              <TranslatedResourceText text={detailedInfo.documentsRequired} />
+            ) : (
+              contactForDocumentsText
+            )}
           </p>
         </CardContent>
       </Card>
@@ -280,12 +312,16 @@ export default function ResourceDetail() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <DollarSign className="h-5 w-5 mr-2 text-primary" />
-            Fees
+            {feesText}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-line text-sm">
-              {detailedInfo?.fees || "Contact the organization for fee information"}
+              {detailedInfo?.fees ? (
+                <TranslatedResourceText text={detailedInfo.fees} />
+              ) : (
+                contactForFeesText
+              )}
             </p>
           </CardContent>
         </Card>
@@ -296,7 +332,7 @@ export default function ResourceDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
+            <CardTitle>{contactInfoText}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Service Phones from service-at-location-details */}
@@ -306,7 +342,7 @@ export default function ResourceDetail() {
                 <div key={index} className="flex items-start">
                   <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium">{phone.name || "Phone"}</p>
+                    <p className="font-medium">{phone.name || phoneText}</p>
                     {/* Make phone clickable if not a fax */}
                     {phone.number && !phone.name?.toLowerCase().includes('fax') && !phone.description?.toLowerCase().includes('fax') ? (
                       <a 
@@ -332,7 +368,7 @@ export default function ResourceDetail() {
                   <Phone className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">
-                      {phone.name || phone.type || "Phone"}
+                      {phone.name || phone.type || phoneText}
                       {phone.isMain && <span className="ml-1 text-xs bg-primary text-primary-foreground px-1 rounded">Main</span>}
                     </p>
                     {/* Make phone clickable if not a fax */}
