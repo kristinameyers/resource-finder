@@ -288,45 +288,47 @@ export default function Home() {
         
         {/* Keyword Search Section - Below Resource Filters */}
         <div className="mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  type="text"
-                  placeholder={searchPlaceholderText}
-                  value={keywordQuery}
-                  onChange={(e) => setKeywordQuery(e.target.value)}
-                  onKeyPress={handleKeywordInputKeyPress}
-                  className="pl-10 pr-4 py-3 text-lg border-gray-300 focus:border-[#005191] focus:ring-[#005191]"
-                />
-              </div>
-              <Button
-                onClick={handleKeywordSearch}
-                disabled={!keywordQuery.trim()}
-                className="px-6 py-3 bg-[#005191] hover:bg-[#0066b3] text-white rounded-lg flex items-center gap-2 shadow-sm"
-              >
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </div>
-            {searchType === 'keyword' && keywordQuery && (
-              <div className="mt-3 flex items-center gap-2">
-                <Badge variant="outline" className="bg-blue-50 text-[#005191]">
-                  {keywordSearchText}: "{keywordQuery}"
-                </Badge>
+          <div style={{ backgroundColor: '#FFB351' }} className="rounded-xl p-4 shadow-sm">
+            <div className="bg-white rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder={searchPlaceholderText}
+                    value={keywordQuery}
+                    onChange={(e) => setKeywordQuery(e.target.value)}
+                    onKeyPress={handleKeywordInputKeyPress}
+                    className="pl-10 pr-4 py-3 text-lg border-gray-300 focus:border-[#005191] focus:ring-[#005191]"
+                  />
+                </div>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setKeywordQuery('');
-                    setSearchType('category');
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
+                  onClick={handleKeywordSearch}
+                  disabled={!keywordQuery.trim()}
+                  className="px-6 py-3 bg-[#005191] hover:bg-[#0066b3] text-white rounded-lg flex items-center gap-2 shadow-sm"
                 >
-                  {clearText}
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
-            )}
+              {searchType === 'keyword' && keywordQuery && (
+                <div className="mt-3 flex items-center gap-2">
+                  <Badge variant="outline" className="bg-blue-50 text-[#005191]">
+                    {keywordSearchText}: "{keywordQuery}"
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setKeywordQuery('');
+                      setSearchType('category');
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    {clearText}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
