@@ -70,6 +70,16 @@ export default function ResourceDetail() {
   const { text: contactForDocumentsText } = useTranslatedText("Contact the organization for required documentation");
   const { text: contactForFeesText } = useTranslatedText("Contact the organization for fee information");
   const { text: serviceLocationText } = useTranslatedText("Service Location");
+  const { text: serviceDetailsText } = useTranslatedText("Service Details");
+  const { text: hoursOfOperationText } = useTranslatedText("Hours of Operation");
+  const { text: addressText } = useTranslatedText("Address");
+  const { text: mainText } = useTranslatedText("Main");
+  const { text: mustBeVeteranText } = useTranslatedText("Must be a veteran");
+  const { text: fullyAccessibleText } = useTranslatedText("Fully accessible to individuals using mobility aids.");
+  const { text: contactForHoursText } = useTranslatedText("Contact the organization for hours of operation");
+  const { text: contactForEligibilityText } = useTranslatedText("Contact the organization for eligibility information");
+  const { text: contactForAccessibilityText } = useTranslatedText("Contact for accessibility information");
+  const { text: contactForLanguageText } = useTranslatedText("Contact for language information");
   const { id } = useParams();
   const { toast } = useToast();
   
@@ -204,7 +214,7 @@ export default function ResourceDetail() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-4 md:p-6 pb-24">
+    <div className="container max-w-4xl mx-auto p-4 md:p-6 pb-32">
       {/* Back button */}
       <Button variant="ghost" asChild className="mb-4">
         <Link href={getBackNavigationUrl()}>
@@ -470,7 +480,7 @@ export default function ResourceDetail() {
             <div className="flex items-start">
               <Clock className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium">Hours of Operation</p>
+                <p className="font-medium">{hoursOfOperationText}</p>
                 <div className="text-muted-foreground whitespace-pre-line">
                   {detailedInfo?.serviceHoursText ? (
                     detailedInfo.serviceHoursText.split('\n').map((line: string, index: number) => (
@@ -485,7 +495,7 @@ export default function ResourceDetail() {
                       </div>
                     ))
                   ) : (
-                    <span>Contact the organization for hours of operation</span>
+                    <span>{contactForHoursText}</span>
                   )}
                 </div>
               </div>
@@ -495,7 +505,7 @@ export default function ResourceDetail() {
               <div className="flex items-start">
                 <Mail className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Email</p>
+                  <p className="font-medium">{emailText}</p>
                   <p className="text-muted-foreground">{resource.email}</p>
                 </div>
               </div>
@@ -505,7 +515,7 @@ export default function ResourceDetail() {
               <div className="flex items-start">
                 <Globe className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Website</p>
+                  <p className="font-medium">{websiteText}</p>
                   <a 
                     href={detailedInfo?.website || resource.url}
                     target="_blank"
@@ -522,7 +532,7 @@ export default function ResourceDetail() {
               <div className="flex items-start">
                 <MapPin className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Address</p>
+                  <p className="font-medium">{addressText}</p>
                   <div className="text-muted-foreground whitespace-pre-line">
                     {detailedInfo?.address ? (
                       // Format address from service-at-location-details and make it clickable
@@ -564,7 +574,7 @@ export default function ResourceDetail() {
             <div className="flex items-start">
               <Languages className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium">Languages</p>
+                <p className="font-medium">{languagesText}</p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {detailedInfo?.languagesOffered && detailedInfo.languagesOffered.length > 0 ? (
                     detailedInfo.languagesOffered.map((language: string) => (
@@ -579,7 +589,7 @@ export default function ResourceDetail() {
                       </Badge>
                     ))
                   ) : (
-                    <Badge variant="secondary" className="text-xs">Contact for language information</Badge>
+                    <Badge variant="secondary" className="text-xs">{contactForLanguageText}</Badge>
                   )}
                 </div>
               </div>
@@ -589,16 +599,22 @@ export default function ResourceDetail() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Service Details</CardTitle>
+            <CardTitle>{serviceDetailsText}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Eligibility */}
             <div className="flex items-start">
               <Users className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium">Eligibility</p>
+                <p className="font-medium">{eligibilityText}</p>
                 <p className="text-muted-foreground whitespace-pre-line">
-                  {detailedInfo?.eligibility || resource.eligibility || "Contact the organization for eligibility information"}
+                  {detailedInfo?.eligibility ? (
+                    <TranslatedResourceText text={detailedInfo.eligibility} />
+                  ) : resource.eligibility ? (
+                    <TranslatedResourceText text={resource.eligibility} />
+                  ) : (
+                    contactForEligibilityText
+                  )}
                 </p>
               </div>
             </div>
@@ -607,9 +623,15 @@ export default function ResourceDetail() {
             <div className="flex items-start">
               <Accessibility className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium">Accessibility</p>
+                <p className="font-medium">{accessibilityText}</p>
                 <p className="text-muted-foreground whitespace-pre-line">
-                  {detailedInfo?.disabilitiesAccess || resource.accessibility || "Contact for accessibility information"}
+                  {detailedInfo?.disabilitiesAccess ? (
+                    <TranslatedResourceText text={detailedInfo.disabilitiesAccess} />
+                  ) : resource.accessibility ? (
+                    <TranslatedResourceText text={resource.accessibility} />
+                  ) : (
+                    contactForAccessibilityText
+                  )}
                 </p>
               </div>
             </div>
