@@ -363,7 +363,7 @@ export default function Home() {
           </>
         ) : (
           // Show category grid when no category is selected
-          <div className="mb-8">
+          <div>
             {isLoadingCategories ? (
               <CategoryGridSkeleton />
             ) : (
