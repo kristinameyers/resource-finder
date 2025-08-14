@@ -55,8 +55,8 @@ export function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40" style={{ backgroundColor: "#539ED0" }}>
-      <div className="flex justify-around items-center py-3 px-2 max-w-2xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-40" style={{ backgroundColor: "#66A8DD" }}>
+      <div className="flex justify-around items-center py-4 px-3 max-w-2xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.path === "/" ? location === "/" : location.startsWith(item.path);
@@ -66,23 +66,27 @@ export function BottomNavigation() {
               <button
                 key={item.id}
                 onClick={item.onClick}
-                className="flex flex-col items-center justify-center p-2 min-w-[55px] h-auto rounded-lg transition-all duration-150 transform active:scale-95 hover:scale-105"
+                className="flex flex-col items-center justify-center transition-all duration-150 transform active:scale-95 hover:scale-105"
                 style={{ 
-                  backgroundColor: "#005191",
+                  backgroundColor: "#152941",
                   color: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0,81,145,0.3)",
+                  borderRadius: "20px",
+                  width: "68px",
+                  height: "68px",
+                  boxShadow: "0 2px 8px rgba(21,41,65,0.3)",
+                  margin: "0 4px"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,81,145,0.4)";
-                  e.currentTarget.style.backgroundColor = "#0066b3";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(21,41,65,0.4)";
+                  e.currentTarget.style.backgroundColor = "#1e3a5f";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,81,145,0.3)";
-                  e.currentTarget.style.backgroundColor = "#005191";
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(21,41,65,0.3)";
+                  e.currentTarget.style.backgroundColor = "#152941";
                 }}
               >
-                <Icon size={20} className="mb-1" />
-                <span className="text-xs font-medium" style={{ color: "#ffffff" }}>{item.label}</span>
+                <Icon size={22} className="mb-1" />
+                <span className="text-xs font-medium leading-tight" style={{ color: "#ffffff" }}>{item.label}</span>
               </button>
             );
           }
@@ -90,23 +94,27 @@ export function BottomNavigation() {
           return (
             <Link key={item.id} href={item.path}>
               <button
-                className="flex flex-col items-center justify-center p-2 min-w-[55px] h-auto rounded-lg transition-all duration-150 transform active:scale-95 hover:scale-105"
+                className="flex flex-col items-center justify-center transition-all duration-150 transform active:scale-95 hover:scale-105"
                 style={{ 
-                  backgroundColor: "#005191",
+                  backgroundColor: "#152941",
                   color: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0,81,145,0.3)",
+                  borderRadius: "20px",
+                  width: "68px",
+                  height: "68px",
+                  boxShadow: "0 2px 8px rgba(21,41,65,0.3)",
+                  margin: "0 4px"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,81,145,0.4)";
-                  e.currentTarget.style.backgroundColor = "#0066b3";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(21,41,65,0.4)";
+                  e.currentTarget.style.backgroundColor = "#1e3a5f";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,81,145,0.3)";
-                  e.currentTarget.style.backgroundColor = "#005191";
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(21,41,65,0.3)";
+                  e.currentTarget.style.backgroundColor = "#152941";
                 }}
               >
-                <Icon size={20} className="mb-1" />
-                <span className="text-xs font-medium" style={{ color: "#ffffff" }}>{item.label}</span>
+                <Icon size={22} className="mb-1" />
+                <span className="text-xs font-medium leading-tight" style={{ color: "#ffffff" }}>{item.label}</span>
               </button>
             </Link>
           );
