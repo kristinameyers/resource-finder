@@ -224,7 +224,7 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <img src={new211Logo} alt="Santa Barbara County 211" className="h-16" />
+          <img src={new211Logo} alt="Santa Barbara County 211" className="h-32" />
           
           {/* Loading indicator */}
           {(isLoadingCategories || isLoadingResources) && (
