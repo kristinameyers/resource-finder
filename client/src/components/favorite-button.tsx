@@ -31,7 +31,7 @@ export default function FavoriteButton({
       onClick={handleToggle}
       className={cn(
         "flex items-center gap-2 transition-colors",
-        favorite && "bg-red-500 hover:bg-red-600 text-white",
+        favorite && "bg-red-500 hover:bg-red-600 text-white !text-white",
         className
       )}
     >
@@ -42,7 +42,7 @@ export default function FavoriteButton({
         )} 
       />
       {showText && (
-        <span>
+        <span className={favorite ? "text-white" : ""}>
           {favorite ? removeFromFavoritesText : addToFavoritesText}
         </span>
       )}
