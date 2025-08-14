@@ -160,10 +160,10 @@ export default function FilterSection({
               <p className="text-sm text-gray-600 font-normal">{findResourcesText}</p>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
+          <AccordionContent className="px-4 pb-4">
             <div className="space-y-4">
               {/* Category Filter */}
-              <div className="space-y-2">
+              <div className="bg-white rounded-xl p-4 space-y-2">
                 <Label htmlFor="category" className="text-sm font-medium text-[#005191]">{categoryText}</Label>
                 <Select 
                   value={selectedCategoryId || "all"} 
@@ -192,7 +192,7 @@ export default function FilterSection({
               
               {/* Subcategory Filter - only show when a category is selected */}
               {selectedCategoryId && (
-                <div className="space-y-2">
+                <div className="bg-white rounded-xl p-4 space-y-2">
                   <Label htmlFor="subcategory" className="text-sm font-medium text-[#005191]">
                     {subcategoryText}
                     {isLoadingSubcategories && (
@@ -228,7 +228,7 @@ export default function FilterSection({
               )}
               
               {/* Location Filter */}
-              <div className="pt-4 border-t border-[#256BAE]/20">
+              <div className="bg-white rounded-xl p-4">
                 <Label className="mb-3 block text-sm font-medium text-[#005191]">{locationText}</Label>
                 
                 {/* Current location status */}
