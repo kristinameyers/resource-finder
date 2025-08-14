@@ -32,7 +32,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
   return (
     <div className="bg-[#005191] p-6 pb-8 rounded-xl">
       <h2 className="text-white text-center mb-6 text-2xl font-normal">{browseCategoriesText}</h2>
-      <div className="grid grid-cols-3 gap-3 justify-items-center">
+      <div className="grid grid-cols-3 gap-4 justify-items-center">
         {categories.map((category) => {
           const iconMap: Record<string, string> = {
             'education': educationIcon,
