@@ -188,14 +188,16 @@ export default function ResourceDetail() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-4xl mx-auto p-4 md:p-6">
-        <Skeleton className="h-12 w-3/4 mb-4" />
-        <Skeleton className="h-6 w-full mb-2" />
-        <Skeleton className="h-6 w-full mb-6" />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
+      <div style={{ backgroundColor: '#005191' }} className="min-h-screen">
+        <div className="container max-w-4xl mx-auto p-4 md:p-6">
+          <Skeleton className="h-12 w-3/4 mb-4" />
+          <Skeleton className="h-6 w-full mb-2" />
+          <Skeleton className="h-6 w-full mb-6" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
         </div>
       </div>
     );
@@ -203,44 +205,47 @@ export default function ResourceDetail() {
 
   if (error || !resource) {
     return (
-      <div className="container max-w-4xl mx-auto p-4 md:p-6 text-center">
-        <h1 className="text-2xl font-bold mb-4">Resource Not Found</h1>
-        <p className="mb-6">We couldn't find the resource you're looking for.</p>
-        <Button asChild>
-          <Link href="/">Return to Home</Link>
-        </Button>
+      <div style={{ backgroundColor: '#005191' }} className="min-h-screen">
+        <div className="container max-w-4xl mx-auto p-4 md:p-6 text-center">
+          <h1 className="text-2xl font-bold mb-4 text-white">Resource Not Found</h1>
+          <p className="mb-6 text-gray-200">We couldn't find the resource you're looking for.</p>
+          <Button asChild className="bg-white text-[#005191] hover:bg-gray-100">
+            <Link href="/">Return to Home</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-4 md:p-6 pb-32">
-      {/* Back button */}
-      <Button variant="ghost" asChild className="mb-4">
-        <Link href={getBackNavigationUrl()}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          {backToResourcesText}
-        </Link>
-      </Button>
-      
-      {/* Resource title and badges */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">
-          {detailedInfo?.serviceAtLocationName || detailedInfo?.serviceName || resource.name}
-        </h1>
-        <div className="flex flex-wrap gap-2">
-          {category && (
-            <Badge variant="outline" className="bg-primary/10 highlight">
-              <TranslatedCategoryName name={category.name} />
-            </Badge>
-          )}
-          {subcategory && (
-            <Badge variant="outline" className="bg-secondary/10">
-              <TranslatedCategoryName name={subcategory.name} />
-            </Badge>
-          )}
+    <div style={{ backgroundColor: '#005191' }} className="min-h-screen">
+      <div className="container max-w-4xl mx-auto p-4 md:p-6 pb-32">
+        {/* Back button */}
+        <Button variant="ghost" asChild className="mb-4 text-white hover:bg-white/20">
+          <Link href={getBackNavigationUrl()}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            {backToResourcesText}
+          </Link>
+        </Button>
+        
+        {/* Resource title and badges */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2 text-white">
+            {detailedInfo?.serviceAtLocationName || detailedInfo?.serviceName || resource.name}
+          </h1>
+          <div className="flex flex-wrap gap-2">
+            {category && (
+              <Badge variant="outline" className="bg-primary/10 highlight border-white text-white">
+                <TranslatedCategoryName name={category.name} />
+              </Badge>
+            )}
+            {subcategory && (
+              <Badge variant="outline" className="bg-secondary/10 border-white text-white">
+                <TranslatedCategoryName name={subcategory.name} />
+              </Badge>
+            )}
+          </div>
         </div>
-      </div>
       
       {/* Favorites Section */}
       <Card className="mb-6">
@@ -665,6 +670,7 @@ export default function ResourceDetail() {
             </a>
           </Button>
         )}
+      </div>
       </div>
     </div>
   );
