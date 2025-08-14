@@ -30,6 +30,12 @@ import { Check, Loader2, MapPin } from "lucide-react";
 import * as icons from "lucide-react";
 import { useTranslatedText } from "@/components/TranslatedText";
 
+// Category translation helper component
+function CategoryName({ category }: { category: Category }) {
+  const { text } = useTranslatedText(category.name);
+  return <>{text}</>;
+}
+
 interface FilterSectionProps {
   categories: Category[];
   selectedCategoryId: string | null;
@@ -173,7 +179,9 @@ export default function FilterSection({
                         <SelectItem key={category.id} value={category.id} className="py-3">
                           <div className="flex items-center">
                             {getCategoryIcon(category)}
-                            <span className="font-medium">{category.name}</span>
+                            <span className="font-medium">
+                              <CategoryName category={category} />
+                            </span>
                           </div>
                         </SelectItem>
                       ))}

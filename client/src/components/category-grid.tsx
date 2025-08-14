@@ -2,6 +2,12 @@ import { Category } from "@shared/schema";
 import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "@/components/category-icons";
 import { useTranslatedText } from "@/components/TranslatedText";
 
+// Category translation helper component
+function CategoryLabel({ category }: { category: Category }) {
+  const { text } = useTranslatedText(category.name);
+  return <>{text}</>;
+}
+
 // Import PNG icons
 import educationIcon from "../assets/icons/education.png";
 import legalAssistanceIcon from "../assets/icons/legal-assistance.png";
@@ -66,7 +72,9 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
                     <div className="h-[42px] w-[42px] bg-white/20 rounded-lg"></div>
                   )}
                 </div>
-                <h3 className="font-medium leading-tight category-text text-white">{category.name}</h3>
+                <h3 className="font-medium leading-tight category-text text-white">
+                  <CategoryLabel category={category} />
+                </h3>
               </div>
             </div>
           );
