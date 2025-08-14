@@ -50,6 +50,8 @@ export default function ResultsSection({
   const { text: noResourcesMatchText } = useTranslatedText("No resources match your current filters. Try changing your filters or clearing them.");
   const { text: tipText } = useTranslatedText("💡 Tip: Try selecting a different category or wait 30 seconds before retrying.");
   const { text: liveDataText } = useTranslatedText("Live 211 Data");
+  const { text: addToFavoritesText } = useTranslatedText("Add to Favorites");
+  const { text: viewDetailsText } = useTranslatedText("View Details");
   // Find category and subcategory objects for a resource
   const getCategoryForResource = (categoryId: string) => {
     return categories.find(c => c.id === categoryId);

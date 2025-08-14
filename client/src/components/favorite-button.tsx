@@ -2,6 +2,7 @@ import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFavorites } from '@/hooks/use-favorites';
 import { cn } from '@/lib/utils';
+import { useTranslatedText } from '@/components/TranslatedText';
 
 interface FavoriteButtonProps {
   resourceId: string;
@@ -16,6 +17,8 @@ export default function FavoriteButton({
 }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(resourceId);
+  const { text: addToFavoritesText } = useTranslatedText("Add to Favorites");
+  const { text: removeFromFavoritesText } = useTranslatedText("Remove from Favorites");
 
   const handleToggle = () => {
     toggleFavorite(resourceId);
@@ -40,7 +43,7 @@ export default function FavoriteButton({
       />
       {showText && (
         <span>
-          {favorite ? "Remove from Favorites" : "Add to Favorites"}
+          {favorite ? removeFromFavoritesText : addToFavoritesText}
         </span>
       )}
     </Button>
