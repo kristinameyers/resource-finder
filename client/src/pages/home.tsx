@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { fetchCategories } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { useTranslatedText } from "@/components/TranslatedText";
+import new211Logo from "@/assets/new-211-logo.png";
 
 export default function Home() {
   // Translation hooks for all text content
@@ -223,7 +224,7 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <h1 className="text-4xl font-normal text-[#005191]">Santa Barbara 211</h1>
+          <img src={new211Logo} alt="Santa Barbara County 211" className="h-16" />
           
           {/* Loading indicator */}
           {(isLoadingCategories || isLoadingResources) && (
