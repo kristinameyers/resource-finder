@@ -13,6 +13,7 @@ import Favorites from "@/pages/favorites";
 import Settings from "@/pages/settings";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 
 function Router() {
   return (
@@ -52,18 +53,20 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AnimatePresence>
-          {isLoading && <SplashScreen isVisible={isLoading} />}
-        </AnimatePresence>
-        {!isLoading && (
-          <>
-            <Router />
-            <BottomNavigation />
-          </>
-        )}
-        <Toaster />
-      </LanguageProvider>
+      <AccessibilityProvider>
+        <LanguageProvider>
+          <AnimatePresence>
+            {isLoading && <SplashScreen isVisible={isLoading} />}
+          </AnimatePresence>
+          {!isLoading && (
+            <>
+              <Router />
+              <BottomNavigation />
+            </>
+          )}
+          <Toaster />
+        </LanguageProvider>
+      </AccessibilityProvider>
     </QueryClientProvider>
   );
 }

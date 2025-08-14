@@ -1,6 +1,7 @@
 import { Category } from "@shared/schema";
 import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "@/components/category-icons";
 import { useTranslatedText } from "@/components/TranslatedText";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 
 // Category translation helper component
 function CategoryLabel({ category }: { category: Category }) {
@@ -29,6 +30,7 @@ interface CategoryGridProps {
 
 export default function CategoryGrid({ categories, onCategorySelect, selectedCategoryId }: CategoryGridProps) {
   const { text: browseCategoriesText } = useTranslatedText("Browse all Categories");
+  const { triggerHaptic, reduceMotion } = useAccessibility();
   return (
     <div className="bg-[#005191] p-6 pb-8 rounded-xl">
       <h2 className="text-white text-center mb-6 text-2xl font-normal">{browseCategoriesText}</h2>
@@ -55,14 +57,22 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
           const isSelected = selectedCategoryId === category.id;
           
           return (
-            <div 
+            <button 
               key={category.id} 
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-0 overflow-hidden rounded-[32px] min-h-[140px] w-[140px] h-[140px] flex flex-col bg-[#256BAE] border-2 border-white/25 shadow-lg ${
+              className={`cursor-pointer ${
+                reduceMotion ? 'transition-none' : 'transition-all duration-200 hover:shadow-lg'
+              } border-0 overflow-hidden rounded-[32px] min-h-[140px] w-[140px] h-[140px] flex flex-col bg-[#256BAE] border-2 border-white/25 shadow-lg ${
                 isSelected 
                   ? 'ring-2 ring-white shadow-xl transform scale-105' 
-                  : 'hover:shadow-xl hover:transform hover:scale-102'
+                  : `${reduceMotion ? '' : 'hover:shadow-xl hover:transform hover:scale-102'}`
               }`}
-              onClick={() => onCategorySelect(category.id)}
+              onClick={() => {
+                triggerHaptic('light');
+                onCategorySelect(category.id);
+              }}
+              aria-label={`Select ${category.name} category`}
+              aria-pressed={isSelected}
+              role="button"
             >
               <div className="p-6 flex-1 flex flex-col items-center justify-center text-center">
                 <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
@@ -74,9 +84,10 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
                 </div>
                 <h3 className="font-medium leading-tight category-text text-white">
                   <CategoryLabel category={category} />
+                  {isSelected && <span className="sr-only">Selected</span>}
                 </h3>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

@@ -7,17 +7,25 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Globe, Check, Eye, Palette, Volume2, Smartphone, Type, Accessibility } from "lucide-react";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 
 export default function SettingsPage() {
   const { currentLanguage, setLanguage, translate, translateBatch, clearTranslationCache } = useLanguage();
+  const { 
+    fontSize, 
+    highContrast, 
+    reduceMotion, 
+    screenReader, 
+    hapticFeedback,
+    setFontSize, 
+    setHighContrast, 
+    setReduceMotion, 
+    setScreenReader, 
+    setHapticFeedback,
+    triggerHaptic,
+    theme 
+  } = useAccessibility();
   const [translatedTexts, setTranslatedTexts] = useState<Record<string, string>>({});
-  
-  // Accessibility settings state
-  const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
-  const [highContrast, setHighContrast] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [screenReader, setScreenReader] = useState(false);
-  const [hapticFeedback, setHapticFeedback] = useState(true);
 
   const languages = [
     { code: 'en' as Language, name: 'English', nativeName: 'English' },
@@ -25,50 +33,7 @@ export default function SettingsPage() {
     { code: 'tl' as Language, name: 'Tagalog', nativeName: 'Tagalog' }
   ];
 
-  // Load accessibility settings from localStorage
-  useEffect(() => {
-    const savedFontSize = localStorage.getItem('accessibility-font-size') as 'small' | 'medium' | 'large';
-    const savedHighContrast = localStorage.getItem('accessibility-high-contrast') === 'true';
-    const savedReduceMotion = localStorage.getItem('accessibility-reduce-motion') === 'true';
-    const savedScreenReader = localStorage.getItem('accessibility-screen-reader') === 'true';
-    const savedHapticFeedback = localStorage.getItem('accessibility-haptic-feedback') !== 'false';
-
-    if (savedFontSize) setFontSize(savedFontSize);
-    setHighContrast(savedHighContrast);
-    setReduceMotion(savedReduceMotion);
-    setScreenReader(savedScreenReader);
-    setHapticFeedback(savedHapticFeedback);
-  }, []);
-
-  // Apply accessibility settings to document
-  useEffect(() => {
-    const root = document.documentElement;
-    
-    // Apply font size
-    root.classList.remove('font-small', 'font-medium', 'font-large');
-    root.classList.add(`font-${fontSize}`);
-    
-    // Apply high contrast
-    if (highContrast) {
-      root.classList.add('high-contrast');
-    } else {
-      root.classList.remove('high-contrast');
-    }
-    
-    // Apply reduced motion
-    if (reduceMotion) {
-      root.classList.add('reduce-motion');
-    } else {
-      root.classList.remove('reduce-motion');
-    }
-    
-    // Save settings
-    localStorage.setItem('accessibility-font-size', fontSize);
-    localStorage.setItem('accessibility-high-contrast', highContrast.toString());
-    localStorage.setItem('accessibility-reduce-motion', reduceMotion.toString());
-    localStorage.setItem('accessibility-screen-reader', screenReader.toString());
-    localStorage.setItem('accessibility-haptic-feedback', hapticFeedback.toString());
-  }, [fontSize, highContrast, reduceMotion, screenReader, hapticFeedback]);
+  // Enhanced accessibility settings are now managed by AccessibilityProvider
 
   // Translate page content
   useEffect(() => {
@@ -177,6 +142,7 @@ export default function SettingsPage() {
 
   const handleLanguageChange = (languageCode: string) => {
     setLanguage(languageCode as Language);
+    triggerHaptic('light'); // Provide haptic feedback for language change
   };
 
   const t = (text: string) => translatedTexts[text] || text;
@@ -322,6 +288,9 @@ export default function SettingsPage() {
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-gray-200 bg-white hover:border-gray-300'
                     }`}
+                    aria-pressed={fontSize === size}
+                    aria-label={`Set font size to ${size}`}
+                    role="button"
                   >
                     <div className="text-center">
                       <div className={`font-medium ${
@@ -332,6 +301,7 @@ export default function SettingsPage() {
                       <div className="text-xs mt-1 capitalize">
                         {t(size.charAt(0).toUpperCase() + size.slice(1))}
                       </div>
+                      {fontSize === size && <span className="sr-only">Currently selected</span>}
                     </div>
                   </button>
                 ))}
@@ -357,10 +327,14 @@ export default function SettingsPage() {
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
+                  aria-pressed={!highContrast}
+                  aria-label="Use default display mode"
+                  role="button"
                 >
                   <div className="text-center">
                     <Eye className="w-5 h-5 mx-auto mb-2 text-gray-600" />
                     <div className="font-medium text-sm">{t('Default')}</div>
+                    {!highContrast && <span className="sr-only">Currently selected</span>}
                   </div>
                 </button>
                 <button
@@ -370,10 +344,14 @@ export default function SettingsPage() {
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
+                  aria-pressed={highContrast}
+                  aria-label="Use high contrast display mode"
+                  role="button"
                 >
                   <div className="text-center">
                     <Palette className="w-5 h-5 mx-auto mb-2 text-gray-900" />
                     <div className="font-medium text-sm">{t('High Contrast')}</div>
+                    {highContrast && <span className="sr-only">Currently selected</span>}
                   </div>
                 </button>
               </div>
@@ -397,6 +375,7 @@ export default function SettingsPage() {
                 <Switch
                   checked={reduceMotion}
                   onCheckedChange={setReduceMotion}
+                  aria-label="Toggle reduce motion setting"
                 />
               </div>
             </div>
@@ -419,6 +398,7 @@ export default function SettingsPage() {
                 <Switch
                   checked={screenReader}
                   onCheckedChange={setScreenReader}
+                  aria-label="Toggle screen reader optimization"
                 />
               </div>
             </div>
@@ -441,6 +421,7 @@ export default function SettingsPage() {
                 <Switch
                   checked={hapticFeedback}
                   onCheckedChange={setHapticFeedback}
+                  aria-label="Toggle haptic feedback"
                 />
               </div>
             </div>

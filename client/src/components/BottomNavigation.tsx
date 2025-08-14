@@ -2,9 +2,11 @@ import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { Search, Heart, Phone, Users, Settings, Accessibility } from "lucide-react";
 import { useTranslatedText } from "@/components/TranslatedText";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 
 export function BottomNavigation() {
   const [location] = useLocation();
+  const { triggerHaptic, reduceMotion } = useAccessibility();
   const { text: searchText } = useTranslatedText("Search");
   const { text: favoritesText } = useTranslatedText("Favorites");
   const { text: callText } = useTranslatedText("Call");
@@ -13,6 +15,7 @@ export function BottomNavigation() {
 
 
   const handleCallClick = () => {
+    triggerHaptic('medium');
     window.location.href = "tel:18004001572";
   };
 
@@ -65,8 +68,17 @@ export function BottomNavigation() {
             return (
               <button
                 key={item.id}
-                onClick={item.onClick}
-                className="flex flex-col items-center justify-center transition-all duration-150 transform active:scale-95 hover:scale-105"
+                onClick={() => {
+                  triggerHaptic('light');
+                  item.onClick?.();
+                }}
+                className={`flex flex-col items-center justify-center ${
+                  reduceMotion 
+                    ? 'transition-none' 
+                    : 'transition-all duration-150 transform active:scale-95 hover:scale-105'
+                }`}
+                aria-label={`${item.label} button`}
+                role="button"
                 style={{ 
                   backgroundColor: "#152941",
                   color: "#ffffff",
@@ -94,7 +106,14 @@ export function BottomNavigation() {
           return (
             <Link key={item.id} href={item.path}>
               <button
-                className="flex flex-col items-center justify-center transition-all duration-150 transform active:scale-95 hover:scale-105"
+                onClick={() => triggerHaptic('light')}
+                className={`flex flex-col items-center justify-center ${
+                  reduceMotion 
+                    ? 'transition-none' 
+                    : 'transition-all duration-150 transform active:scale-95 hover:scale-105'
+                }`}
+                aria-label={`Navigate to ${item.label}`}
+                role="button"
                 style={{ 
                   backgroundColor: "#152941",
                   color: "#ffffff",
