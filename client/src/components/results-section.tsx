@@ -65,10 +65,10 @@ export default function ResultsSection({
   // Loading state - show skeleton cards
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div style={{ backgroundColor: '#005191' }} className="p-6 rounded-lg space-y-6">
         <div className="flex items-center gap-2 mb-4">
-          <Loader2 className="h-5 w-5 text-primary animate-spin" />
-          <h2 className="text-xl font-semibold">{loadingResourcesText}</h2>
+          <Loader2 className="h-5 w-5 text-white animate-spin" />
+          <h2 className="text-xl font-semibold text-white">{loadingResourcesText}</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
@@ -84,33 +84,33 @@ export default function ResultsSection({
     const isRateLimited = error.message?.includes('RATE_LIMITED');
     
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div style={{ backgroundColor: '#005191' }} className="p-6 rounded-lg flex flex-col items-center justify-center py-12 text-center">
         {isRateLimited ? (
-          <Clock className="h-12 w-12 text-yellow-500 mb-4" />
+          <Clock className="h-12 w-12 text-yellow-400 mb-4" />
         ) : (
-          <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+          <AlertTriangle className="h-12 w-12 text-red-400 mb-4" />
         )}
-        <h3 className="font-semibold text-lg mb-2">
+        <h3 className="font-semibold text-lg mb-2 text-white">
           {isRateLimited ? serviceTemporarilyBusyText : failedToLoadResourcesText}
         </h3>
-        <p className="text-muted-foreground mb-4 max-w-md">
+        <p className="text-gray-200 mb-4 max-w-md">
           {isRateLimited 
             ? resourceDatabaseBusyText
             : errorLoadingDetailsText
           }
         </p>
         <div className="space-x-2">
-          <Button onClick={onRetry}>
+          <Button onClick={onRetry} className="bg-white text-[#005191] hover:bg-gray-100">
             {isRateLimited ? tryAgainText : retryText}
           </Button>
           {isRateLimited && (
-            <Button onClick={onClearFilters} variant="outline">
+            <Button onClick={onClearFilters} variant="outline" className="border-white text-white hover:bg-white hover:text-[#005191]">
               {clearFiltersText}
             </Button>
           )}
         </div>
         {isRateLimited && (
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-sm text-gray-200 mt-4">
             {tipText}
           </p>
         )}
@@ -121,12 +121,12 @@ export default function ResultsSection({
   // Empty state
   if (resources.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <h3 className="font-semibold text-lg mb-2">{noResourcesText}</h3>
-        <p className="text-muted-foreground mb-4 max-w-md">
+      <div style={{ backgroundColor: '#005191' }} className="p-6 rounded-lg flex flex-col items-center justify-center py-12 text-center">
+        <h3 className="font-semibold text-lg mb-2 text-white">{noResourcesText}</h3>
+        <p className="text-gray-200 mb-4 max-w-md">
           {noResourcesMatchText}
         </p>
-        <Button onClick={onClearFilters}>{clearFiltersText}</Button>
+        <Button onClick={onClearFilters} className="bg-white text-[#005191] hover:bg-gray-100">{clearFiltersText}</Button>
       </div>
     );
   }
@@ -136,11 +136,11 @@ export default function ResultsSection({
 
   // Display results
   return (
-    <div>
+    <div style={{ backgroundColor: '#005191' }} className="p-6 rounded-lg">
       <div className="mb-4">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-xl font-semibold text-white">
               {totalCount} Resource{totalCount !== 1 && 's'} 
               {selectedCategory ? ` in ${selectedCategory.name}` : ' Found'}
             </h2>
@@ -155,7 +155,7 @@ export default function ResultsSection({
               hasLocation={hasLocation}
             />
             {selectedCategoryId && (
-              <Button variant="outline" onClick={onClearFilters}>
+              <Button variant="outline" onClick={onClearFilters} className="bg-white text-[#005191] border-white hover:bg-gray-100">
                 Clear Filters
               </Button>
             )}

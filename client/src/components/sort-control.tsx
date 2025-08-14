@@ -10,9 +10,9 @@ interface SortControlProps {
 export default function SortControl({ value, onValueChange, hasLocation }: SortControlProps) {
   return (
     <div className="flex items-center gap-2">
-      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+      <ArrowUpDown className="h-4 w-4 text-white" />
       <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger className="w-40 bg-white text-[#005191] border-white hover:bg-gray-100">
           <SelectValue placeholder="Sort by..." />
         </SelectTrigger>
         <SelectContent>
