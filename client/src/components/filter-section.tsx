@@ -152,7 +152,7 @@ export default function FilterSection({
 
   return (
     <Card className="mb-6" style={{ backgroundColor: '#FFB351' }}>
-      <Accordion type="single" collapsible defaultValue="filters" className="w-full">
+      <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="filters">
           <AccordionTrigger className="mx-4 my-4 px-6 py-4 bg-white rounded-xl hover:no-underline">
             <div className="flex flex-col items-start text-left">

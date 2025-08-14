@@ -30,7 +30,7 @@ interface CategoryGridProps {
 export default function CategoryGrid({ categories, onCategorySelect, selectedCategoryId }: CategoryGridProps) {
   const { text: browseCategoriesText } = useTranslatedText("Browse all Categories");
   return (
-    <div className="bg-[#005191] p-6 rounded-xl">
+    <div className="bg-[#005191] p-6 pb-8 rounded-xl">
       <h2 className="text-white text-center mb-6 text-2xl font-normal">{browseCategoriesText}</h2>
       <div className="grid grid-cols-3 gap-3 justify-items-center">
         {categories.map((category) => {
