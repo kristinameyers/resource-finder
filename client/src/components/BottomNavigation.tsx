@@ -71,10 +71,10 @@ export function BottomNavigation() {
                   backgroundColor: "#152941",
                   color: "#ffffff",
                   borderRadius: "20px",
-                  width: "68px",
+                  width: "80px",
                   height: "68px",
                   boxShadow: "0 2px 8px rgba(21,41,65,0.3)",
-                  margin: "0 4px"
+                  margin: "0 2px"
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(21,41,65,0.4)";
@@ -99,10 +99,10 @@ export function BottomNavigation() {
                   backgroundColor: "#152941",
                   color: "#ffffff",
                   borderRadius: "20px",
-                  width: "68px",
+                  width: "80px",
                   height: "68px",
                   boxShadow: "0 2px 8px rgba(21,41,65,0.3)",
-                  margin: "0 4px"
+                  margin: "0 2px"
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(21,41,65,0.4)";
