@@ -154,7 +154,7 @@ export default function FilterSection({
     <Card className="mb-6" style={{ backgroundColor: '#FFB351' }}>
       <Accordion type="single" collapsible defaultValue="filters" className="w-full">
         <AccordionItem value="filters">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+          <AccordionTrigger className="mx-4 my-4 px-6 py-4 bg-white rounded-xl hover:no-underline">
             <div className="flex flex-col items-start text-left">
               <h3 className="text-lg font-semibold text-[#005191]">{resourceFiltersText}</h3>
               <p className="text-sm text-gray-600 font-normal">{findResourcesText}</p>
