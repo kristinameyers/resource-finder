@@ -17,7 +17,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   housing: {
     id: 'housing',
     name: 'Housing',
-    taxonomyCode: 'BH',
+    taxonomyCode: 'BH-1800',
     subcategories: [
       { id: 'domestic-violence-shelters', name: 'Domestic Violence Shelters', taxonomyCode: 'BH-1800.1500-100' },
       { id: 'homeless-shelters', name: 'Homeless Shelters', taxonomyCode: 'BH-1800.8500' },
@@ -47,7 +47,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'finance-employment': {
     id: 'finance-employment',
     name: 'Finance & Employment',
-    taxonomyCode: 'N',
+    taxonomyCode: 'NL-1000',
     subcategories: [
       { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
       { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
@@ -74,7 +74,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   food: {
     id: 'food',
     name: 'Food',
-    taxonomyCode: 'BD',
+    taxonomyCode: 'BD-1800.2000',
     subcategories: [
       { id: 'calfresh', name: 'CalFresh (formerly Food Stamps)', taxonomyCode: 'NL-6000.2000' },
       { id: 'groceries', name: 'Groceries', taxonomyCode: 'BD-1800.1000' },
@@ -89,7 +89,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   transportation: {
     id: 'transportation',
     name: 'Transportation',
-    taxonomyCode: 'BT',
+    taxonomyCode: 'BT-4500',
     subcategories: [
       { id: 'bus-services', name: 'Bus Services', taxonomyCode: 'BT-4500.4700' },
       { id: 'travel-directions', name: 'Travel Directions/Trip Planning', taxonomyCode: 'BT-8750.8600' },
@@ -105,7 +105,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   healthcare: {
     id: 'healthcare',
     name: 'Health Care',
-    taxonomyCode: 'L',
+    taxonomyCode: 'LN',
     subcategories: [
       { id: 'clinics-urgent-care', name: 'Clinics & Urgent Care', taxonomyCode: 'LN' },
       { id: 'hospitals', name: 'Hospitals', taxonomyCode: 'LL-3000' },
@@ -139,7 +139,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'mental-wellness': {
     id: 'mental-wellness',
     name: 'Mental Wellness',
-    taxonomyCode: 'R',
+    taxonomyCode: 'RP-1400',
     subcategories: [
       { id: 'adoption-counseling', name: 'Adoption Counseling and Support', taxonomyCode: 'PH-0300.0300' },
       { id: 'bereavement-grief', name: 'Bereavement and Grief Counseling', taxonomyCode: 'RP-1400.8000-100' },
@@ -163,7 +163,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'substance-use': {
     id: 'substance-use',
     name: 'Substance Use',
-    taxonomyCode: 'RX',
+    taxonomyCode: 'RX-8250',
     subcategories: [
       { id: 'alcohol-detox', name: 'Alcohol Detoxification', taxonomyCode: 'RX-1700.0500' },
       { id: 'alcohol-support-groups', name: 'Alcohol Support Groups', taxonomyCode: 'PN-8100.0500-070' },
@@ -182,7 +182,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'children-family': {
     id: 'children-family',
     name: 'Children & Family',
-    taxonomyCode: 'P',
+    taxonomyCode: 'PH',
     subcategories: [
       { id: 'family-law-courts', name: 'Family Law Courts', taxonomyCode: 'FC-8200.8100-200' },
       { id: 'child-custody', name: 'Child Custody', taxonomyCode: 'FT-3000.1500' },
@@ -204,7 +204,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'young-adults': {
     id: 'young-adults',
     name: 'Young Adults',
-    taxonomyCode: 'YB-9000',
+    taxonomyCode: 'PS-9800',
     subcategories: [
       { id: 'dropout-prevention', name: 'Drop Out Prevention', taxonomyCode: 'HH-1600.1600' },
       { id: 'gang-prevention', name: 'Gang Prevention', taxonomyCode: 'FN-2300' },
@@ -220,7 +220,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   education: {
     id: 'education',
     name: 'Education',
-    taxonomyCode: 'H',
+    taxonomyCode: 'HD-1800.8000',
     subcategories: [
       { id: 'adult-literacy', name: 'Adult Literacy', taxonomyCode: 'HH-4500.0500' },
       { id: 'computer-literacy', name: 'Computer Literacy Training Programs', taxonomyCode: 'PL-7400.1500' },
@@ -238,7 +238,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   'legal-assistance': {
     id: 'legal-assistance',
     name: 'Legal Assistance',
-    taxonomyCode: 'F',
+    taxonomyCode: 'FT',
     subcategories: [
       { id: 'criminal-courts', name: 'Criminal State Trial Courts', taxonomyCode: 'FC-8200.1550' },
       { id: 'juvenile-courts', name: 'Juvenile Justice Courts', taxonomyCode: 'FC-8200.3500-350' },
