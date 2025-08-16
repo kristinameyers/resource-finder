@@ -226,23 +226,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             animate="center"
             exit="exit"
             transition={{ duration: reduceMotion ? 0 : 0.3 }}
-            className="flex-1 flex flex-col p-8"
+            className="flex-1 flex flex-col p-8 h-full"
           >
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <img 
                 src={new211Logo} 
                 alt="Santa Barbara County 211 Logo" 
-                className="h-20 w-auto mx-auto mb-4"
+                className="h-16 w-auto mx-auto mb-3"
               />
-              <p className="text-sm text-gray-600 mb-6">Get connected. Get Help.</p>
+              <p className="text-sm text-gray-600 mb-4">Get connected. Get Help.</p>
               
-              <h2 className="text-xl font-normal text-gray-800 mb-4">
+              <h2 className="text-lg font-normal text-gray-800 mb-4">
                 {selectThreeText}
               </h2>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-              <div className="space-y-4 max-w-sm mx-auto">
+            <div className="flex-1 overflow-y-auto mb-6 max-h-96">
+              <div className="space-y-3 max-w-sm mx-auto">
                 {categories.map((category) => (
                   <div 
                     key={category.id}
@@ -266,21 +266,24 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </div>
             </div>
 
-            <div className="pt-6 space-y-4 w-full max-w-sm mx-auto">
+            {/* Fixed button at bottom - ALWAYS VISIBLE */}
+            <div className="mt-auto space-y-4 w-full max-w-sm mx-auto bg-white pt-4">
               <Button 
                 onClick={handleComplete}
-                className="bg-[#005191] hover:bg-[#004080] text-white w-full py-3 flex items-center justify-center gap-2 font-medium text-lg shadow-lg"
+                className="bg-[#005191] hover:bg-[#004080] text-white w-full py-4 flex items-center justify-center gap-2 font-bold text-xl shadow-xl border-4 border-yellow-400"
                 aria-label="Complete onboarding and go to home screen"
+                data-testid="onboarding-complete-button"
               >
-                Continue to Home
-                <ArrowRight className="w-5 h-5" />
+                🏠 Continue to Home
+                <ArrowRight className="w-6 h-6" />
               </Button>
               
-              {selectedCategories.length > 0 && (
-                <p className="text-xs text-gray-500 text-center">
-                  {selectedCategories.length} of 3 categories selected
-                </p>
-              )}
+              <p className="text-sm text-gray-600 text-center font-medium">
+                {selectedCategories.length > 0 
+                  ? `${selectedCategories.length} of 3 categories selected`
+                  : "Categories are optional - click Continue to proceed"
+                }
+              </p>
             </div>
           </motion.div>
         )}
