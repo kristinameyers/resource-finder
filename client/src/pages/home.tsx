@@ -16,8 +16,11 @@ import { fetchCategories } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { useTranslatedText } from "@/components/TranslatedText";
 import new211Logo from "@/assets/new-211-logo.png";
+import { useOnboarding } from "@/hooks/use-onboarding";
 
 export default function Home() {
+  const { preferences } = useOnboarding();
+  
   // Translation hooks for all text content
   const { text: loadingText } = useTranslatedText("Loading...");
   const { text: localDataText } = useTranslatedText("Local Data");
@@ -83,6 +86,24 @@ export default function Home() {
     },
     select: (data) => data.categories
   });
+
+  // Sort categories based on onboarding preferences
+  const sortedCategories = categories ? (() => {
+    if (!preferences?.favoriteCategories?.length) return categories;
+    
+    const favoriteIds = preferences.favoriteCategories;
+    const favoriteCategories = categories.filter(cat => favoriteIds.includes(cat.id));
+    const otherCategories = categories.filter(cat => !favoriteIds.includes(cat.id));
+    
+    // Sort favorites in the order they were selected
+    favoriteCategories.sort((a, b) => {
+      const aIndex = favoriteIds.indexOf(a.id);
+      const bIndex = favoriteIds.indexOf(b.id);
+      return aIndex - bIndex;
+    });
+    
+    return [...favoriteCategories, ...otherCategories];
+  })() : [];
   
   // Fetch subcategories for selected category
   const {
@@ -369,7 +390,7 @@ export default function Home() {
               <CategoryGridSkeleton />
             ) : (
               <CategoryGrid 
-                categories={categories}
+                categories={sortedCategories}
                 onCategorySelect={handleCategorySelect}
                 selectedCategoryId={selectedCategoryId}
               />

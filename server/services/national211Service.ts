@@ -458,7 +458,7 @@ export async function searchResourcesByTaxonomyCode(
       skip: offset.toString()
     });
     
-    // Add location parameter - API requires location, so we must have one
+    // Add location parameter - use Santa Barbara County by default
     if (zipCode) {
       queryParams.set('location', zipCode);
       console.log(`Using zip code location: ${zipCode}`);
@@ -466,10 +466,10 @@ export async function searchResourcesByTaxonomyCode(
       queryParams.set('location', `${latitude},${longitude}`);
       console.log(`Using coordinate location: ${latitude},${longitude}`);
     } else {
-      // No location provided - use county for broader search
-      console.log('No location provided, defaulting to Santa Barbara County');
+      // Always search Santa Barbara County - no postal code restriction
+      console.log('Searching all Santa Barbara County resources');
       queryParams.set('location', 'Santa Barbara County, CA'); // Search county wide
-      queryParams.set('distance', '100'); // Increase distance for county-wide search
+      queryParams.set('distance', '100'); // County-wide search distance
     }
     
     const fullUrl = `${requestUrl}?${queryParams.toString()}`;

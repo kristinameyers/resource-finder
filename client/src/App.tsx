@@ -14,6 +14,8 @@ import Settings from "@/pages/settings";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { OnboardingFlow, OnboardingPreferences } from "@/components/onboarding/OnboardingFlow";
+import { useOnboarding } from "@/hooks/use-onboarding";
 
 function Router() {
   return (
@@ -34,6 +36,7 @@ function Router() {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const { hasCompletedOnboarding, completeOnboarding } = useOnboarding();
 
   useEffect(() => {
     // Show splash screen while app initializes
@@ -58,7 +61,10 @@ function App() {
           <AnimatePresence>
             {isLoading && <SplashScreen isVisible={isLoading} />}
           </AnimatePresence>
-          {!isLoading && (
+          {!isLoading && hasCompletedOnboarding === false && (
+            <OnboardingFlow onComplete={completeOnboarding} />
+          )}
+          {!isLoading && hasCompletedOnboarding === true && (
             <>
               <Router />
               <BottomNavigation />

@@ -231,7 +231,7 @@ export default function ResourceDetail() {
         {/* Resource title and badges */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2 text-white">
-            {detailedInfo?.serviceAtLocationName || detailedInfo?.serviceName || resource.name}
+            {detailedInfo?.serviceAtLocationName || detailedInfo?.organizationName || resource.name}
           </h1>
           <div className="flex flex-wrap gap-2">
             {category && (
@@ -269,7 +269,7 @@ export default function ResourceDetail() {
         </CardHeader>
         <CardContent>
           <div className="whitespace-pre-line">
-            {(detailedInfo?.organizationDescription || resource.description)?.split('\n').map((line: string, index: number) => {
+            {(detailedInfo?.descriptionService || resource.description)?.split('\n').map((line: string, index: number) => {
               if (line.trim().startsWith('•')) {
                 return (
                   <div key={index} className="flex items-start mb-1">
