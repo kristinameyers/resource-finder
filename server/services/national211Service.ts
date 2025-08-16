@@ -272,16 +272,16 @@ export async function searchAllResourcesByKeyword(
       const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode || '');
       return {
         ...resource,
-        distance: distance !== null ? Number(distance.toFixed(1)) : null
+        distance: distance !== null ? Number(distance.toFixed(1)) : undefined
       };
     });
     
     // Sort by distance if we have distance data
     allResources.sort((a, b) => {
-      if (a.distance === null && b.distance === null) return 0;
-      if (a.distance === null) return 1;
-      if (b.distance === null) return -1;
-      return a.distance - b.distance;
+      if (a.distance === undefined && b.distance === undefined) return 0;
+      if (a.distance === undefined) return 1;
+      if (b.distance === undefined) return -1;
+      return (a.distance || 0) - (b.distance || 0);
     });
     
     console.log(`Applied distance calculations and sorting for ${allResources.length} resources`);

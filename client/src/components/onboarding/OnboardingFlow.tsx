@@ -266,15 +266,21 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </div>
             </div>
 
-            <div className="pt-6">
+            <div className="pt-6 space-y-4 w-full max-w-sm mx-auto">
               <Button 
                 onClick={handleComplete}
-                className="bg-[#FFB351] hover:bg-[#e89d42] text-white w-full max-w-sm mx-auto flex items-center justify-center gap-2"
-                aria-label="Complete onboarding"
+                className="bg-[#005191] hover:bg-[#004080] text-white w-full py-3 flex items-center justify-center gap-2 font-medium text-lg shadow-lg"
+                aria-label="Complete onboarding and go to home screen"
               >
-                {saveText}
-                <ArrowRight className="w-4 h-4" />
+                Continue to Home
+                <ArrowRight className="w-5 h-5" />
               </Button>
+              
+              {selectedCategories.length > 0 && (
+                <p className="text-xs text-gray-500 text-center">
+                  {selectedCategories.length} of 3 categories selected
+                </p>
+              )}
             </div>
           </motion.div>
         )}
