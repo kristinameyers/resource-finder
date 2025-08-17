@@ -509,17 +509,29 @@ export async function searchResourcesByTaxonomyCode(
           'keywordIsTaxonomyCode': 'false'
         };
         
-        // Use category name as search term
+        // Use category name as search term - updated with new taxonomy codes
         const categoryNames: { [key: string]: string } = {
           'BD': 'food',
-          'BH': 'housing', 
+          'BD-1800.2000': 'food',
+          'BH': 'housing',
+          'BH-1800': 'housing',
+          'NL-1000': 'employment',
           'N': 'employment',
+          'LN': 'healthcare',
           'L': 'healthcare',
+          'FT': 'legal',
           'F': 'legal',
+          'HD-1800.8000': 'education',
           'H': 'education',
+          'BT-4500': 'transportation',
           'BT': 'transportation',
+          'PH': 'family',
           'P': 'family',
+          'RX-8250': 'substance',
           'RX': 'substance',
+          'RP-1400': 'mental health',
+          'R': 'mental health',
+          'PS-9800': 'youth',
           'YB-9000': 'youth'
         };
         
