@@ -62,8 +62,7 @@ export const SUBCATEGORIES = {
     { id: 'credit-counseling', name: 'Credit Counseling', taxonomyCode: 'DM-1500.1500' },
     { id: 'vita-programs', name: 'VITA Programs', taxonomyCode: 'DT-8800.9300' },
     { id: 'utility-payment-assistance', name: 'Utility Payment Assistance', taxonomyCode: 'BV-8900.9300' },
-    { id: 'well-animal-checkups', name: 'Well Animal Checkups', taxonomyCode: 'PD-9000.9700' },
-    { id: 'pet-food', name: 'Pet Food', taxonomyCode: 'PD-6250.6600' }
+    { id: 'well-animal-checkups', name: 'Well Animal Checkups', taxonomyCode: 'PD-9000.9700' }
   ],
   'legal-assistance': [
     { id: 'criminal-courts', name: 'Criminal State Trial Courts', taxonomyCode: 'FC-8200.1550' },
@@ -100,14 +99,14 @@ export const SUBCATEGORIES = {
   
   'food': [
     { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000' },
-    { id: 'calaim', name: 'CalAIM', taxonomyCode: 'BD-5000.3500' },
     { id: 'food-pantries', name: 'Food Pantries', taxonomyCode: 'BD-1800.2000' },
     { id: 'calfresh', name: 'CalFresh (Food Stamps)', taxonomyCode: 'NL-6000.2000' },
     { id: 'wic', name: 'Women, Infants, & Children (WIC)', taxonomyCode: 'NL-6000.9500' },
     { id: 'senior-nutrition', name: 'Senior Nutrition Programs', taxonomyCode: 'BD-5000.8000' },
     { id: 'school-meals', name: 'School Meal Programs', taxonomyCode: 'BD-1800.7500' },
     { id: 'emergency-food', name: 'Emergency Food Assistance', taxonomyCode: 'BD-1800.2000' },
-    { id: 'home-delivery-meals', name: 'Home Delivery Meals', taxonomyCode: 'BD-5000.3500' }
+    { id: 'home-delivery-meals', name: 'Home Delivery Meals', taxonomyCode: 'BD-5000.3500' },
+    { id: 'pet-food', name: 'Pet Food', taxonomyCode: 'PD-6250.6600' }
   ]
 } as const;
 
