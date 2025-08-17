@@ -74,7 +74,7 @@ export const CATEGORY_TAXONOMY: Record<string, TaxonomyMapping> = {
   food: {
     id: 'food',
     name: 'Food',
-    taxonomyCode: 'BD-1800.2000',
+    taxonomyCode: 'BD',
     subcategories: [
       { id: 'calfresh', name: 'CalFresh (formerly Food Stamps)', taxonomyCode: 'NL-6000.2000' },
       { id: 'groceries', name: 'Groceries', taxonomyCode: 'BD-1800.1000' },

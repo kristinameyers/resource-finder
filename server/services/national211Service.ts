@@ -479,9 +479,12 @@ export async function searchResourcesByTaxonomyCode(
       const headers: HeadersInit = {
         'Accept': 'application/json',
         'Api-Key': SUBSCRIPTION_KEY || '',
-        'locationMode': 'Serving',
-        'keywordIsTaxonomyCode': 'true'
+        'locationMode': 'Serving'
       };
+      
+      // Log the taxonomy code being used
+      console.log(`Searching with taxonomy code: ${taxonomyCode}`);
+      headers['keywordIsTaxonomyCode'] = 'true';
       
       console.log('Trying GET method with correct parameters...');
       let response = await handleRateLimitedRequest(async () => {
