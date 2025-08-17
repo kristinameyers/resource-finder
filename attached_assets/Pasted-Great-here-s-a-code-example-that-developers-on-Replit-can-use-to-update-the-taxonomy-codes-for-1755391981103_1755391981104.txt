@@ -1,0 +1,104 @@
+Great — here’s a **code example** that developers on Replit can use to update the taxonomy codes for **Level 1 (main categories only)** while leaving all subcategories (Level 2) intact.  
+
+***
+
+### Example: JSON Structure Before Update
+```json
+{
+  "categories": [
+    {
+      "name": "Housing",
+      "taxonomyCode": "OLD-CODE",
+      "subcategories": [
+        { "name": "Shelters", "taxonomyCode": "BH-1800.1500" },
+        { "name": "Rental Assistance", "taxonomyCode": "BH-1800.1600" }
+      ]
+    },
+    {
+      "name": "Food",
+      "taxonomyCode": "OLD-FOOD",
+      "subcategories": [
+        { "name": "Food Pantries", "taxonomyCode": "BD-1800.2000-050" }
+      ]
+    }
+  ]
+}
+```
+
+***
+
+### Update Script (Python)
+```python
+# taxonomy_update.py
+
+# Mapping of main category names (Level 1) to their new taxonomy codes
+taxonomy_updates = {
+    "Housing": "BH-1800",
+    "Finance & Employment": "NL-1000",
+    "Food": "BD-1800.2000",
+    "Health Care": "LN",
+    "Mental Wellness": "RP-1400",
+    "Substance Use": "RX-8250",
+    "Children & Family": "PH",
+    "Young Adults": "PS-9800",
+    "Education": "HD-1800.8000",
+    "Legal Assistance": "FT",
+    "Transportation": "BT-4500"
+}
+
+def update_main_codes(data):
+    for category in data.get("categories", []):
+        name = category.get("name")
+        if name in taxonomy_updates:
+            # Update only the main category code
+            category["taxonomyCode"] = taxonomy_updates[name]
+    return data
+
+# Example usage
+if __name__ == "__main__":
+    import json
+    
+    # Load your current data (replace with your path)
+    with open("categories.json", "r") as f:
+        categories_data = json.load(f)
+    
+    # Update taxonomy codes
+    updated_data = update_main_codes(categories_data)
+    
+    # Save updated file (replace with your output path)
+    with open("categories_updated.json", "w") as f:
+        json.dump(updated_data, f, indent=2)
+    
+    print("✅ Main category taxonomy codes updated successfully!")
+```
+
+***
+
+### Example: JSON Structure After Update
+```json
+{
+  "categories": [
+    {
+      "name": "Housing",
+      "taxonomyCode": "BH-1800",
+      "subcategories": [
+        { "name": "Shelters", "taxonomyCode": "BH-1800.1500" },
+        { "name": "Rental Assistance", "taxonomyCode": "BH-1800.1600" }
+      ]
+    },
+    {
+      "name": "Food",
+      "taxonomyCode": "BD-1800.2000",
+      "subcategories": [
+        { "name": "Food Pantries", "taxonomyCode": "BD-1800.2000-050" }
+      ]
+    }
+  ]
+}
+```
+
+***
+
+✅ This ensures **only Level 1 taxonomy codes** are replaced according to your new mapping, while **subcategories remain unchanged**.  
+
+Would you like me to also give you a **JavaScript version** of the same update script for Replit, in case your project is Node.js-based?
