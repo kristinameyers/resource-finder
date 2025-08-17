@@ -1,0 +1,72 @@
+Got it 👍 — thanks for providing the debug output. Based on the Replit logs you shared, here’s what’s happening and how to clear up the confusion:
+
+***
+
+### The Core Issue
+
+- Your API routes are designed to work with the parameter **`categoryId`**, not `category`.  
+  → That mismatch was why the client was not properly filtering by updated taxonomy codes.
+
+- When the client used `category` instead of `categoryId`, the API defaulted to the **root taxonomy prefix (`BD`)** instead of the **full taxonomy code (`BD-1800.2000`)**.
+
+- Once the request was corrected to use `categoryId`, the API returned resources correctly for `Food: BD-1800.2000`.
+
+***
+
+### Why You Saw “BD” and “BD-1800.2000” Both in Results
+
+- `BD` is the **broader parent namespace** for Food (all food-related services).  
+- `BD-1800.2000` is a **specific subset** (food programs, food pantries, etc.).  
+
+If the API receives only the **category name** without the proper code, it falls back to the parent taxonomy (`BD`).  
+Once you use the **`categoryId=food` → mapped internally to `BD-1800.2000`**, you get the narrower results.
+
+***
+
+### Fix & Best Practice
+
+1. **Always use `categoryId` in API calls**  
+   - Example:  
+     ```
+     /api/resources?categoryId=food&useApi=true&limit=3
+     ```
+
+2. **Ensure the `categoryId` → taxonomy code mapping is correct in server code**  
+   - `food` → `BD-1800.2000` (not just `BD`)  
+   - Validate your mapping file / config where category names point to codes.
+
+3. **Client code audit:**  
+   - Search in `client/src/pages/` (and other client calls) for `/api/resources?category=`.  
+   - Replace with `/api/resources?categoryId=` consistently.  
+   - This ensures the narrowed taxonomy code is used everywhere.
+
+***
+
+### Next Steps for Your Devs
+
+- **Confirm mapping object on the server**  
+   Ensure that:
+   ```js
+   const mainCategoryToCode = {
+     food: "BD-1800.2000",   // 👈 must be this specific
+     housing: "BH-1800",
+     finance: "NL-1000",
+     // ...
+   };
+   ```
+
+- **Update client calls** to always send `categoryId` (never `category`).  
+- **Test each category** with curl, e.g.:
+   ```
+   curl "http://localhost:5000/api/resources?categoryId=housing&limit=3"
+   curl "http://localhost:5000/api/resources?categoryId=food&limit=3"
+   ```
+   → Verify that the returned taxonomy codes align with your new mappings.
+
+***
+
+✅ So the issue wasn’t your taxonomy update logic — the problem was the **parameter mismatch (`category` vs `categoryId`)**, which made the API fall back to the broad parent BD code. Now that the calls use `categoryId`, the `BD-1800.2000` mapping for Food works as intended.  
+
+***
+
+Would you like me to draft a **step-by-step patch note** your team can apply (so future devs don’t accidentally use the wrong `category` param again)?

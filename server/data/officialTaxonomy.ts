@@ -4,20 +4,20 @@
  * This is the authoritative mapping between categories/subcategories and their official taxonomy codes
  */
 
-// Main Categories with official taxonomy codes
+// Main Categories with official taxonomy codes - Updated January 2025 per user requirements
 export const MAIN_CATEGORIES = {
-  'housing': { name: 'Housing', taxonomyCode: 'BH' },
-  'finance-employment': { name: 'Finance & Employment', taxonomyCode: 'N' },
-  'food': { name: 'Food', taxonomyCode: 'BD' },
-  'healthcare': { name: 'Health Care', taxonomyCode: 'L' },
-  'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'R' },
-  'substance-use': { name: 'Substance Use', taxonomyCode: 'RX' },
-  'children-family': { name: 'Children & Family', taxonomyCode: 'P' },
-  'young-adults': { name: 'Young Adults', taxonomyCode: 'YB-9000' },
-  'education': { name: 'Education', taxonomyCode: 'H' },
-  'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'F' },
+  'housing': { name: 'Housing', taxonomyCode: 'BH-1800' },
+  'finance-employment': { name: 'Finance & Employment', taxonomyCode: 'NL-1000' },
+  'food': { name: 'Food', taxonomyCode: 'BD-1800.2000' },
+  'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
+  'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
+  'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
+  'children-family': { name: 'Children & Family', taxonomyCode: 'PH' },
+  'young-adults': { name: 'Young Adults', taxonomyCode: 'PS-9800' },
+  'education': { name: 'Education', taxonomyCode: 'HD-1800.8000' },
+  'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
   'utilities': { name: 'Utilities', taxonomyCode: 'BV' },
-  'transportation': { name: 'Transportation', taxonomyCode: 'BT' }
+  'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' }
 } as const;
 
 // Subcategories with official taxonomy codes
