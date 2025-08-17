@@ -1,0 +1,88 @@
+Thanks for posting the actual **`officialTaxonomy.ts`** code – this makes the picture much clearer.  
+
+The problem isn’t your `MAIN_CATEGORIES` mapping (you set `"food": {taxonomyCode: 'BD-1800.2000'}` correctly), it’s **how and where that mapping is being used downstream**. Based on your description and the Replit logs, here’s where things can go wrong:
+
+***
+
+### Why “Food” is still returning `BD` instead of `BD‑1800.2000`
+
+1. **Fallback logic in the API route**  
+   Somewhere in your `/api/resources` route or service layer, you’re mapping `categoryId=food` → taxonomy code. If that lookup fails (e.g. parameter mismatch, undefined category), the API is likely defaulting to the broader parent “BD” code.  
+   → This explains why sometimes you see results tagged only with `BD`.
+
+2. **Exact key mismatch**  
+   - Your `MAIN_CATEGORIES` object uses `food` (all lowercase, no hyphens) as the key.  
+   - If the client is calling `/api/resources?categoryId=Food` or `/api/resources?categoryId=foods`, then `MAIN_CATEGORIES["Food"]` returns `undefined`, causing fallback to `BD`.  
+
+   TypeScript won’t protect you here unless you strictly type `categoryId`. Case sensitivity matters (`food` vs. `Food`).
+
+3. **Subcategory bleed‑through**  
+   In your `SUBCATEGORIES` mapping under `housing`, you actually have one misplaced item:  
+   ```ts
+   { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000' }
+   ```
+   That is a **Food subcategory accidentally nested under Housing**. If downstream code collates results across all subcategories, that could be skewing results toward `BD` classifications.
+
+4. **Utilities introduced**  
+   Notice `"utilities"` is in `MAIN_CATEGORIES` (taxonomyCode: `'BV'`) but doesn’t have a `SUBCATEGORIES` array. Depending on how you handle lookups, this could cause similar mismatch problems if code falls back to root taxonomy letters when it can’t find a subcategory.
+
+***
+
+### How to Fix This
+
+✅ **Step 1 – Enforce strict `categoryId` usage**  
+In your `/api/resources` handler (server), ensure you always use lowercase keys that match `MAIN_CATEGORIES`:  
+
+```ts
+import { MAIN_CATEGORIES, getOfficialCategoryTaxonomyCode } from "./officialTaxonomy";
+
+app.get("/api/resources", (req, res) => {
+  const categoryId = (req.query.categoryId as string)?.toLowerCase();
+
+  const taxonomyCode = getOfficialCategoryTaxonomyCode(categoryId);
+  if (!taxonomyCode) {
+    return res.status(400).json({ error: `Unknown categoryId: ${categoryId}` });
+  }
+
+  // Use taxonomyCode directly for resource lookup
+  resourceService.findByTaxonomy(taxonomyCode)
+    .then(results => res.json({ resources: results }))
+    .catch(err => res.status(500).json({ error: err.message }));
+});
+```
+
+✅ **Step 2 – Audit client calls**  
+- Confirm all frontend queries pass **`categoryId=food`** exactly (lowercase, hyphenated format from `MAIN_CATEGORIES`).  
+- Do a global search in `client/src` for `category=` — they should all be `categoryId=`.
+
+✅ **Step 3 – Move “Meals” out of Housing**  
+That line is probably an artifact. Move it into a `SUBCATEGORIES["food"]` array instead of under `housing`. Right now it falsely associates a Food taxonomy code (`BD-5000`) with Housing, reinforcing the fallback issue.
+
+✅ **Step 4 – Add logging before fallback**  
+In your taxonomy lookup function, add a console log when no match is found:
+```ts
+export function getOfficialCategoryTaxonomyCode(categoryId: string): string | null {
+  const key = categoryId.toLowerCase();
+  const category = MAIN_CATEGORIES[key as keyof typeof MAIN_CATEGORIES];
+  if (!category) {
+    console.warn(`[Taxonomy] No main mapping for categoryId="${categoryId}", falling back`);
+    return null;
+  }
+  return category.taxonomyCode;
+}
+```
+This will help you catch unexpected mismatches.
+
+***
+
+### Summary
+
+- Your `MAIN_CATEGORIES` mapping **is correct** for Food: `BD-1800.2000`.  
+- The **wrong code (`BD`) is coming from fallback logic or mis‑keyed lookups**:
+  - Client sending `Food` instead of `food`.  
+  - Meals subcategory misplaced under Housing, re‑using a Food taxonomy code.  
+  - API defaulting to BD when it can’t resolve the specific categoryId.  
+
+***
+
+👉 Would you like me to give you a **patched version of `officialTaxonomy.ts`** where I move the misplaced “Meals” subcategory into `food`, add a new `SUBCATEGORIES["food"]` array, and strengthen the lookup so you don’t get silent fallbacks?

@@ -42,7 +42,6 @@ export const SUBCATEGORIES = {
     { id: 'section-8-voucher', name: 'Section 8 Voucher / Housing Authority', taxonomyCode: 'BH-8300.3000' },
     { id: 'bathing-facilities', name: 'Bathing Facilities', taxonomyCode: 'BH-1800.3500' },
     { id: 'temporary-mailing-address', name: 'Temporary Mailing Address', taxonomyCode: 'BM-6500.6500-850' },
-    { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000' },
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' },
     { id: 'animal-licenses', name: 'Animal Licenses', taxonomyCode: 'PD-0700.0600' }
   ],
@@ -56,7 +55,6 @@ export const SUBCATEGORIES = {
     { id: 'general-relief', name: 'General Relief', taxonomyCode: 'NL-1000.2500' },
     { id: 'cash-assistance-immigrants', name: 'Cash Assistance Program for Immigrants', taxonomyCode: 'NL-1000.2400-150' },
     { id: 'veteran-benefits', name: 'Veteran Benefits Assistance', taxonomyCode: 'FT-1000.9000' },
-    { id: 'calaim', name: 'CalAIM', taxonomyCode: 'BD-5000.3500' },
     { id: 'calfresh', name: 'CalFresh (formerly Food Stamps)', taxonomyCode: 'NL-6000.2000' },
     { id: 'medicaid', name: 'Medicaid', taxonomyCode: 'NL-5000.5000' },
     { id: 'wic', name: 'Women, Infants, & Children', taxonomyCode: 'NL-6000.9500' },
@@ -98,25 +96,69 @@ export const SUBCATEGORIES = {
     { id: 'restraining-orders', name: 'Restraining Orders', taxonomyCode: 'FT-6940' },
     { id: 'social-security-fraud', name: 'Social Security Fraud Reporting', taxonomyCode: 'FN-1700.7800' },
     { id: 'welfare-rights', name: 'Welfare Rights', taxonomyCode: 'FT-1000.9500' }
+  ],
+  
+  'food': [
+    { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000' },
+    { id: 'calaim', name: 'CalAIM', taxonomyCode: 'BD-5000.3500' },
+    { id: 'food-pantries', name: 'Food Pantries', taxonomyCode: 'BD-1800.2000' },
+    { id: 'calfresh', name: 'CalFresh (Food Stamps)', taxonomyCode: 'NL-6000.2000' },
+    { id: 'wic', name: 'Women, Infants, & Children (WIC)', taxonomyCode: 'NL-6000.9500' },
+    { id: 'senior-nutrition', name: 'Senior Nutrition Programs', taxonomyCode: 'BD-5000.8000' },
+    { id: 'school-meals', name: 'School Meal Programs', taxonomyCode: 'BD-1800.7500' },
+    { id: 'emergency-food', name: 'Emergency Food Assistance', taxonomyCode: 'BD-1800.2000' },
+    { id: 'home-delivery-meals', name: 'Home Delivery Meals', taxonomyCode: 'BD-5000.3500' }
   ]
-  // ... Additional categories would follow the same pattern
 } as const;
 
 /**
- * Get the official taxonomy code for a main category
+ * Get the official taxonomy code for a main category with proper error handling
  */
 export function getOfficialCategoryTaxonomyCode(categoryId: string): string | null {
-  const category = MAIN_CATEGORIES[categoryId as keyof typeof MAIN_CATEGORIES];
-  return category?.taxonomyCode || null;
+  if (!categoryId) {
+    console.warn(`[Taxonomy] Empty categoryId provided`);
+    return null;
+  }
+  
+  // Ensure lowercase for consistent lookups
+  const normalizedCategoryId = categoryId.toLowerCase().trim();
+  const category = MAIN_CATEGORIES[normalizedCategoryId as keyof typeof MAIN_CATEGORIES];
+  
+  if (!category) {
+    console.warn(`[Taxonomy] No main category mapping found for categoryId="${categoryId}" (normalized: "${normalizedCategoryId}")`);
+    console.warn(`[Taxonomy] Available categories: ${Object.keys(MAIN_CATEGORIES).join(', ')}`);
+    return null;
+  }
+  
+  console.log(`[Taxonomy] ✅ Mapped categoryId "${categoryId}" → taxonomy code "${category.taxonomyCode}"`);
+  return category.taxonomyCode;
 }
 
 /**
- * Get the official taxonomy code for a subcategory
+ * Get the official taxonomy code for a subcategory with proper error handling
  */
 export function getOfficialSubcategoryTaxonomyCode(categoryId: string, subcategoryId: string): string | null {
-  const subcategories = SUBCATEGORIES[categoryId as keyof typeof SUBCATEGORIES];
-  if (!subcategories) return null;
+  if (!categoryId || !subcategoryId) {
+    console.warn(`[Taxonomy] Missing categoryId or subcategoryId: ${categoryId}, ${subcategoryId}`);
+    return null;
+  }
   
-  const subcategory = subcategories.find(sub => sub.id === subcategoryId);
-  return subcategory?.taxonomyCode || null;
+  const normalizedCategoryId = categoryId.toLowerCase().trim();
+  const subcategories = SUBCATEGORIES[normalizedCategoryId as keyof typeof SUBCATEGORIES];
+  
+  if (!subcategories) {
+    console.warn(`[Taxonomy] No subcategories found for categoryId="${categoryId}" (normalized: "${normalizedCategoryId}")`);
+    return null;
+  }
+  
+  const subcategory = subcategories.find(sub => sub.id === subcategoryId.toLowerCase().trim());
+  
+  if (!subcategory) {
+    console.warn(`[Taxonomy] No subcategory mapping found for "${subcategoryId}" in category "${categoryId}"`);
+    console.warn(`[Taxonomy] Available subcategories: ${subcategories.map(s => s.id).join(', ')}`);
+    return null;
+  }
+  
+  console.log(`[Taxonomy] ✅ Mapped subcategory "${subcategoryId}" in "${categoryId}" → taxonomy code "${subcategory.taxonomyCode}"`);
+  return subcategory.taxonomyCode;
 }
