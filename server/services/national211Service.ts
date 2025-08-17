@@ -535,7 +535,7 @@ export async function searchResourcesByTaxonomyCode(
           'YB-9000': 'youth'
         };
         
-        const searchTerm = categoryNames[taxonomyCode] || 'food';
+        const searchTerm = categoryNames[taxonomyCode] || categoryNames[taxonomyCode.split('-')[0]] || 'food';
         const fallbackParams = new URLSearchParams(queryParams);
         fallbackParams.set('keywords', searchTerm);
         
