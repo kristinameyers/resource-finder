@@ -6,13 +6,13 @@
 
 // Main Categories with official taxonomy codes - Updated January 2025 per user requirements
 export const MAIN_CATEGORIES = {
-  'housing': { name: 'Housing', taxonomyCode: 'BH-1800' },
+  'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
   'finance-employment': { name: 'Finance & Employment', taxonomyCode: 'NL-1000' },
-  'food': { name: 'Food', taxonomyCode: 'BD-1800.2000' },
+  'food': { name: 'Food', taxonomyCode: 'BD-5000' },
   'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
   'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
   'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
-  'children-family': { name: 'Children & Family', taxonomyCode: 'PH' },
+  'children-family': { name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
   'young-adults': { name: 'Young Adults', taxonomyCode: 'PS-9800' },
   'education': { name: 'Education', taxonomyCode: 'HD-1800.8000' },
   'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
