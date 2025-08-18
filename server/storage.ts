@@ -48,7 +48,7 @@ export class MemStorage implements IStorage {
     this.categories = [
       // Row 1: Children & Family, Food, Education - Updated with official taxonomy codes January 2025
       { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'PH-2360.2400' },
-      { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD-5000' },
+      { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD-1800.2000' },
       { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'HD-1800.8000' },
       // Row 2: Finance & Employment, Housing, Health Care
       { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'NL-1000' },

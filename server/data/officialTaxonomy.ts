@@ -8,7 +8,7 @@
 export const MAIN_CATEGORIES = {
   'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
   'finance-employment': { name: 'Finance & Employment', taxonomyCode: 'NL-1000' },
-  'food': { name: 'Food', taxonomyCode: 'BD-5000' },
+  'food': { name: 'Food', taxonomyCode: 'BD-1800.2000' },
   'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
   'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
   'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
