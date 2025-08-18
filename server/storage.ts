@@ -46,22 +46,22 @@ export class MemStorage implements IStorage {
     
     // Populate categories with official 211 taxonomy codes - Row order for display
     this.categories = [
-      // Row 1: Children & Family, Food, Education
-      { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'P' },
-      { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD' },
-      { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'H' },
+      // Row 1: Children & Family, Food, Education - Updated with official taxonomy codes January 2025
+      { id: 'children-family', name: 'Children & Family', icon: 'users', taxonomyCode: 'PH-2360.2400' },
+      { id: 'food', name: 'Food', icon: 'utensils', taxonomyCode: 'BD-5000' },
+      { id: 'education', name: 'Education', icon: 'book', taxonomyCode: 'HD-1800.8000' },
       // Row 2: Finance & Employment, Housing, Health Care
-      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'N' },
-      { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH' },
-      { id: 'healthcare', name: 'Health Care', icon: 'stethoscope', taxonomyCode: 'L' },
+      { id: 'finance-employment', name: 'Finance & Employment', icon: 'briefcase', taxonomyCode: 'NL-1000' },
+      { id: 'housing', name: 'Housing', icon: 'home', taxonomyCode: 'BH-1800.8500' },
+      { id: 'healthcare', name: 'Health Care', icon: 'stethoscope', taxonomyCode: 'LN' },
       // Row 3: Hygiene & Household, Mental Wellness, Legal Assistance
       { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'shower' },
-      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'R' },
-      { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel', taxonomyCode: 'F' },
+      { id: 'mental-wellness', name: 'Mental Wellness', icon: 'brain', taxonomyCode: 'RP-1400' },
+      { id: 'legal-assistance', name: 'Legal Assistance', icon: 'gavel', taxonomyCode: 'FT' },
       // Row 4: Substance Use, Transportation, Young Adults
-      { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX' },
-      { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT' },
-      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'YB-9000' },
+      { id: 'substance-use', name: 'Substance Use', icon: 'pills', taxonomyCode: 'RX-8250' },
+      { id: 'transportation', name: 'Transportation', icon: 'bus', taxonomyCode: 'BT-4500' },
+      { id: 'young-adults', name: 'Young Adults', icon: 'graduation-cap', taxonomyCode: 'PS-9800' },
     ];
     
     // Populate subcategories for each category
