@@ -52,11 +52,31 @@ export async function loadZipCodeData() {
       }
       
       console.log(`Loaded ${zipCodeMap.size} zip codes from CSV file for distance calculations`);
+      
+      // Add missing Santa Barbara County zip codes that are commonly found in 211 API results
+      const additionalZipCodes = [
+        { zip: "93000", lat: 34.41972, lng: -119.13028, city: "Ventura", state: "CA" },
+        { zip: "93108", lat: 34.44306, lng: -119.74000, city: "Santa Barbara", state: "CA" },
+        { zip: "93110", lat: 34.44306, lng: -119.74000, city: "Santa Barbara", state: "CA" },
+        { zip: "93111", lat: 34.46167, lng: -119.77694, city: "Santa Barbara", state: "CA" }
+      ];
+      
+      additionalZipCodes.forEach(zipData => {
+        if (!zipCodeMap.has(zipData.zip)) {
+          zipCodeMap.set(zipData.zip, zipData);
+        }
+      });
+      
+      console.log(`Added missing Santa Barbara County zip codes. Total: ${zipCodeMap.size} zip codes`);
 
     } else {
       // Fallback to hardcoded data including the specific zip codes we're seeing in the logs
       const fallbackZipCodes: ZipCodeData[] = [
-        // Santa Barbara County zip codes from 211 API logs
+        // Santa Barbara County zip codes from 211 API logs - MISSING ZIP CODES ADDED
+        { zip: "93000", lat: 34.41972, lng: -119.13028, city: "Ventura", state: "CA" },
+        { zip: "93108", lat: 34.44306, lng: -119.74000, city: "Santa Barbara", state: "CA" },
+        { zip: "93110", lat: 34.44306, lng: -119.74000, city: "Santa Barbara", state: "CA" },
+        { zip: "93111", lat: 34.46167, lng: -119.77694, city: "Santa Barbara", state: "CA" },
         { zip: "93436", lat: 34.73639, lng: -120.42167, city: "Lompoc", state: "CA" },
         { zip: "93454", lat: 34.61639, lng: -120.41417, city: "Santa Maria", state: "CA" },
         { zip: "93455", lat: 34.92028, lng: -120.42750, city: "Santa Maria", state: "CA" },

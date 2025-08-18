@@ -1,0 +1,85 @@
+Here’s how Replit can restore and safeguard the **distance calculation and sorting feature** in your app:
+
+***
+
+## Instructions to Restore Distance Calculation & Sorting
+
+### 1. **Feature Requirement**
+- **Calculate the distance** between the user and each resource using **geo-coordinates** (zip code, latitude, longitude).
+- **Display resources sorted** from **closest to farthest**.
+
+### 2. **Data Required**
+- **User location**: User’s zip code (preferably lat/long, for accuracy).
+- **Resource location**: Each resource’s address (must include lat/long if available; otherwise, fallback to zip code centroid).
+
+### 3. **Distance Calculation Algorithm**
+- Use the **Haversine formula** for great-circle distance (standard approach).
+- **Example (JavaScript/Node):**
+  ```js
+  function haversineDistance(lat1, lon1, lat2, lon2) {
+    // Radius of Earth in miles or kilometers
+    const R = 3958.8; // in miles. Use 6371 for kilometers.
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+  ```
+
+### 4. **Implementation Steps**
+- Retrieve user coordinates on search/init.
+- For each resource in results:
+  - Fetch/lookup resource coordinates.
+  - If only zip codes, get lat/long for zip code centroid (many npm packages/APIs for this).
+  - Use the distance function above to calculate miles/km.
+- Add a new property `distance` (e.g., `{ name, address, distance }`) for display logic.
+- **Sort resources array** before display:
+  ```js
+  resources.sort((a, b) => a.distance - b.distance);
+  ```
+
+### 5. **Safeguard for Future Updates**
+- Add a **unit test or integration test** to verify that results are always sorted by `distance`, and that the calculation occurs.
+- Place distance logic into a **dedicated, well-documented utility module** (`utils/distance.ts` or `distanceUtils.js`) so future changes to other features don’t interfere.
+- Document this requirement in your README or product specs:  
+  > “Resources must always be shown sorted from closest to farthest based on user location.”
+
+### 6. **Recovery for Missing Feature**
+- Audit current codebase:  
+  - Confirm whether distance calculation code is present (search for `haversine` or `distance`).
+  - If missing, re-add as in example above.
+- Ensure location data is properly fetched/decoded for both user and resource.
+- Confirm client displays/use the sorted array, not the unsorted base dataset.
+
+***
+
+## Sample Code Integration (Resource Sorting)
+
+```js
+// Example resource structure: [{ name, lat, lon, ... }]
+function sortResourcesByDistance(userLat, userLon, resources) {
+  return resources
+    .map(resource => ({
+      ...resource,
+      distance: haversineDistance(userLat, userLon, resource.lat, resource.lon)
+    }))
+    .sort((a, b) => a.distance - b.distance);
+}
+```
+
+***
+
+## Action Item
+
+- **Restore and lock in the distance calculation logic** (preferably in its own utility file).
+- **Add a test** to ensure results are always sorted by distance.
+- **Document and notify team**: This feature must not be removed on future refactors.
+
+***
+
+Let me know if you’d like a ready-to-use distance utility module, zip code → lat/long lookup recommendation, a unit test sample, or update instructions for the frontend display!
