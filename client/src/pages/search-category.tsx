@@ -12,12 +12,18 @@ interface Category {
   taxonomyCode: string;
 }
 
+interface CategoriesResponse {
+  categories: Category[];
+}
+
 export default function SearchCategoryPage() {
   const [, setLocation] = useLocation();
   
-  const { data: categories = [] } = useQuery<Category[]>({
+  const { data: categoriesResponse } = useQuery<CategoriesResponse>({
     queryKey: ["/api/categories"],
   });
+
+  const categories = categoriesResponse?.categories || [];
 
   const handleCategorySelect = (categoryId: string) => {
     setLocation(`/resources?categoryId=${categoryId}&useApi=true`);
@@ -103,7 +109,7 @@ export default function SearchCategoryPage() {
 
         {/* Category Grid */}
         <div className="grid grid-cols-3 gap-6">
-          {categories.map((category) => (
+          {categories.length > 0 ? categories.map((category: Category) => (
             <button
               key={category.id}
               onClick={() => handleCategorySelect(category.id)}
@@ -117,7 +123,13 @@ export default function SearchCategoryPage() {
                 <TranslatedText text={category.name} />
               </span>
             </button>
-          ))}
+          )) : (
+            <div className="col-span-3 text-center py-8">
+              <p className="text-gray-500">
+                <TranslatedText text="Loading categories..." />
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

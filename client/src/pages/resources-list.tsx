@@ -30,6 +30,14 @@ interface Subcategory {
   categoryId: string;
 }
 
+interface CategoriesResponse {
+  categories: Category[];
+}
+
+interface SubcategoriesResponse {
+  subcategories: Subcategory[];
+}
+
 export default function ResourcesListPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -51,15 +59,17 @@ export default function ResourcesListPage() {
   }, []);
 
   // Fetch category data
-  const { data: categories = [] } = useQuery<Category[]>({
+  const { data: categoriesResponse } = useQuery<CategoriesResponse>({
     queryKey: ["/api/categories"],
   });
+  const categories = categoriesResponse?.categories || [];
 
   // Fetch subcategories for the selected category
-  const { data: subcategories = [] } = useQuery<Subcategory[]>({
+  const { data: subcategoriesResponse } = useQuery<SubcategoriesResponse>({
     queryKey: ["/api/subcategories", categoryId],
     enabled: !!categoryId,
   });
+  const subcategories = subcategoriesResponse?.subcategories || [];
 
   // Build query parameters for resources
   const resourceParams = new URLSearchParams();
@@ -89,8 +99,8 @@ export default function ResourcesListPage() {
     }
   })() : [];
 
-  const currentCategory = categories.find(cat => cat.id === categoryId);
-  const filteredSubcategories = subcategories.filter(sub => sub.categoryId === categoryId);
+  const currentCategory = categories.find((cat: Category) => cat.id === categoryId);
+  const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);
 
   const handleBack = () => {
     setLocation("/");
@@ -163,7 +173,7 @@ export default function ResourcesListPage() {
                 <SelectItem value="">
                   <TranslatedText text="All Subcategories" />
                 </SelectItem>
-                {filteredSubcategories.map((subcategory) => (
+                {filteredSubcategories.map((subcategory: Subcategory) => (
                   <SelectItem key={subcategory.id} value={subcategory.id}>
                     <TranslatedText text={subcategory.name} />
                   </SelectItem>
