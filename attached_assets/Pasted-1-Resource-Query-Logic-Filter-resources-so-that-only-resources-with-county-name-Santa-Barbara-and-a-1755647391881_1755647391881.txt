@@ -1,0 +1,118 @@
+1. Resource Query Logic
+Filter resources so that only resources with county_name=Santa Barbara and assigned the selected category (taxonomy code) are shown.
+
+When a user selects a category (via search or dropdown), the app should:
+
+Query the resource database for those with county_name matching "Santa Barbara"
+
+Also filter by the resource’s category (taxonomy code) matching the user’s selection.
+
+2. Install U.S. Postal Code Geolocation Plugin
+Find and install a plugin/package that provides a database of all U.S. postal codes, including latitude and longitude coordinates.
+
+For Node.js/TypeScript, recommended options:
+
+zipcodes
+
+us-zipcode
+
+zipcode-city-distance
+
+Install with:
+
+bash
+npm install zipcodes
+# or
+npm install zipcode-city-distance
+3. Distance Calculation & Sorting
+When a user provides their zip code:
+
+Lookup their location’s latitude/longitude using the plugin.
+
+For each resource, get its zip code’s lat/lon (plugin/db).
+
+Compute the distance between the user’s zip and each resource zip using the Haversine formula:
+
+js
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 3958.8; // Radius of Earth in miles
+  const toRad = deg => deg * (Math.PI / 180);
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(toRad(lat1))*Math.cos(toRad(lat2)) *
+    Math.sin(dLon/2)*Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+Display the calculated distance between the user’s zip code and each resource zip code next to each resource.
+
+Sort the resources so the closest appear first.
+
+4. Resource Filters & List Screens (UI Updates)
+Remove existing “Resource Filters” section on home/list screen.
+
+Add “Subcategories” dropdown:
+
+When a category is selected, display a dropdown listing all relevant subcategories (from taxonomy).
+
+List resources by selected subcategory.
+
+"Update Location" leads to the Update Location Screen (see Update-Location-Screen PDF).
+
+5. Home Screen - Search Buttons
+Add two prominently styled buttons:
+
+“Search Category” — leads to “Search Category Screen” (see "Search Category Screen PDF").
+
+On this screen, show “Search by Category” as the header.
+
+Button is orange background, black text when active.
+
+“Search Keyword” — leads to “Search Keyword Screen” (see "Keyword-Search-Screen PDF").
+
+Shows “Search with Keyword” header.
+
+Show a search field and icon button (black on orange background).
+
+On button activation, style with orange background, black text.
+
+6. App Navigation Updates
+Add a nav bar to all screens with:
+
+Back button (chevron icon) on far left.
+
+Hamburger menu icon to the right of back button, which triggers a slide-out menu showing links to all app screens.
+
+GPS icon on far right; clicking it leads to the “Update Location Screen.”
+
+Match header and navigation components to PDFs provided.
+
+7. List Screen Updates
+Update “List Screen” design per List-Screen PDF.
+
+Remove previous “Resource Filters” UI.
+
+Add Subcategories dropdown for the category.
+
+Resources are shown in cards/rows, now include distance info (if user zip is provided), sorted by proximity.
+
+“Update Location” button leads directly to Update Location Screen.
+
+8. Safeguards for Future Updates
+Place distance calculation code in a distinct module (e.g., utils/distance.js).
+
+Add tests that verify resource sorting and distance display function after code changes.
+
+Summary:
+
+Filter by county and selected taxonomy code.
+
+Install a postal code plugin, calculate/display resource distances, and sort by proximity.
+
+Update home/list screen UI and navigation as per provided PDFs.
+
+Add prominent search buttons, subcategory dropdowns, and improved nav.
+
+Document distance features and add tests so future features don’t remove them.
