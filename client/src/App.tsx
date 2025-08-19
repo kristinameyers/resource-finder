@@ -11,6 +11,10 @@ import ResourceDetail from "@/pages/resource-detail";
 import About from "@/pages/about";
 import Favorites from "@/pages/favorites";
 import Settings from "@/pages/settings";
+import SearchCategoryPage from "@/pages/search-category";
+import SearchKeywordPage from "@/pages/search-keyword";
+import UpdateLocationPage from "@/pages/update-location";
+import ResourcesListPage from "@/pages/resources-list";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
@@ -23,6 +27,10 @@ function Router() {
       <Switch>
         {/* Add pages below */}
         <Route path="/" component={Home} />
+        <Route path="/search-category" component={SearchCategoryPage} />
+        <Route path="/search-keyword" component={SearchKeywordPage} />
+        <Route path="/update-location" component={UpdateLocationPage} />
+        <Route path="/resources" component={ResourcesListPage} />
         <Route path="/resources/:id" component={ResourceDetail} />
         <Route path="/favorites" component={Favorites} />
         <Route path="/about" component={About} />

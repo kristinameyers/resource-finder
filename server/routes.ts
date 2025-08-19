@@ -63,9 +63,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           console.log(`211 API returned ${apiResult.resources.length} total resources for keyword: ${keyword}`);
           
+          // Filter for Santa Barbara County resources only
+          const santaBarbaraResources = apiResult.resources.filter(resource => {
+            const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
+            const address = resource.address?.toLowerCase() || '';
+            return serviceAreas.includes('santa barbara') || address.includes('santa barbara');
+          });
+
+          console.log(`Filtered to ${santaBarbaraResources.length} Santa Barbara County resources`);
+          
           return res.json({
-            resources: apiResult.resources,
-            total: apiResult.total,
+            resources: santaBarbaraResources,
+            total: santaBarbaraResources.length,
             source: '211 API'
           });
         } catch (searchError) {
@@ -122,6 +131,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           let resources = apiResult.resources;
+          
+          // Filter for Santa Barbara County resources only
+          resources = resources.filter(resource => {
+            const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
+            const address = resource.address?.toLowerCase() || '';
+            return serviceAreas.includes('santa barbara') || address.includes('santa barbara');
+          });
+
+          console.log(`Filtered to ${resources.length} Santa Barbara County resources`);
             
             // Only calculate distances when user has provided a location
             if (zipCode && resources.length > 0) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation as useRouter } from "wouter";
 import FilterSection from "@/components/filter-section";
 import FilterSectionSkeleton from "@/components/filter-section-skeleton";
 import CategoryGrid from "@/components/category-grid";
@@ -14,12 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchCategories } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { useTranslatedText } from "@/components/TranslatedText";
+import { useTranslatedText, TranslatedText } from "@/components/TranslatedText";
 import new211Logo from "@/assets/new-211-logo.png";
 import { useOnboarding } from "@/hooks/use-onboarding";
 
 export default function Home() {
   const { preferences } = useOnboarding();
+  const [, setRouterLocation] = useRouter();
   
   // Translation hooks for all text content
   const { text: loadingText } = useTranslatedText("Loading...");
@@ -384,8 +386,28 @@ export default function Home() {
             />
           </>
         ) : (
-          // Show category grid when no category is selected
+          // Show prominent search buttons and category grid when no category is selected
           <div>
+            {/* Prominent Search Buttons */}
+            <div className="mb-8">
+              <div className="flex space-x-4 justify-center">
+                <Button 
+                  onClick={() => setRouterLocation("/search-category")}
+                  className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  <TranslatedText text="Search Category" />
+                </Button>
+                <Button 
+                  onClick={() => setRouterLocation("/search-keyword")}
+                  className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  <TranslatedText text="Search Keyword" />
+                </Button>
+              </div>
+            </div>
+
             {isLoadingCategories ? (
               <CategoryGridSkeleton />
             ) : (
