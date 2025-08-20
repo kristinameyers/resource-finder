@@ -290,6 +290,27 @@ export default function Home() {
             />
           )}
         </div>
+
+        {/* Bottom Navigation - as shown in PDFs */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+          <div className="flex justify-around items-center py-3">
+            <button className="flex flex-col items-center space-y-1 text-gray-600">
+              <div className="text-xs">Search</div>
+            </button>
+            <button className="flex flex-col items-center space-y-1 text-gray-600">
+              <div className="text-xs">Favorites</div>
+            </button>
+            <button className="flex flex-col items-center space-y-1 text-gray-600">
+              <div className="text-xs">Search</div>
+            </button>
+            <button className="flex flex-col items-center space-y-1 text-gray-600">
+              <div className="text-xs">About</div>
+            </button>
+            <button className="flex flex-col items-center space-y-1 text-gray-600">
+              <div className="text-xs">Settings</div>
+            </button>
+          </div>
+        </div>
       </main>
       
       {/* Footer */}

@@ -159,8 +159,26 @@ export default function ResourcesListPage() {
         </h1>
       </div>
 
-      {/* Filters and Controls */}
+      {/* Filters and Controls - as shown in List Screen PDF */}
       <div className="px-4 py-4 bg-white border-b border-gray-200">
+        <div className="flex justify-between items-center mb-4">
+          {/* Subcategories Dropdown */}
+          <div className="flex-1 mr-2">
+            <Button variant="outline" className="w-full text-left justify-between">
+              <TranslatedText text="Subcategories" />
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
+          {/* Update Location Button */}
+          <Button 
+            variant="outline"
+            onClick={() => setLocation("/update-location")}
+            className="whitespace-nowrap"
+          >
+            <TranslatedText text="Update Location" />
+          </Button>
+        </div>
+        
         <div className="flex space-x-2 mb-4">
           {/* Subcategories Dropdown */}
           {filteredSubcategories.length > 0 && (
@@ -251,6 +269,27 @@ export default function ResourcesListPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Bottom Navigation - as shown in PDFs */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div className="flex justify-around items-center py-3">
+          <button className="flex flex-col items-center space-y-1 text-gray-600">
+            <div className="text-xs">Search</div>
+          </button>
+          <button className="flex flex-col items-center space-y-1 text-gray-600">
+            <div className="text-xs">Favorites</div>
+          </button>
+          <button className="flex flex-col items-center space-y-1 text-gray-600">
+            <div className="text-xs">Search</div>
+          </button>
+          <button className="flex flex-col items-center space-y-1 text-gray-600">
+            <div className="text-xs">About</div>
+          </button>
+          <button className="flex flex-col items-center space-y-1 text-gray-600">
+            <div className="text-xs">Settings</div>
+          </button>
+        </div>
       </div>
     </div>
   );
