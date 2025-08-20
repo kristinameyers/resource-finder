@@ -110,7 +110,36 @@ export default function UpdateLocationPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
+      {/* Header with Santa Barbara 211 Logo */}
+      <header className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-6 flex justify-center items-center">
+          <h1 className="text-xl font-semibold text-gray-800">
+            <TranslatedText text="Santa Barbara 211" />
+          </h1>
+        </div>
+      </header>
+
+      {/* Search Type Toggle */}
+      <div className="px-4 py-4 bg-white border-b border-gray-200">
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => setLocation("/search-category")}
+          >
+            <TranslatedText text="Search Category" />
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => setLocation("/search-keyword")}
+          >
+            <TranslatedText text="Search Keyword" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Navigation continuation */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Button 

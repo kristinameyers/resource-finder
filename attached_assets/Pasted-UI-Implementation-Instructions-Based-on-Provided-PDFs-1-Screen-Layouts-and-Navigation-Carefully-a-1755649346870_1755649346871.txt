@@ -1,0 +1,75 @@
+UI Implementation Instructions (Based on Provided PDFs)
+1. Screen Layouts and Navigation
+Carefully analyze each PDF (“List-Screen”, “Update-Location-Screen”, “Keyword-Search-Screen”, “Search-Category-Screen”) for visual structure.
+
+Recreate each screen’s layout, ensuring spacing, grouping, and UI hierarchy match the PDFs exactly.
+
+All screens must include the persistent nav bar shown in the PDFs, including correct icon placement.
+
+2. Icons
+Use icons as shown in the PDFs:
+
+Chevron (Back): Far left in header/navigation bar.
+
+Hamburger Menu: Immediately right of Back, opens full slide-out menu with links to all screens (“Favorites”, “Search”, “About”, “Settings”, etc.).
+
+GPS Icon: Far right in header; triggers location update per “Update Location Screen”.
+
+Category and Keyword Search Icons: Apply as depicted in “Search Category” and “Keyword Search” screens (icon buttons with black on orange or according to PDF).
+
+Use widely-accepted icon libraries (e.g. Material Icons, FontAwesome) for consistency unless project requires custom SVGs.
+
+3. Input Fields & Buttons
+Place input fields (text, zip code, keyword) exactly as shown, matched in style, border shape, and spacing.
+
+Buttons must use specific coloring and style:
+
+Orange background, black text when active (e.g., active “Search Category”).
+
+Inactive buttons must clearly show a different visual state as in your PDFs.
+
+Button shapes, padding, corner radius, and icons within buttons should mirror the provided samples.
+
+4. List Screen
+On resource list screens (“List-Screen.pdf”), show:
+
+Subcategories dropdown at the top.
+
+Resources grouped in cards/rows, each matching the structure shown (resource name, office, “Add to Favorites”, “View Details” as formatted).
+
+“Update Location” button styled/matched to PDF; clicking it leads to location screen.
+
+5. Search Flows
+“Search Category” and “Search Keyword” must flow to their dedicated screens with headers and search inputs designed precisely per your PDF.
+
+Screen transitions and “back” navigation behavior must follow mobile/web conventions (smooth, either via routing or history push).
+
+6. Color Palette and Typography
+Adhere to all color choices shown in the PDFs, especially background/fill for buttons, header bars, input borders, and icons.
+
+Font sizes, weights, and colors must mirror those in the samples.
+
+7. Additional Notes
+Do not substitute, omit, or alter visual elements unless explicitly discussed or permitted in design review.
+
+For any elements not fully clear in the PDFs, consult with you for clarification before making UI decisions.
+
+Implementation Checklist
+ All screen layouts match the provided PDFs.
+
+ Icons (chevron, hamburger menu, GPS, search) appear in correct locations/styles.
+
+ Button colors, shapes, states as shown (orange/black, etc.).
+
+ All input fields positioned and styled exactly as in PDFs.
+
+ Resource cards/lists and dropdowns formatted per sample screens.
+
+ Navigation works correctly, including hamburger menu and GPS icon.
+
+ “Update Location” and “Back” features route as specified.
+
+Reminder:
+UI/UX changes must not deviate from the PDF blueprints; submit live previews or screenshots for check-off before deploying production updates.
+
+If you need pixel-perfect reference components, further icon SVG assets, or a CSS style guide extracted from the PDFs, I can provide those as well.
