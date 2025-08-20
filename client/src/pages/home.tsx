@@ -278,14 +278,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Browse All Categories Header */}
-        <div className="bg-blue-600 text-white text-center py-4 rounded-t-lg mb-0">
-          <h2 className="text-lg font-semibold">
-            <TranslatedText text="Browse all Categories" />
-          </h2>
-        </div>
         {/* Category Grid - Main Content */}
-        <div className="bg-blue-600 px-4 pb-6">
+        <div className="bg-blue-600 px-4 py-6 rounded-lg">
           {isLoadingCategories ? (
             <CategoryGridSkeleton />
           ) : (
