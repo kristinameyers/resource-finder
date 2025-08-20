@@ -301,10 +301,9 @@ export default function Home() {
             </button>
             <button 
               onClick={() => setRouterLocation("/search-keyword")}
-              className="search-keyword-btn"
               style={{
                 backgroundColor: '#0458a3',
-                color: '#ffffff !important',
+                color: 'white',
                 fontWeight: '700',
                 fontSize: '18px',
                 fontFamily: 'Arial, Helvetica, sans-serif',
@@ -318,21 +317,21 @@ export default function Home() {
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = '#004080';
-                e.currentTarget.style.setProperty('color', '#ffffff', 'important');
+                e.currentTarget.style.color = 'white';
                 e.currentTarget.style.boxShadow = '0 2px 6px rgba(4,88,163,0.18)';
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.backgroundColor = '#0458a3';
-                e.currentTarget.style.setProperty('color', '#ffffff', 'important');
+                e.currentTarget.style.color = 'white';
                 e.currentTarget.style.boxShadow = 'none';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.backgroundColor = '#003060';
-                e.currentTarget.style.setProperty('color', '#ffffff', 'important');
+                e.currentTarget.style.color = 'white';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.backgroundColor = '#004080';
-                e.currentTarget.style.setProperty('color', '#ffffff', 'important');
+                e.currentTarget.style.color = 'white';
               }}
             >
               <TranslatedText text="Search Keyword" />
