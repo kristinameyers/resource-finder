@@ -184,8 +184,7 @@ export default function Home() {
   
   // Category grid selection handler
   const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategoryId(categoryId);
-    setSelectedSubcategoryId(null);
+    setRouterLocation(`/resources?categoryId=${categoryId}&useApi=true`);
   };
   
   // "Use my location" button handler
@@ -260,165 +259,43 @@ export default function Home() {
       </header>
       
       <main className="flex-grow container mx-auto px-4 py-8 bg-gray-50 min-h-screen pb-24">
-        {/* Data source toggle */}
-        <div className="flex items-center justify-end mb-4 gap-2">
-          <div className="flex items-center space-x-2">
+        {/* Prominent Search Buttons */}
+        <div className="mb-8">
+          <div className="flex space-x-4 justify-center">
             <Button 
-              variant={useNational211Api ? "outline" : "default"}
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={() => setUseNational211Api(false)}
+              className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
             >
-              <Database className="h-4 w-4" />
-              {localDataText}
+              <Search className="mr-2 h-5 w-5" />
+              <TranslatedText text="Search Category" />
             </Button>
             <Button 
-              variant={useNational211Api ? "default" : "outline"}
-              size="sm"
-              className="flex items-center gap-1 btn-highlight"
-              onClick={() => setUseNational211Api(true)}
+              onClick={() => setRouterLocation("/search-keyword")}
+              className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
             >
-              <Database className="h-4 w-4" />
-              {api211Text}
+              <Search className="mr-2 h-5 w-5" />
+              <TranslatedText text="Search Keyword" />
             </Button>
           </div>
-          
-          {dataSource && (
-            <Badge variant="outline" className={dataSource === '211 API' ? 'bg-primary/10 highlight' : 'bg-muted'}>
-              <Database className="h-3 w-3 mr-1" /> 
-              {dataSource}
-            </Badge>
+        </div>
+
+        {/* Browse All Categories Header */}
+        <div className="bg-blue-600 text-white text-center py-4 rounded-t-lg mb-0">
+          <h2 className="text-lg font-semibold">
+            <TranslatedText text="Browse all Categories" />
+          </h2>
+        </div>
+        {/* Category Grid - Main Content */}
+        <div className="bg-blue-600 px-4 pb-6">
+          {isLoadingCategories ? (
+            <CategoryGridSkeleton />
+          ) : (
+            <CategoryGrid 
+              categories={sortedCategories}
+              onCategorySelect={handleCategorySelect}
+              selectedCategoryId={selectedCategoryId}
+            />
           )}
         </div>
-        
-        {isLoadingCategories ? (
-          <FilterSectionSkeleton />
-        ) : (
-          <FilterSection 
-            categories={categories}
-            selectedCategoryId={selectedCategoryId}
-            onCategoryChange={handleCategoryChange}
-            subcategories={subcategories}
-            selectedSubcategoryId={selectedSubcategoryId}
-            onSubcategoryChange={handleSubcategoryChange}
-            locationState={locationState}
-            onUseMyLocation={handleUseMyLocation}
-            onZipCodeChange={handleZipCodeChange}
-            onClearLocation={clearLocation}
-            isLoadingSubcategories={isLoadingSubcategories}
-            isLoadingLocation={isLocationLoading}
-          />
-        )}
-        
-        {/* Keyword Search Section - Below Resource Filters */}
-        <div className="mb-6">
-          <div style={{ backgroundColor: '#FFB351' }} className="rounded-xl p-4 shadow-sm">
-            <div className="bg-white rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="text"
-                    placeholder={searchPlaceholderText}
-                    value={keywordQuery}
-                    onChange={(e) => setKeywordQuery(e.target.value)}
-                    onKeyPress={handleKeywordInputKeyPress}
-                    className="pl-10 pr-4 py-3 text-lg border-gray-300 focus:border-[#005191] focus:ring-[#005191]"
-                  />
-                </div>
-                <Button
-                  onClick={handleKeywordSearch}
-                  disabled={!keywordQuery.trim()}
-                  className="px-6 py-3 bg-[#005191] hover:bg-[#0066b3] text-white rounded-lg flex items-center gap-2 shadow-sm"
-                >
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </div>
-              {searchType === 'keyword' && keywordQuery && (
-                <div className="mt-3 flex items-center gap-2">
-                  <Badge variant="outline" className="bg-blue-50 text-[#005191]">
-                    {keywordSearchText}: "{keywordQuery}"
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setKeywordQuery('');
-                      setSearchType('category');
-                    }}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    {clearText}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {selectedCategoryId || (searchType === 'keyword' && keywordQuery.trim()) ? (
-          // Show results when a category is selected
-          <>
-            <div className="mb-4">
-              <Button
-                variant="ghost"
-                className="flex items-center text-muted-foreground"
-                onClick={handleBackToCategories}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                {searchType === 'keyword' ? backToSearchText : backToCategoriesText}
-              </Button>
-            </div>
-            
-            <ResultsSection 
-              resources={resources}
-              totalCount={totalCount}
-              categories={categories}
-              subcategories={[...subcategories, ...allSubcategories]}
-              isLoading={isLoadingResources}
-              error={resourcesError}
-              onRetry={refetchResources}
-              onClearFilters={handleClearFilters}
-              selectedCategoryId={selectedCategoryId}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              hasLocation={locationState.type !== 'none'}
-            />
-          </>
-        ) : (
-          // Show prominent search buttons and category grid when no category is selected
-          <div>
-            {/* Prominent Search Buttons */}
-            <div className="mb-8">
-              <div className="flex space-x-4 justify-center">
-                <Button 
-                  onClick={() => setRouterLocation("/search-category")}
-                  className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
-                >
-                  <Search className="mr-2 h-5 w-5" />
-                  <TranslatedText text="Search Category" />
-                </Button>
-                <Button 
-                  onClick={() => setRouterLocation("/search-keyword")}
-                  className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
-                >
-                  <Search className="mr-2 h-5 w-5" />
-                  <TranslatedText text="Search Keyword" />
-                </Button>
-              </div>
-            </div>
-
-            {isLoadingCategories ? (
-              <CategoryGridSkeleton />
-            ) : (
-              <CategoryGrid 
-                categories={sortedCategories}
-                onCategorySelect={handleCategorySelect}
-                selectedCategoryId={selectedCategoryId}
-              />
-            )}
-          </div>
-        )}
       </main>
       
       {/* Footer */}
