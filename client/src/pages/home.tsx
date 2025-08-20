@@ -279,7 +279,7 @@ export default function Home() {
         </div>
 
         {/* Category Grid - Main Content */}
-        <div className="bg-blue-600 px-4 py-6 rounded-lg">
+        <div className="px-4 py-6">
           {isLoadingCategories ? (
             <CategoryGridSkeleton />
           ) : (
