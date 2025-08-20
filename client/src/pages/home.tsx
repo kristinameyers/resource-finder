@@ -303,7 +303,7 @@ export default function Home() {
               onClick={() => setRouterLocation("/search-keyword")}
               style={{
                 backgroundColor: '#0458a3',
-                color: 'white',
+                color: '#ffffff',
                 fontWeight: '700',
                 fontSize: '18px',
                 fontFamily: 'Arial, Helvetica, sans-serif',
@@ -312,26 +312,32 @@ export default function Home() {
                 padding: '12px 40px',
                 cursor: 'pointer',
                 display: 'inline-block',
-                transition: 'background 0.2s, color 0.2s',
-                outline: 'none'
+                transition: 'background 0.2s',
+                outline: 'none',
+                WebkitTextFillColor: '#ffffff',
+                textShadow: 'none'
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = '#004080';
-                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
                 e.currentTarget.style.boxShadow = '0 2px 6px rgba(4,88,163,0.18)';
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.backgroundColor = '#0458a3';
-                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
                 e.currentTarget.style.boxShadow = 'none';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.backgroundColor = '#003060';
-                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.backgroundColor = '#004080';
-                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
               }}
             >
               <TranslatedText text="Search Keyword" />
