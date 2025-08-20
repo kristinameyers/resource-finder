@@ -263,18 +263,38 @@ export default function Home() {
         <div className="mb-8">
           <div className="flex space-x-4 justify-center">
             <button 
-              className="category-button selected px-8 py-3 rounded-2xl text-base font-semibold"
+              className="search-category-btn"
               style={{
-                background: '#ff8200',
-                color: '#151515',
-                border: '2px solid #222',
-                borderRadius: '16px',
-                fontSize: '16px',
-                fontWeight: '600',
-                padding: '12px 20px',
-                margin: '8px',
-                boxShadow: '0 2px 6px rgba(75,75,75,0.04)',
-                cursor: 'pointer'
+                backgroundColor: '#ffb157',
+                color: '#222222',
+                fontWeight: '700',
+                fontSize: '18px',
+                fontFamily: 'Arial, Helvetica, sans-serif',
+                border: 'none',
+                borderRadius: '32px',
+                padding: '12px 40px',
+                cursor: 'pointer',
+                display: 'inline-block',
+                transition: 'background 0.2s, color 0.2s',
+                outline: 'none'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#ff8200';
+                e.currentTarget.style.color = '#151515';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(34,34,34,0.14)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#ffb157';
+                e.currentTarget.style.color = '#222222';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.backgroundColor = '#e06300';
+                e.currentTarget.style.color = '#151515';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.backgroundColor = '#ff8200';
+                e.currentTarget.style.color = '#151515';
               }}
             >
               <TranslatedText text="Search Category" />
