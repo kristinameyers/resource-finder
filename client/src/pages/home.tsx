@@ -269,7 +269,7 @@ export default function Home() {
             justifyContent: 'center',
             alignItems: 'center',
             gap: '32px',
-            marginBottom: '0'
+            marginBottom: '42px'
           }}
         >
             <button 
