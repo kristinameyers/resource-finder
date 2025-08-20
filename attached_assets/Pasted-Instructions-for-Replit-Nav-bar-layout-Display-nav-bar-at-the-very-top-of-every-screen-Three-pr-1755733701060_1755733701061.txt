@@ -1,0 +1,174 @@
+Instructions for Replit:
+Nav bar layout:
+
+Display nav bar at the very top of every screen.
+
+Three primary icons:
+
+Menu button (hamburger) on far left. Opens a left-side slide out menu, not just one overlay.
+
+Back button (chevron) to the right of the menu button (as shown in image, left side before logo).
+
+211 Logo centered.
+
+Location button (pin icon) on far right, links to “Update Location Screen.”
+
+Ensure icons are spaced, sized, and aligned as in your mockup.
+
+Slide out menu:
+
+Opens from left when menu button clicks.
+
+Buttons/links stacked vertically, each styled as a menu item.
+
+Links to screens:
+
+Home
+
+About
+
+Search by Category
+
+Search by Keyword
+
+Update Location
+
+Favorites
+
+Call 211
+
+Settings
+
+"Call 211" triggers tel:211 on mobile.
+
+Example CSS
+css
+/* Global Navbar Container */
+.global-navbar {
+  width: 100vw;
+  height: 66px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2000;
+  box-shadow: 0 2px 8px rgba(34,34,34,0.05);
+  padding: 0 24px;
+}
+
+/* Left Section (Menu & Back) */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nav-icon {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Center Section (Logo) */
+.nav-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-logo {
+  height: 46px;
+  object-fit: contain;
+  background: none;
+}
+
+/* Right Section (Location) */
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Slide Out Menu */
+.menu-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 240px;
+  background: #fff;
+  box-shadow: 2px 0 8px rgba(34,34,34,0.08);
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 18px;
+  gap: 14px;
+  transition: transform 0.2s;
+  /* For animation, use transform: translateX(-100%) when closed, translateX(0) when open */
+}
+
+/* Slide Out Button */
+.menu-item-btn {
+  background: #0458a3;
+  color: #fff;
+  font-weight: 600;
+  font-size: 17px;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.18s;
+}
+
+.menu-item-btn:hover,
+.menu-item-btn:focus {
+  background: #ff8200;
+  color: #222;
+}
+JSX/HTML Structure Sample
+jsx
+<div className="global-navbar">
+  <div className="nav-left">
+    <button className="nav-icon" onClick={openMenu}>{/* Hamburger SVG */}</button>
+    <button className="nav-icon" onClick={goBack}>{/* Chevron SVG */}</button>
+  </div>
+  <div className="nav-center">
+    <img className="nav-logo" src="sb-211-logo.png" alt="Santa Barbara 211 Logo" />
+  </div>
+  <div className="nav-right">
+    <button className="nav-icon" onClick={goToLocation}>{/* Location SVG */}</button>
+  </div>
+</div>
+{menuOpen && (
+  <div className="menu-drawer">
+    <button className="menu-item-btn" onClick={goHome}>Home</button>
+    <button className="menu-item-btn" onClick={goAbout}>About</button>
+    <button className="menu-item-btn" onClick={goCategory}>Search by Category</button>
+    <button className="menu-item-btn" onClick={goKeyword}>Search by Keyword</button>
+    <button className="menu-item-btn" onClick={goLocation}>Update Location</button>
+    <button className="menu-item-btn" onClick={goFavorites}>Favorites</button>
+    <button className="menu-item-btn" onClick={() => window.open('tel:211')}>Call 211</button>
+    <button className="menu-item-btn" onClick={goSettings}>Settings</button>
+  </div>
+)}
+Summary:
+Place this navbar (.global-navbar) at the top of every screen.
+
+Use standard accessible button styles for icons.
+
+All three icons (menu, back, location) must be easily clickable and well-spaced.
+
+Slide out menu is full-height, left-aligned, with blue/white buttons matching your brand.
+
+All navigation targets work as described above.

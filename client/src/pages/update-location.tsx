@@ -4,6 +4,7 @@ import { ChevronLeft, Menu, MapPin, Locate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TranslatedText } from "@/components/TranslatedText";
+import GlobalNavbar from "@/components/GlobalNavbar";
 import { useToast } from "@/hooks/use-toast";
 
 export default function UpdateLocationPage() {
@@ -21,16 +22,7 @@ export default function UpdateLocationPage() {
   }, []);
 
   const handleBack = () => {
-    setLocation("/");
-  };
-
-  const handleMenuClick = () => {
-    // TODO: Implement hamburger menu slide-out
-    console.log("Menu clicked");
-  };
-
-  const handleLocationClick = () => {
-    // Already on location page
+    window.history.back();
   };
 
   const handleUseCurrentLocation = async () => {
@@ -110,67 +102,12 @@ export default function UpdateLocationPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with Santa Barbara 211 Logo */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-6 flex justify-center items-center">
-          <h1 className="text-xl font-semibold text-gray-800">
-            <TranslatedText text="Santa Barbara 211" />
-          </h1>
-        </div>
-      </header>
-
-      {/* Search Type Toggle */}
-      <div className="px-4 py-4 bg-white border-b border-gray-200">
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            className="flex-1"
-            onClick={() => setLocation("/search-category")}
-          >
-            <TranslatedText text="Search Category" />
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex-1"
-            onClick={() => setLocation("/search-keyword")}
-          >
-            <TranslatedText text="Search Keyword" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Navigation continuation */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={handleBack}
-            className="p-1"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={handleMenuClick}
-            className="p-1"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={handleLocationClick}
-          className="p-1"
-        >
-          <MapPin className="h-5 w-5 text-blue-500" />
-        </Button>
-      </div>
-
-      {/* Header */}
+      {/* Global Navigation */}
+      <GlobalNavbar showBackButton={true} onBackClick={handleBack} />
+      
+      {/* Content with top padding for fixed navbar */}
+      <div style={{ paddingTop: '66px' }}>
+        {/* Header */}
       <div className="text-center py-6 bg-white">
         <h1 className="text-xl font-semibold text-gray-900">
           <TranslatedText text="Santa Barbara 211" />
@@ -266,6 +203,7 @@ export default function UpdateLocationPage() {
             <div className="text-xs">Settings</div>
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

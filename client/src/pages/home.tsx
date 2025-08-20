@@ -5,6 +5,7 @@ import FilterSectionSkeleton from "@/components/filter-section-skeleton";
 import CategoryGrid from "@/components/category-grid";
 import CategoryGridSkeleton from "@/components/category-grid-skeleton";
 import ResultsSection from "@/components/results-section";
+import GlobalNavbar from "@/components/GlobalNavbar";
 import { useResources } from "@/hooks/use-resources";
 import { useSubcategories } from "@/hooks/use-subcategories";
 import { useLocation, LocationState } from "@/hooks/use-location";
@@ -243,20 +244,11 @@ export default function Home() {
   
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <img src={new211Logo} alt="Santa Barbara County 211" className="h-32" />
-          
-          {/* Loading indicator */}
-          {(isLoadingCategories || isLoadingResources) && (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-[#005191]" />
-              <span className="text-base text-[#005191] font-medium">{loadingText}</span>
-            </div>
-          )}
-        </div>
-      </header>
+      {/* Global Navigation */}
+      <GlobalNavbar />
+      
+      {/* Content with top padding for fixed navbar */}
+      <div style={{ paddingTop: '66px' }}>
       
       <main className="flex-grow min-h-screen pb-24" style={{ margin: '0', padding: '0', background: '#fff' }}>
         {/* Navigation Bar with Blue Background */}
@@ -264,12 +256,11 @@ export default function Home() {
           className="menu-nav-bar"
           style={{
             background: '#62a0c6',
-            padding: '32px 0 0 0',
+            padding: '18px 0 18px 0',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: '32px',
-            marginBottom: '42px'
+            gap: '64px'
           }}
         >
             <button 
@@ -363,7 +354,7 @@ export default function Home() {
             transform: 'translateX(-50%)',
             background: '#005191',
             borderRadius: '0',
-            padding: '32px 0 0 0',
+            padding: '3px 0 0 0',
             boxSizing: 'border-box',
             marginTop: '0'
           }}
@@ -390,6 +381,7 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

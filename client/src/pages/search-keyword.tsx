@@ -4,6 +4,7 @@ import { ChevronLeft, Menu, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TranslatedText } from "@/components/TranslatedText";
+import GlobalNavbar from "@/components/GlobalNavbar";
 
 export default function SearchKeywordPage() {
   const [, setLocation] = useLocation();
@@ -36,16 +37,12 @@ export default function SearchKeywordPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with Santa Barbara 211 Logo */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-6 flex justify-center items-center">
-          <h1 className="text-xl font-semibold text-gray-800">
-            <TranslatedText text="Santa Barbara 211" />
-          </h1>
-        </div>
-      </header>
-
-      {/* Search Type Toggle */}
+      {/* Global Navigation */}
+      <GlobalNavbar showBackButton={true} onBackClick={handleBack} />
+      
+      {/* Content with top padding for fixed navbar */}
+      <div style={{ paddingTop: '66px' }}>
+        {/* Search Type Toggle */}
       <div className="px-4 py-4 bg-white border-b border-gray-200">
         <div className="flex space-x-2">
           <Button 
@@ -109,6 +106,7 @@ export default function SearchKeywordPage() {
             <div className="text-xs">Settings</div>
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { ChevronLeft, Menu, MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TranslatedText } from "@/components/TranslatedText";
+import GlobalNavbar from "@/components/GlobalNavbar";
 import { useQuery } from "@tanstack/react-query";
 import { filterSantaBarbaraAndSort } from "@/utils/distance";
 
@@ -103,16 +104,7 @@ export default function ResourcesListPage() {
   const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);
 
   const handleBack = () => {
-    setLocation("/");
-  };
-
-  const handleMenuClick = () => {
-    // TODO: Implement hamburger menu slide-out
-    console.log("Menu clicked");
-  };
-
-  const handleLocationClick = () => {
-    setLocation("/update-location");
+    window.history.back();
   };
 
   const handleResourceClick = (resourceId: string) => {
@@ -121,36 +113,11 @@ export default function ResourcesListPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation Bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={handleBack}
-            className="p-1"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={handleMenuClick}
-            className="p-1"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={handleLocationClick}
-          className="p-1"
-        >
-          <MapPin className="h-5 w-5" />
-        </Button>
-      </div>
+      {/* Global Navigation */}
+      <GlobalNavbar showBackButton={true} onBackClick={handleBack} />
+      
+      {/* Content with top padding for fixed navbar */}
+      <div style={{ paddingTop: '66px' }}>
 
       {/* Header */}
       <div className="text-center py-6 bg-white">
@@ -290,6 +257,7 @@ export default function ResourcesListPage() {
             <div className="text-xs">Settings</div>
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
