@@ -259,6 +259,47 @@ export default function Home() {
       </header>
       
       <main className="flex-grow container mx-auto px-4 py-8 bg-gray-50 min-h-screen pb-24">
+        {/* Search Type Buttons */}
+        <div className="mb-8">
+          <div className="flex space-x-4 justify-center">
+            <button 
+              className="category-button selected px-8 py-3 rounded-2xl text-base font-semibold"
+              style={{
+                background: '#ff8200',
+                color: '#151515',
+                border: '2px solid #222',
+                borderRadius: '16px',
+                fontSize: '16px',
+                fontWeight: '600',
+                padding: '12px 20px',
+                margin: '8px',
+                boxShadow: '0 2px 6px rgba(75,75,75,0.04)',
+                cursor: 'pointer'
+              }}
+            >
+              <TranslatedText text="Search Category" />
+            </button>
+            <button 
+              onClick={() => setRouterLocation("/search-keyword")}
+              className="px-8 py-3 rounded-2xl text-base font-semibold text-white"
+              style={{
+                background: '#1e40af',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                fontSize: '16px',
+                fontWeight: '600',
+                padding: '12px 20px',
+                margin: '8px',
+                boxShadow: '0 2px 6px rgba(75,75,75,0.04)',
+                cursor: 'pointer'
+              }}
+            >
+              <TranslatedText text="Search Keyword" />
+            </button>
+          </div>
+        </div>
+
         {/* Category Grid - Main Content */}
         <div>
           {isLoadingCategories ? (
