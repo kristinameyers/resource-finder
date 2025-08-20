@@ -301,18 +301,38 @@ export default function Home() {
             </button>
             <button 
               onClick={() => setRouterLocation("/search-keyword")}
-              className="px-8 py-3 rounded-2xl text-base font-semibold text-white"
+              className="search-keyword-btn"
               style={{
-                background: '#1e40af',
-                color: 'white',
+                backgroundColor: '#0458a3',
+                color: '#ffffff',
+                fontWeight: '700',
+                fontSize: '18px',
+                fontFamily: 'Arial, Helvetica, sans-serif',
                 border: 'none',
-                borderRadius: '16px',
-                fontSize: '16px',
-                fontWeight: '600',
-                padding: '12px 20px',
-                margin: '8px',
-                boxShadow: '0 2px 6px rgba(75,75,75,0.04)',
-                cursor: 'pointer'
+                borderRadius: '32px',
+                padding: '12px 40px',
+                cursor: 'pointer',
+                display: 'inline-block',
+                transition: 'background 0.2s, color 0.2s',
+                outline: 'none'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#004080';
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(4,88,163,0.18)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#0458a3';
+                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.backgroundColor = '#003060';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.backgroundColor = '#004080';
+                e.currentTarget.style.color = '#ffffff';
               }}
             >
               <TranslatedText text="Search Keyword" />
