@@ -32,7 +32,8 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
   const { text: browseCategoriesText } = useTranslatedText("Browse all Categories");
   const { triggerHaptic, reduceMotion } = useAccessibility();
   return (
-    <div className="p-6 pb-8">
+    <div className="bg-[#005191] p-6 pb-8 rounded-xl">
+      <h2 className="text-white text-center mb-6 text-2xl font-normal">{browseCategoriesText}</h2>
       <div className="grid grid-cols-3 gap-6 justify-items-center">
         {categories.map((category) => {
           const iconMap: Record<string, string> = {
