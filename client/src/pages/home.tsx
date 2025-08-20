@@ -259,25 +259,6 @@ export default function Home() {
       </header>
       
       <main className="flex-grow container mx-auto px-4 py-8 bg-gray-50 min-h-screen pb-24">
-        {/* Prominent Search Buttons */}
-        <div className="mb-8">
-          <div className="flex space-x-4 justify-center">
-            <Button 
-              className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
-            >
-              <Search className="mr-2 h-5 w-5" />
-              <TranslatedText text="Search Category" />
-            </Button>
-            <Button 
-              onClick={() => setRouterLocation("/search-keyword")}
-              className="flex-1 max-w-[200px] bg-orange-500 hover:bg-orange-600 text-black font-medium py-4 text-lg"
-            >
-              <Search className="mr-2 h-5 w-5" />
-              <TranslatedText text="Search Keyword" />
-            </Button>
-          </div>
-        </div>
-
         {/* Category Grid - Main Content */}
         <div>
           {isLoadingCategories ? (
@@ -291,26 +272,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Bottom Navigation - as shown in PDFs */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-          <div className="flex justify-around items-center py-3">
-            <button className="flex flex-col items-center space-y-1 text-gray-600">
-              <div className="text-xs">Search</div>
-            </button>
-            <button className="flex flex-col items-center space-y-1 text-gray-600">
-              <div className="text-xs">Favorites</div>
-            </button>
-            <button className="flex flex-col items-center space-y-1 text-gray-600">
-              <div className="text-xs">Search</div>
-            </button>
-            <button className="flex flex-col items-center space-y-1 text-gray-600">
-              <div className="text-xs">About</div>
-            </button>
-            <button className="flex flex-col items-center space-y-1 text-gray-600">
-              <div className="text-xs">Settings</div>
-            </button>
-          </div>
-        </div>
+
       </main>
       
       {/* Footer */}
