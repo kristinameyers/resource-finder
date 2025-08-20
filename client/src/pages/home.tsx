@@ -258,17 +258,18 @@ export default function Home() {
         </div>
       </header>
       
-      <main className="flex-grow bg-gray-50 min-h-screen pb-24">
+      <main className="flex-grow min-h-screen pb-24" style={{ margin: '0', padding: '0', background: '#fff' }}>
         {/* Navigation Bar with Blue Background */}
         <div 
           className="menu-nav-bar"
           style={{
             background: '#62a0c6',
-            padding: '32px 0 32px 0',
+            padding: '32px 0 0 0',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: '32px'
+            gap: '32px',
+            marginBottom: '0'
           }}
         >
             <button 
@@ -354,7 +355,19 @@ export default function Home() {
         </div>
 
         {/* Category Grid - Main Content */}
-        <div className="container mx-auto px-4 py-8">
+        <div 
+          className="icon-grid-section"
+          style={{
+            width: '100vw',
+            marginLeft: '50%',
+            transform: 'translateX(-50%)',
+            background: '#005191',
+            borderRadius: '0',
+            padding: '32px 0 0 0',
+            boxSizing: 'border-box',
+            marginTop: '0'
+          }}
+        >
           {isLoadingCategories ? (
             <CategoryGridSkeleton />
           ) : (

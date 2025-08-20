@@ -32,7 +32,7 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
   const { text: browseCategoriesText } = useTranslatedText("Search Category");
   const { triggerHaptic, reduceMotion } = useAccessibility();
   return (
-    <div className="bg-[#005191] p-6 pb-8 rounded-xl">
+    <div className="bg-[#005191] px-6 py-8" style={{ margin: '0', borderRadius: '0' }}>
       <h2 className="text-white text-center mb-6 text-3xl font-normal">{browseCategoriesText}</h2>
       <div className="grid grid-cols-3 gap-6 justify-items-center">
         {categories.map((category) => {
