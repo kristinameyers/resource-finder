@@ -258,10 +258,19 @@ export default function Home() {
         </div>
       </header>
       
-      <main className="flex-grow container mx-auto px-4 py-8 bg-gray-50 min-h-screen pb-24">
-        {/* Search Type Buttons */}
-        <div className="mb-8">
-          <div className="flex space-x-4 justify-center">
+      <main className="flex-grow bg-gray-50 min-h-screen pb-24">
+        {/* Navigation Bar with Blue Background */}
+        <div 
+          className="menu-nav-bar"
+          style={{
+            background: '#62a0c6',
+            padding: '32px 0 32px 0',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '32px'
+          }}
+        >
             <button 
               className="search-category-btn"
               style={{
@@ -320,33 +329,32 @@ export default function Home() {
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = '#004080';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
+                (e.currentTarget.style as any).webkitTextFillColor = '#ffffff';
                 e.currentTarget.style.boxShadow = '0 2px 6px rgba(4,88,163,0.18)';
               }}
               onMouseOut={(e) => {
                 e.currentTarget.style.backgroundColor = '#0458a3';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
+                (e.currentTarget.style as any).webkitTextFillColor = '#ffffff';
                 e.currentTarget.style.boxShadow = 'none';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.backgroundColor = '#003060';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
+                (e.currentTarget.style as any).webkitTextFillColor = '#ffffff';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.backgroundColor = '#004080';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.WebkitTextFillColor = '#ffffff';
+                (e.currentTarget.style as any).webkitTextFillColor = '#ffffff';
               }}
             >
               <TranslatedText text="Search Keyword" />
             </button>
-          </div>
         </div>
 
         {/* Category Grid - Main Content */}
-        <div>
+        <div className="container mx-auto px-4 py-8">
           {isLoadingCategories ? (
             <CategoryGridSkeleton />
           ) : (
