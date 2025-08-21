@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation as useRouter } from 'wouter';
-import { Menu, ChevronLeft, MapPin } from 'lucide-react';
+import { Menu, ChevronLeft, MapPin, X } from 'lucide-react';
 import { TranslatedText } from '@/components/TranslatedText';
 import sbLogo from '@/assets/new-211-logo.png';
 
@@ -83,6 +83,12 @@ export default function GlobalNavbar({ showBackButton = false, onBackClick }: Gl
 
       {/* Slide Out Menu */}
       <div className={`slide-menu ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Close X button */}
+        <div className="menu-header">
+          <button className="menu-close-btn" onClick={closeMenu}>
+            <X size={24} color="#222" />
+          </button>
+        </div>
         <ul className="menu-list">
           {menuItems.map((item, index) => (
             <li 
