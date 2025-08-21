@@ -1,0 +1,86 @@
+It is critical for a polished, consistent UX that the “menu” (hamburger) icon and the central logo do not shift horizontally depending on whether the “back” button is present or absent. Their positions should remain fixed at all times, regardless of which navigation icons are being displayed.
+
+Implementation Guidance
+The menu (hamburger) icon should always be anchored to the far left of the nav bar.
+
+The logo must remain perfectly centered in the nav bar at all times, not shifting left or right as different elements appear or disappear on the sides.
+
+When the back button is present, it appears directly to the right of the menu icon, but the menu’s position on the left, and the logo’s centered alignment, are unchanged.
+
+When the back button is absent, do not shift the menu or move the logo—simply leave the space empty or adjust with an invisible placeholder occupying the same width as the back button.
+
+Example (React/JSX + CSS)
+You can accomplish this with flex layout and a fixed-width invisible placeholder when the back button isn't visible:
+
+jsx
+<div className="global-navbar">
+  <div className="nav-left">
+    <button className="nav-icon" onClick={openMenu}> {/* Hamburger */} </button>
+    {showBackButton ? (
+      <button className="nav-icon" onClick={goBack}> {/* Chevron */} </button>
+    ) : (
+      <span className="nav-icon-placeholder"></span>
+    )}
+  </div>
+  <div className="nav-center">
+    <img className="nav-logo" src="sb-211-logo.png" alt="Santa Barbara 211 Logo"/>
+  </div>
+  <div className="nav-right">
+    <button className="nav-icon" onClick={goToLocation}> {/* Location */} </button>
+  </div>
+</div>
+css
+.global-navbar {
+  width: 100vw;
+  height: 66px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2000;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 90px; /* ensure this side never shrinks if back is missing */
+}
+
+.nav-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-logo {
+  height: 46px;
+  object-fit: contain;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.nav-icon,
+.nav-icon-placeholder {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  /* .nav-icon gets cursor:pointer; .nav-icon-placeholder does not */
+}
+Summary for Replit
+Never move the menu or logo when displaying or hiding the back button.
+
+Use a fixed-width invisible placeholder for the back button space when it’s not shown.
+
+This ensures perfect alignment and no shifting for all devices/screens
