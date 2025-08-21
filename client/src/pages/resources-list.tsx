@@ -63,12 +63,23 @@ export default function ResourcesListPage() {
   // Fetch category data
   const { data: categoriesResponse } = useQuery<CategoriesResponse>({
     queryKey: ["/api/categories"],
+    queryFn: async () => {
+      const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json();
+    },
   });
   const categories = categoriesResponse?.categories || [];
 
   // Fetch subcategories for the selected category
   const { data: subcategoriesResponse } = useQuery<SubcategoriesResponse>({
     queryKey: ["/api/subcategories", categoryId],
+    queryFn: async () => {
+      if (!categoryId) throw new Error('Category ID required');
+      const response = await fetch(`/api/subcategories?categoryId=${categoryId}`);
+      if (!response.ok) throw new Error('Failed to fetch subcategories');
+      return response.json();
+    },
     enabled: !!categoryId,
   });
   const subcategories = subcategoriesResponse?.subcategories || [];
@@ -84,6 +95,11 @@ export default function ResourcesListPage() {
   // Fetch resources
   const { data: resourcesData, isLoading } = useQuery({
     queryKey: ["/api/resources", resourceParams.toString()],
+    queryFn: async () => {
+      const response = await fetch(`/api/resources?${resourceParams.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch resources');
+      return response.json();
+    },
     enabled: !!(categoryId || keyword),
   });
 
