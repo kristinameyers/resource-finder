@@ -40,43 +40,20 @@ export async function getCoordinatesFromZipCode(zipCode: string): Promise<{ lat:
   return null;
 }
 
-// Filter and sort resources for Santa Barbara County with distance calculations
+// The backend now handles all 211 API taxonomy-based filtering and distance calculations
+// This function is kept for compatibility but should not be needed
 export function filterSantaBarbaraAndSort(userZipCode: string, resources: any[]): any[] {
-  return resources
-    .filter((resource: any) => {
-      // Filter for Santa Barbara County resources
-      const address = resource.address?.toLowerCase() || '';
-      const location = resource.location?.toLowerCase() || '';
-      const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
-      
-      return address.includes('santa barbara') ||
-             address.includes(', ca') ||
-             location.includes('santa barbara') ||
-             serviceAreas.includes('santa barbara') ||
-             // Include other Santa Barbara County cities
-             address.includes('lompoc') ||
-             address.includes('santa maria') ||
-             address.includes('guadalupe') ||
-             address.includes('goleta') ||
-             address.includes('carpinteria') ||
-             address.includes('solvang');
-    })
-    .map((resource: any) => {
-      // Add distance calculation if coordinates are available
-      if (resource.coordinates && userZipCode) {
-        // This would need user coordinates, which we'd get from userZipCode
-        // For now, return the resource as-is
-        return resource;
-      }
-      return resource;
-    })
-    .sort((a: any, b: any) => {
-      // Sort by distance if available, otherwise by name
-      if (a.distance && b.distance) {
-        return a.distance - b.distance;
-      }
-      return a.name.localeCompare(b.name);
-    });
+  // Backend already handles proper Santa Barbara filtering via 211 API
+  // Just return resources as-is since they're already properly filtered
+  return resources.sort((a: any, b: any) => {
+    // Sort by distance if available (backend calculates this), otherwise by name
+    if (a.distanceMiles !== undefined && b.distanceMiles !== undefined) {
+      return a.distanceMiles - b.distanceMiles;
+    }
+    if (a.distanceMiles !== undefined) return -1;
+    if (b.distanceMiles !== undefined) return 1;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 // Get user's current location using browser geolocation

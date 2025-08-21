@@ -87,29 +87,8 @@ export default function ResourcesListPage() {
     enabled: !!(categoryId || keyword),
   });
 
-  // Process resources with distance calculations and Santa Barbara filtering
-  const processedResources = (resourcesData as any)?.resources ? (() => {
-    const resources = (resourcesData as any).resources;
-    if (userLocation) {
-      return filterSantaBarbaraAndSort(userLocation, resources);
-    } else {
-      // Filter for Santa Barbara County even without user location
-      return resources.filter((resource: Resource) => {
-        const address = resource.address?.toLowerCase() || '';
-        const location = resource.location?.toLowerCase() || '';
-        const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
-        
-        return address.includes('santa barbara') ||
-               address.includes(', ca') ||
-               location.includes('santa barbara') ||
-               serviceAreas.includes('santa barbara') ||
-               // Include Lompoc, Santa Maria, Guadalupe as they are in Santa Barbara County
-               address.includes('lompoc') ||
-               address.includes('santa maria') ||
-               address.includes('guadalupe');
-      });
-    }
-  })() : [];
+  // Process resources - backend already handles 211 API taxonomy search and Santa Barbara filtering
+  const processedResources = (resourcesData as any)?.resources || [];
 
   const currentCategory = categories.find((cat: Category) => cat.id === categoryId);
   const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);
