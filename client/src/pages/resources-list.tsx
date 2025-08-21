@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TranslatedText } from "@/components/TranslatedText";
 import GlobalNavbar from "@/components/GlobalNavbar";
 import { useQuery } from "@tanstack/react-query";
-import { filterSantaBarbaraAndSort } from "@/utils/distance";
+import { filterSantaBarbaraAndSort } from "@/lib/distanceUtils";
 
 interface Resource {
   id: string;
