@@ -54,14 +54,14 @@ export default function GlobalNavbar({ showBackButton = false, onBackClick }: Gl
       {/* Global Navbar */}
       <div className="global-navbar">
         <div className="nav-left">
-          <button className="nav-icon" onClick={openMenu}>
-            <Menu size={24} color="#005191" />
-          </button>
           {showBackButton && (
             <button className="nav-icon" onClick={goBack}>
               <ChevronLeft size={24} color="#005191" />
             </button>
           )}
+          <button className="nav-icon" onClick={openMenu}>
+            <Menu size={24} color="#005191" />
+          </button>
         </div>
         <div className="nav-center">
           <img className="nav-logo" src={sbLogo} alt="Santa Barbara 211 Logo"/>
