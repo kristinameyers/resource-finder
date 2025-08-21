@@ -248,3 +248,12 @@ export default function ResourcesListPage() {
                 <div className="flex items-center text-sm text-gray-500">
                   <MapPin className="h-4 w-4 mr-1" />
                   <span><TranslatedText text={resource.location} /></span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
