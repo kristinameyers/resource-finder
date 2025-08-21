@@ -1,0 +1,63 @@
+Instructions for Replit
+1. Stop Deploying Further Changes Immediately
+Do not push additional code until you’ve done a step-by-step review.
+
+2. Restore the Resource Functionality From Yesterday
+Identify the specific commit or file(s) from yesterday (when resource categories and lists worked correctly).
+
+Use your version control/git history (e.g., git log, GitHub/Bitbucket UI).
+
+Look for recent commits for resources, category click, or API/data fetching logic.
+
+Restore all affected backend and frontend files handling:
+
+Resource fetching/filtering (API endpoints, database logic).
+
+Frontend resource display and category click handlers.
+
+Any Redux/context/data loader logic and related utility functions.
+
+Test that categories display resources as expected (as of yesterday).
+
+3. Keep Today's UI and CSS Changes
+Preserve all CSS/layout and UI refactor updates made today:
+
+Navigation bar redesign, new button styling, background fixes, slide-out menu, etc.
+
+Do NOT roll back new UI/UX code—only restore business/resource logic.
+
+4. Manually Merge or Cherry-Pick Where Needed
+If both UI and resource logic changed in the same file, manually:
+
+Copy-paste or merge the resource-relevant functions/handlers from the working version (yesterday) into the current UI-updated version (today).
+
+Carefully avoid overwriting the style/layout work done today.
+
+For files that only contain resource logic, simply revert or cherry-pick them.
+
+5. Test Thoroughly
+After merging, test the following:
+
+Resource category clicks show correct resources.
+
+Resource lists and filters work as they did yesterday.
+
+All today’s design changes remain visible and functioning.
+
+6. Last Steps: Version Control and Future Guardrails
+Commit this fixed, working state with a clear message (e.g., "Restore resource listing function, preserve UI updates (merge 2025-08-20 & 2025-08-19 changes)").
+
+Tag the working commit or save a backup for fallback.
+
+Add a team note:
+
+“When major UI changes are made, verify all core functionality (category, resource listing, filtering, etc.) before merging or deploying. Use git branches to keep UI and logic changes separate.”
+
+Summary for Replit
+Find where yesterday’s working resource logic was broken or overwritten.
+
+Restore that logic without touching the new UI/CSS/layout from today.
+
+Test both display and filtering, then commit as a new, stable working version.
+
+If you need further help identifying which files/commits to restore or need an example workflow (e.g., git cherry-pick or git checkout for certain files), just ask!
