@@ -7,9 +7,10 @@ import sbLogo from '@/assets/new-211-logo.png';
 interface GlobalNavbarProps {
   showBackButton?: boolean;
   onBackClick?: () => void;
+  active?: string;
 }
 
-export default function GlobalNavbar({ showBackButton = false, onBackClick }: GlobalNavbarProps) {
+export default function GlobalNavbar({ showBackButton = false, onBackClick, active }: GlobalNavbarProps) {
   const [, setLocation] = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

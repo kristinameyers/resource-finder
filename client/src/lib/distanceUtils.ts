@@ -42,17 +42,16 @@ export async function getCoordinatesFromZipCode(zipCode: string): Promise<{ lat:
 
 // The backend now handles all 211 API taxonomy-based filtering and distance calculations
 // This function is kept for compatibility but should not be needed
-export function filterSantaBarbaraAndSort(userZipCode: string, resources: any[]): any[] {
-  // Backend already handles proper Santa Barbara filtering via 211 API
-  // Just return resources as-is since they're already properly filtered
-  return resources.sort((a: any, b: any) => {
-    // Sort by distance if available (backend calculates this), otherwise by name
+export function filterSantaBarbaraAndSort(resources: any[], userZipCode?: string): any[] {
+  // Resources should already be filtered for Santa Barbara by backend!
+  // Sort by ascending distanceMiles if present, then by name.
+  return [...resources].sort((a: any, b: any) => {
     if (a.distanceMiles !== undefined && b.distanceMiles !== undefined) {
       return a.distanceMiles - b.distanceMiles;
     }
     if (a.distanceMiles !== undefined) return -1;
     if (b.distanceMiles !== undefined) return 1;
-    return a.name.localeCompare(b.name);
+    return (a.name || "").localeCompare(b.name || "");
   });
 }
 

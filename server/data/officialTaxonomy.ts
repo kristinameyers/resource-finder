@@ -24,6 +24,7 @@ export const MAIN_CATEGORIES = {
 // Subcategories with official taxonomy codes
 export const SUBCATEGORIES = {
   'housing': [
+    { id: 'housing', name: 'Housing', taxonomyCode: 'BH-1800.8500' },
     { id: 'domestic-violence-shelters', name: 'Domestic Violence Shelters', taxonomyCode: 'BH-1800.1500-100' },
     { id: 'homeless-shelters', name: 'Homeless Shelters', taxonomyCode: 'BH-1800.8500' },
     { id: 'maternity-homes', name: 'Maternity Homes', taxonomyCode: 'LJ-5000.5000' },
@@ -37,9 +38,34 @@ export const SUBCATEGORIES = {
     { id: 'housing-discrimination', name: 'Housing Discrimination', taxonomyCode: 'FT-1800.3000' },
     { id: 'low-income-rental-housing', name: 'Low Income Rental Housing', taxonomyCode: 'BH-7000.4600' },
     { id: 'section-8-voucher', name: 'Section 8 Voucher / Housing Authority', taxonomyCode: 'BH-8300.3000' },
-    { id: 'bathing-facilities', name: 'Bathing Facilities', taxonomyCode: 'BH-1800.3500' }
+    { id: 'bathing-facilities', name: 'Bathing Facilities', taxonomyCode: 'BH-1800.3500' },
+    { id: 'temporary-mailing-address', name: 'Temporary Mailing Address', taxonomyCode: 'BM-6500.6500-850' },
+    { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000' },
+    { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
+  ],
+  'finance-employment': [
+    { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'NL-1000' },
+    { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
+    { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
+    { id: 'employment-discrimination', name: 'Employment Discrimination Assistance', taxonomyCode: 'FT-1800.1850' },
+    { id: 'vocational-rehabilitation', name: 'Vocational Rehabilitation', taxonomyCode: 'ND-9000' },
+    { id: 'technical-trade-schools', name: 'Technical/Trade Schools', taxonomyCode: 'HD-6000.9000' },
+    { id: 'calworks', name: 'CalWorks', taxonomyCode: 'NL-1000.8500' },
+    { id: 'general-relief', name: 'General Relief', taxonomyCode: 'NL-1000.2500' },
+    { id: 'cash-assistance-immigrants', name: 'Cash Assistance Program for Immigrants', taxonomyCode: 'NL-1000.2400-150' },
+    { id: 'veteran-benefits', name: 'Veteran Benefits Assistance', taxonomyCode: 'FT-1000.9000' },
+    { id: 'calaim', name: 'CalAIM', taxonomyCode: 'BD-5000.3500' },
+    { id: 'calfresh', name: 'CalFresh (formerly Food Stamps)', taxonomyCode: 'NL-6000.2000' },
+    { id: 'medicaid', name: 'Medicaid', taxonomyCode: 'NL-5000.5000' },
+    { id: 'wic', name: 'Women, Infants, & Children', taxonomyCode: 'NL-6000.9500' },
+    { id: 'medicare', name: 'Medicare', taxonomyCode: 'NS-8000.5000' },
+    { id: 'credit-counseling', name: 'Credit Counseling', taxonomyCode: 'DM-1500.1500' },
+    { id: 'vita-programs', name: 'VITA Programs', taxonomyCode: 'DT-8800.9300' },
+    { id: 'utility-payment', name: 'Utility Payment Assistance', taxonomyCode: 'BV-8900.9300' },
+    { id: 'pet-checkups', name: 'Low-Cost Veterinary Care', taxonomyCode: 'PD-9000.9700' }
   ],
   'legal-assistance': [
+    { id: 'legal-assistance', name: 'Legal Assistance', taxonomyCode: 'FT' },
     { id: 'traffic-courts', name: 'Traffic Courts', taxonomyCode: 'FC-8200.8100-900' },
     { id: 'veterans-courts', name: 'Veterans Courts', taxonomyCode: 'FC-8200.8100-920' },
     { id: 'general-legal-aid', name: 'General Legal Aid', taxonomyCode: 'FT-3200' },
@@ -124,11 +150,16 @@ export const SUBCATEGORIES = {
     { id: 'postpartum-depression', name: 'Postpartum Depression', taxonomyCode: 'RP-1400.8000-655' },
     { id: 'sexual-assault-counseling', name: 'Sexual Assault', taxonomyCode: 'LT-1750.7935' },
     { id: 'suicide-counseling', name: 'Suicide Counseling', taxonomyCode: 'RP-1400.8000-825' },
-    { id: 'youth-counseling', name: 'Adolescent/Youth Counseling', taxonomyCode: 'RP-1400.8000-050' }
+    { id: 'youth-counseling', name: 'Adolescent/Youth Counseling', taxonomyCode: 'RP-1400.8000-050' },
+    { id: 'domestic-violence-hotlines', name: 'Domestic Violence Hotlines', taxonomyCode: 'RP-1500.1400-200' },
+    { id: 'general-crisis-intervention-hotlines', name: 'General Crisis Intervention Hotlines', taxonomyCode: 'RP-1500.1400-250' },
+    { id: 'lgbtq2-helplines', name: 'LGBTQ2+ Helplines', taxonomyCode: 'RP-1500.1400-400' },
+    { id: 'psychiatric-response-hotline', name: 'Psychiatric Response Hotline', taxonomyCode: 'RP-1500.3400-650' },
+    { id: 'sexual-assault-hotlines', name: 'Sexual Assault Hotlines', taxonomyCode: 'RP-1500.1400-750' },
   ],
   'substance-use': [
     { id: 'substance-use', name: 'Substance Use', taxonomyCode: 'RX-8250' },
-    { id: 'alcohol-detox', name: 'Alcohol Detoxification', taxonomyCode: 'RX-1700.0500' },
+    { id: 'alcohol-detox', name: 'Alcohol Detox', taxonomyCode: 'RX-1700.0500' },
     { id: 'alcohol-support-groups', name: 'Alcohol Support Groups', taxonomyCode: 'PN-8100.0500-070' },
     { id: 'alcoholism-counseling', name: 'Alcoholism Counseling', taxonomyCode: 'RX-8450.8000-050' },
     { id: 'sober-living', name: 'Sober Living Homes', taxonomyCode: 'RX-8500.8000' },

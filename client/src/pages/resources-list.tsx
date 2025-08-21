@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
-import { ChevronLeft, Menu, MapPin, ChevronDown } from "lucide-react";
+import { ChevronLeft, Menu, MapPin, ChevronDown, Heart, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TranslatedText } from "@/components/TranslatedText";
@@ -40,11 +40,26 @@ interface SubcategoriesResponse {
   subcategories: Subcategory[];
 }
 
+function getFavorites() {
+  try {
+    return JSON.parse(localStorage.getItem("favorites") || "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavorites(favs: string[]) {
+  localStorage.setItem("favorites", JSON.stringify(favs));
+}
+
 export default function ResourcesListPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [userLocation, setUserLocation] = useState<string>("");
+  const [favorites, setFavorites] = useState<string[]>(getFavorites());
+  const [sortBy, setSortBy] = useState<"relevance" | "distance">("relevance");
+  const [filtersActive, setFiltersActive] = useState(false);
 
   // Parse URL parameters
   const params = new URLSearchParams(search);
@@ -53,12 +68,12 @@ export default function ResourcesListPage() {
   const useApi = params.get('useApi') === 'true';
 
   useEffect(() => {
-    // Get user location for distance calculations
     const zipCode = localStorage.getItem('userZipCode');
-    if (zipCode) {
-      setUserLocation(zipCode);
-    }
+    if (zipCode) setUserLocation(zipCode);
   }, []);
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
 
   // Fetch category data
   const { data: categoriesResponse } = useQuery<CategoriesResponse>({
@@ -103,12 +118,31 @@ export default function ResourcesListPage() {
     enabled: !!(categoryId || keyword),
   });
 
-  // Resources are now properly filtered by 211 API - no local filtering needed
-  const processedResources = (resourcesData as any)?.resources || [];
-
+  let processedResources = (resourcesData as any)?.resources || [];
   const currentCategory = categories.find((cat: Category) => cat.id === categoryId);
   const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);
 
+  // --- Distance sorting if requested ---
+  if (sortBy === "distance" && !!userLocation) {
+    processedResources = filterSantaBarbaraAndSort(processedResources, userLocation);
+  }
+
+  // --- Handle favorites: Save/remove in local state and localStorage ---
+  const handleToggleFavorite = (resource: Resource, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavorites(favs => {
+      if (favs.includes(resource.id)) {
+        const next = favs.filter(id => id !== resource.id);
+        saveFavorites(next);
+        return next;
+      } else {
+        const next = [...favs, resource.id];
+        saveFavorites(next);
+        return next;
+      }
+    });
+  };
+  
   const handleBack = () => {
     setLocation("/");
   };
@@ -125,11 +159,13 @@ export default function ResourcesListPage() {
   const handleResourceClick = (resourceId: string) => {
     setLocation(`/resources/${resourceId}`);
   };
+  const handleSortChange = (value: "relevance" | "distance") => setSortBy(value);
+  const handleClearFilters = () => setSelectedSubcategory("all");
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navigation Bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Button 
             variant="ghost" 
@@ -199,8 +235,24 @@ export default function ResourcesListPage() {
           >
             <TranslatedText text="Update Location" />
           </Button>
-        </div>
 
+{/* SORT OPTIONS */}
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder={<TranslatedText text="Relevance" />} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevance"><TranslatedText text="Relevance" /></SelectItem>
+              <SelectItem value="distance"><TranslatedText text="Distance" /></SelectItem>
+            </SelectContent>
+          </Select>
+
+
+       {/* Clear Filters Button */}
+          <Button variant="link" className="ml-2 text-blue-600" onClick={handleClearFilters}>
+            <TranslatedText text="Clear Filters" />
+          </Button>
+        </div>
         {/* Results Count */}
         <div className="text-center">
           <p className="text-lg font-semibold text-gray-700">
@@ -218,7 +270,7 @@ export default function ResourcesListPage() {
       </div>
 
       {/* Resources List */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="text-center py-8">
             <TranslatedText text="Loading resources..." />
@@ -252,15 +304,40 @@ export default function ResourcesListPage() {
                   <TranslatedText text={resource.description} />
                 </p>
 
-                <div className="flex items-center text-sm text-gray-500">
+                <div className="flex items-center text-sm text-gray-500 mb-2">
                   <MapPin className="h-4 w-4 mr-1" />
                   <span><TranslatedText text={resource.location} /></span>
+                </div>
+
+                <div className="flex space-x-2 pt-2">
+                  <Button
+                    variant={favorites.includes(resource.id) ? "default" : "secondary"}
+                    size="sm"
+                    onClick={e => handleToggleFavorite(resource, e)}
+                  >
+                    <Heart className={`h-4 w-4 mr-1 ${favorites.includes(resource.id) ? "text-red-500 fill-red-500" : ""}`} />
+                    <TranslatedText text={favorites.includes(resource.id) ? "Favorited" : "Add to Favorites"} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleResourceClick(resource.id);
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    <TranslatedText text="View Details" />
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+      
+      {/* GLOBAL NAVBAR */}
+      <GlobalNavbar active="search" />
     </div>
   );
 }
