@@ -14,9 +14,11 @@ export function useResources(
   location: { type: 'zipCode', value: string } | { type: 'coordinates', latitude: number, longitude: number } | null,
   useApi: boolean = true,
   sortBy: 'relevance' | 'distance' | 'name' = 'relevance',
-  keyword?: string
+  keyword?: string,
+  skip: number = 0,
+  take: number = 20
 ) {
-  // Query key that depends on filters
+  // Query key that depends on filters including pagination
   const queryKey = [
     '/api/resources', 
     { 
@@ -25,7 +27,9 @@ export function useResources(
       location: location ? JSON.stringify(location) : null,
       useApi,
       sortBy,
-      keyword
+      keyword,
+      skip,
+      take
     }
   ];
   
@@ -48,7 +52,9 @@ export function useResources(
             undefined,
             useApi,
             sortBy,
-            keyword
+            keyword,
+            skip,
+            take
           );
         } else {
           result = await fetchResources(
@@ -58,7 +64,9 @@ export function useResources(
             { latitude: location.latitude, longitude: location.longitude },
             useApi,
             sortBy,
-            keyword
+            keyword,
+            skip,
+            take
           );
         }
       } else {
@@ -70,7 +78,9 @@ export function useResources(
           undefined,
           useApi,
           sortBy,
-          keyword
+          keyword,
+          skip,
+          take
         );
       }
       

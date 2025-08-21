@@ -47,6 +47,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const useApi = req.query.useApi === 'true';
       const sortBy = req.query.sortBy as 'relevance' | 'distance' | 'name' || 'relevance';
       const keyword = req.query.keyword ? String(req.query.keyword) : undefined;
+      
+      // Add pagination parameters
+      const skip = req.query.skip ? parseInt(String(req.query.skip)) : 0;
+      const take = req.query.take ? parseInt(String(req.query.take)) : 20;
 
       // Handle keyword search using 211 API
       if (useApi && keyword) {
@@ -58,23 +62,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             keyword,
             zipCode || undefined,
             latitude,
-            longitude
+            longitude,
+            skip,
+            take
           );
 
-          console.log(`211 API returned ${apiResult.resources.length} total resources for keyword: ${keyword}`);
+          console.log(`211 API returned ${apiResult.resources.length} resources for keyword: ${keyword} (skip: ${skip}, take: ${take})`);
           
-          // Filter for Santa Barbara County resources only
-          const santaBarbaraResources = apiResult.resources.filter(resource => {
-            const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
-            const address = resource.address?.toLowerCase() || '';
-            return serviceAreas.includes('santa barbara') || address.includes('santa barbara');
-          });
-
-          console.log(`Filtered to ${santaBarbaraResources.length} Santa Barbara County resources`);
-          
+          // Let 211 API handle location filtering - remove local Santa Barbara filtering
           return res.json({
-            resources: santaBarbaraResources,
-            total: santaBarbaraResources.length,
+            resources: apiResult.resources,
+            total: apiResult.total,
             source: '211 API'
           });
         } catch (searchError) {
@@ -113,7 +111,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               zipCode,
               latitude,
               longitude,
-              true
+              true,
+              skip,
+              take
             );
           } catch (searchError) {
             if (searchError instanceof Error && searchError.message.startsWith('RATE_LIMITED:')) {
@@ -132,14 +132,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           let resources = apiResult.resources;
           
-          // Filter for Santa Barbara County resources only
-          resources = resources.filter(resource => {
-            const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
-            const address = resource.address?.toLowerCase() || '';
-            return serviceAreas.includes('santa barbara') || address.includes('santa barbara');
-          });
-
-          console.log(`Filtered to ${resources.length} Santa Barbara County resources`);
+          // Let 211 API handle location filtering - remove local Santa Barbara filtering
+          console.log(`211 API returned ${resources.length} resources for category search`);
             
             // Only calculate distances when user has provided a location
             if (zipCode && resources.length > 0) {
@@ -187,11 +181,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           }
           
-          console.log(`211 API returned ${resources.length} total resources for category: ${categoryId}, subcategory: ${subcategoryId}`);
+          console.log(`Final result: ${resources.length} resources for category: ${categoryId}, subcategory: ${subcategoryId}`);
           
           return res.status(200).json({
             resources: resources,
-            total: resources.length,
+            total: apiResult.total || resources.length,
             source: '211_API'
           });
         } catch (apiError) {

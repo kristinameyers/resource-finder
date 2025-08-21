@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { TranslatedText } from "@/components/TranslatedText";
 import GlobalNavbar from "@/components/GlobalNavbar";
 import { useToast } from "@/hooks/use-toast";
+import { getCoordinatesFromZipCode } from "@/lib/distanceUtils";
 
 export default function UpdateLocationPage() {
   const [, setLocation] = useLocation();
@@ -67,7 +68,7 @@ export default function UpdateLocationPage() {
     }
   };
 
-  const handleZipCodeSave = () => {
+  const handleZipCodeSave = async () => {
     if (zipCode.trim()) {
       // Basic zip code validation (5 digits)
       const zipRegex = /^\d{5}$/;
@@ -80,17 +81,49 @@ export default function UpdateLocationPage() {
         return;
       }
 
-      // Store zip code and clear GPS coordinates
-      localStorage.setItem('userZipCode', zipCode.trim());
-      localStorage.removeItem('userLatitude');
-      localStorage.removeItem('userLongitude');
-      
-      toast({
-        title: "Location Updated",
-        description: `Zip code ${zipCode.trim()} saved for distance calculations.`,
-      });
-      
-      setLocation("/");
+      try {
+        // Convert zip code to coordinates before saving
+        const coords = await getCoordinatesFromZipCode(zipCode.trim());
+        
+        if (coords) {
+          // Store coordinates instead of just zip code for more precise 211 API queries
+          localStorage.setItem('userLatitude', coords.lat.toString());
+          localStorage.setItem('userLongitude', coords.lng.toString());
+          localStorage.setItem('userZipCode', zipCode.trim()); // Keep zip for display purposes
+          
+          toast({
+            title: "Location Updated",
+            description: `Zip code ${zipCode.trim()} converted to coordinates for precise distance calculations.`,
+          });
+          
+          setLocation("/");
+        } else {
+          // Fallback to just storing zip code if coordinate conversion fails
+          localStorage.setItem('userZipCode', zipCode.trim());
+          localStorage.removeItem('userLatitude');
+          localStorage.removeItem('userLongitude');
+          
+          toast({
+            title: "Location Updated",
+            description: `Zip code ${zipCode.trim()} saved (coordinate lookup unavailable).`,
+          });
+          
+          setLocation("/");
+        }
+      } catch (error) {
+        console.error('Error converting zip code to coordinates:', error);
+        // Fallback to just storing zip code
+        localStorage.setItem('userZipCode', zipCode.trim());
+        localStorage.removeItem('userLatitude');
+        localStorage.removeItem('userLongitude');
+        
+        toast({
+          title: "Location Updated",
+          description: `Zip code ${zipCode.trim()} saved (coordinate lookup failed).`,
+        });
+        
+        setLocation("/");
+      }
     }
   };
 

@@ -30,7 +30,9 @@ export async function fetchResources(
   coordinates?: { latitude: number; longitude: number },
   useApi: boolean = true,
   sortBy: 'relevance' | 'distance' | 'name' = 'relevance',
-  keyword?: string
+  keyword?: string,
+  skip: number = 0,
+  take: number = 20
 ): Promise<{resources: Resource[], total: number, source: string}> {
   const queryParams = new URLSearchParams();
   
@@ -63,7 +65,11 @@ export async function fetchResources(
     queryParams.append('keyword', keyword);
   }
   
-  const url = `/api/resources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  // Add pagination parameters
+  queryParams.append('skip', skip.toString());
+  queryParams.append('take', take.toString());
+  
+  const url = `/api/resources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;  
   
   try {
     const response = await apiRequest('GET', url);

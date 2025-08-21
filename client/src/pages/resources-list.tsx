@@ -87,19 +87,8 @@ export default function ResourcesListPage() {
     enabled: !!(categoryId || keyword),
   });
 
-  // Process resources with distance calculations and Santa Barbara filtering
-  const processedResources = (resourcesData as any)?.resources ? (() => {
-    const resources = (resourcesData as any).resources;
-    if (userLocation) {
-      return filterSantaBarbaraAndSort(userLocation, resources);
-    } else {
-      // Filter for Santa Barbara County even without user location
-      return resources.filter((resource: Resource) => 
-        resource.address?.toLowerCase().includes('santa barbara') ||
-        resource.location?.toLowerCase().includes('santa barbara')
-      );
-    }
-  })() : [];
+  // Resources are now properly filtered by 211 API - no local filtering needed
+  const processedResources = (resourcesData as any)?.resources || [];
 
   const currentCategory = categories.find((cat: Category) => cat.id === categoryId);
   const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);

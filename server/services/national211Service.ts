@@ -207,92 +207,62 @@ export async function searchAllResourcesByKeyword(
   keyword: string,
   zipCode?: string,
   latitude?: number,
-  longitude?: number
+  longitude?: number,
+  skip: number = 0,
+  take: number = 20
 ): Promise<{ resources: Resource[], total: number }> {
-  console.log(`\n=== FETCHING ALL RESOURCES FOR KEYWORD: ${keyword} ===`);
+  console.log(`\n=== FETCHING RESOURCES FOR KEYWORD: ${keyword} (skip: ${skip}, take: ${take}) ===`);
   
-  let allResources: Resource[] = [];
-  let currentPage = 0;
-  const pageSize = 10; // API seems to cap at 10 resources per page
-  let hasMoreResults = true;
-  let apiTotalCount = 0;
-  
-  while (hasMoreResults) {
-    try {
-      const offset = currentPage * pageSize;
-      console.log(`Fetching page ${currentPage + 1} (offset: ${offset})`);
+  try {
+    console.log(`Fetching resources with pagination - skip: ${skip}, take: ${take}`);
+    
+    const pageResult = await searchResourcesByKeyword(
+      keyword,
+      zipCode,
+      latitude,
+      longitude,
+      take, // use take as size
+      skip  // use skip as offset
+    );
+    
+    console.log(`API returned ${pageResult.resources.length} resources for keyword: ${keyword}`);
+    
+    let resources = pageResult.resources;
+    
+    // Add distance calculations if user provided a zip code
+    if (zipCode && resources.length > 0) {
+      console.log(`Calculating distances from user zip code: ${zipCode}`);
+      const { calculateDistanceFromZipCodes } = await import('../data/zipCodes');
       
-      const pageResult = await searchResourcesByKeyword(
-        keyword,
-        zipCode,
-        latitude,
-        longitude,
-        pageSize,
-        offset
-      );
+      resources = resources.map(resource => {
+        const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode || '');
+        return {
+          ...resource,
+          distance: distance !== null ? Number(distance.toFixed(1)) : undefined
+        };
+      });
       
-      // Store the total count from API on first page
-      if (currentPage === 0) {
-        apiTotalCount = pageResult.total;
-        console.log(`API reports total of ${apiTotalCount} resources available for keyword: ${keyword}`);
-      }
+      // Sort by distance if we have distance data
+      resources.sort((a, b) => {
+        if (a.distance === undefined && b.distance === undefined) return 0;
+        if (a.distance === undefined) return 1;
+        if (b.distance === undefined) return -1;
+        return (a.distance || 0) - (b.distance || 0);
+      });
       
-      if (pageResult.resources.length === 0) {
-        hasMoreResults = false;
-        console.log(`No more results found at page ${currentPage + 1}`);
-      } else {
-        allResources.push(...pageResult.resources);
-        console.log(`Retrieved ${pageResult.resources.length} resources from page ${currentPage + 1}`);
-        console.log(`Total resources so far: ${allResources.length} / ${apiTotalCount}`);
-        
-        // Check if we've gotten all available resources based on API total count
-        if (allResources.length >= apiTotalCount) {
-          hasMoreResults = false;
-          console.log(`Retrieved all ${allResources.length} available resources for keyword`);
-        } else if (pageResult.resources.length < pageSize) {
-          // Also stop if we get fewer results than expected (backup condition)
-          hasMoreResults = false;
-          console.log(`Got ${pageResult.resources.length} < ${pageSize}, reached end of results`);
-        } else {
-          currentPage++;
-        }
-      }
-    } catch (error) {
-      console.error(`Error fetching page ${currentPage + 1}:`, error);
-      hasMoreResults = false;
+      console.log(`Applied distance calculations and sorting for ${resources.length} resources`);
     }
+    
+    console.log(`=== KEYWORD SEARCH COMPLETE: ${resources.length} resources ===\n`);
+    
+    return {
+      resources: resources,
+      total: pageResult.total
+    };
+  } catch (error) {
+    console.error('Error in keyword search with pagination:', error);
+    throw error;
   }
-  
-  // Add distance calculations if user provided a zip code
-  if (zipCode && allResources.length > 0) {
-    console.log(`Calculating distances from user zip code: ${zipCode}`);
-    const { calculateDistanceFromZipCodes } = await import('../data/zipCodes');
-    
-    allResources = allResources.map(resource => {
-      const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode || '');
-      return {
-        ...resource,
-        distance: distance !== null ? Number(distance.toFixed(1)) : undefined
-      };
-    });
-    
-    // Sort by distance if we have distance data
-    allResources.sort((a, b) => {
-      if (a.distance === undefined && b.distance === undefined) return 0;
-      if (a.distance === undefined) return 1;
-      if (b.distance === undefined) return -1;
-      return (a.distance || 0) - (b.distance || 0);
-    });
-    
-    console.log(`Applied distance calculations and sorting for ${allResources.length} resources`);
-  }
-  
-  console.log(`=== KEYWORD SEARCH COMPLETE: ${allResources.length} total resources ===\n`);
-  
-  return {
-    resources: allResources,
-    total: apiTotalCount
-  };
 }
 
 /**
@@ -1458,7 +1428,9 @@ export async function searchResources(
   zipCode?: string,
   latitude?: number,
   longitude?: number,
-  use211Api: boolean = true
+  use211Api: boolean = true,
+  skip: number = 0,
+  take: number = 20
 ): Promise<{ resources: Resource[], total: number }> {
   console.log(`Selected category: ${category}, Subcategory: ${subcategory}`);
   console.log(`Location params: ZipCode=${zipCode}, Lat=${latitude}, Lng=${longitude}`);
@@ -1505,12 +1477,14 @@ export async function searchResources(
   console.log(`Using National 211 API with taxonomy code: ${taxonomyCode}`);
   
   try {
-    // Use the searchAllResourcesByTaxonomyCode function to get ALL resources in the taxonomy
-    const result = await searchAllResourcesByTaxonomyCode(
+    // Use the searchResourcesByTaxonomyCode function with pagination
+    const result = await searchResourcesByTaxonomyCode(
       taxonomyCode,
       zipCode,
       latitude,
-      longitude
+      longitude,
+      take,
+      skip
     );
     
     // Sort by distance if user location is available
