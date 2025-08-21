@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, MapPin, Info } from "lucide-react";
+import { ExternalLink, MapPin, Heart, Eye, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import FavoriteButton from "./favorite-button";
@@ -35,76 +35,74 @@ interface ResourceCardProps {
   resource: Resource;
   category?: Category;
   subcategory?: Subcategory;
+  onFavoriteToggle?: () => void; // If supporting in parent
+  isFavorited?: boolean;
+}
+
+// Helper for text truncation with ellipsis
+function Clamp({ children, lines = 2 }: { children: React.ReactNode; lines?: number }) {
+  return <span className={`block truncate line-clamp-${lines}`}>{children}</span>;
 }
 
 export default function ResourceCard({ resource, category, subcategory }: ResourceCardProps) {
   const { text: viewDetailsText } = useTranslatedText("View Details");
+  const { text: addToFavoritesText } = useTranslatedText("Add to Favorites");
+
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-200">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg sm:text-xl">{resource.name}</CardTitle>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {category && (
-            <Badge 
-              variant="outline" 
-              className="bg-primary/10 highlight border-primary/20"
-            >
-              <CategoryName name={category.name} />
-            </Badge>
-          )}
-          {subcategory && (
-            <Badge 
-              variant="outline" 
-              className="bg-secondary/10 text-secondary border-secondary/20"
-            >
-              <CategoryName name={subcategory.name} />
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="py-2 flex-grow">
-        <CardDescription className="text-sm text-muted-foreground mb-2 line-clamp-3">
-          <ResourceDescription text={resource.description} />
-        </CardDescription>
-        
-        {resource.location && (
-          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-4">
-            <MapPin className="h-4 w-4" />
-            <span><LocationName text={resource.location} /></span>
-            {/* Only show zip code when user has provided location (indicated by presence of distance calculation) */}
-            {resource.zipCode && resource.distanceMiles !== undefined && <span className="text-xs">({resource.zipCode})</span>}
-            {resource.distanceMiles !== undefined && (
-              <Badge variant="secondary" className="text-xs ml-auto bg-blue-50 text-blue-700 border-blue-200">
-                {resource.distanceMiles === 0 ? '0.0 mi' : `${resource.distanceMiles.toFixed(1)} mi`}
-              </Badge>
-            )}
-          </div>
-        )}
-      </CardContent>
-      
-      {/* Favorite button outside the link to prevent navigation conflicts */}
-      <div className="px-6 pb-2">
-        <FavoriteButton 
-          resourceId={resource.id}
-          className="text-sm"
-        />
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-6 py-5 mb-6 flex flex-col">
+      {/* Category/Subcategory badges row */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {category &&
+          <Badge className="bg-blue-50 text-blue-800 border-blue-200 font-medium text-xs px-3 py-1 rounded-full">
+            {category.name}
+          </Badge>
+        }
+        {subcategory &&
+          <Badge className="bg-sky-50 text-sky-700 border-sky-200 font-medium text-xs px-3 py-1 rounded-full">
+            {subcategory.name}
+          </Badge>
+        }
       </div>
-      
-      <CardFooter className="pt-2">
-        <Button 
-          variant="default" 
-          className="w-full btn-highlight" 
-          size="sm"
-          asChild
-        >
-          <Link href={`/resources/${resource.id}`}>
-            <Info className="h-4 w-4 mr-2" /> 
-            {viewDetailsText}
-          </Link>
-        </Button>
-      </CardFooter>
-    </Card>
+      {/* Main row: Title and distance that floats right */}
+      <div className="flex justify-between items-start mb-1">
+        <h3 className="font-bold text-lg leading-snug text-gray-900 max-w-[70%]">
+          <Clamp>{resource.name}</Clamp>
+        </h3>
+        {/* Distance as pill */}
+        {resource.distanceMiles !== undefined && (
+          <span className="ml-2 bg-blue-600 text-white text-xs rounded-full px-3 py-1 font-semibold">{resource.distanceMiles.toFixed(2)} mi</span>
+        )}
+      </div>
+      {/* Description */}
+      <p className="text-gray-700 text-sm mb-2 line-clamp-2">
+        {resource.description}
+      </p>
+      {/* Location */}
+      {resource.location && (
+        <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
+          <MapPin className="h-4 w-4 mr-1 opacity-70" />
+          <span>{resource.location}</span>
+        </div>
+      )}
+      {/* Footer with actions */}
+      <div className="flex gap-2 mt-auto">
+        <FavoriteButton 
+    resourceId={resource.id}
+    className="flex-1 flex items-center justify-center rounded-full" 
+    // Add any props for styling!
+  />
+  <Button
+    variant="default"
+    size="sm"
+    className="flex-1 flex items-center justify-center rounded-full"
+    asChild
+  >
+    <Link href={`/resources/${resource.id}`}>
+      <Eye className="h-4 w-4 mr-2" />
+      {viewDetailsText}
+    </Link>
+  </Button>
+</div>
+    </div>
   );
 }
