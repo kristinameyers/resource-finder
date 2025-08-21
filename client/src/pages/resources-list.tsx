@@ -87,14 +87,34 @@ export default function ResourcesListPage() {
     enabled: !!(categoryId || keyword),
   });
 
-  // Process resources - backend already handles 211 API taxonomy search and Santa Barbara filtering
-  const processedResources = (resourcesData as any)?.resources || [];
+  // Process resources with distance calculations and Santa Barbara filtering
+  const processedResources = (resourcesData as any)?.resources ? (() => {
+    const resources = (resourcesData as any).resources;
+    if (userLocation) {
+      return filterSantaBarbaraAndSort(userLocation, resources);
+    } else {
+      // Filter for Santa Barbara County even without user location
+      return resources.filter((resource: Resource) => 
+        resource.address?.toLowerCase().includes('santa barbara') ||
+        resource.location?.toLowerCase().includes('santa barbara')
+      );
+    }
+  })() : [];
 
   const currentCategory = categories.find((cat: Category) => cat.id === categoryId);
   const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);
 
   const handleBack = () => {
-    window.history.back();
+    setLocation("/");
+  };
+
+  const handleMenuClick = () => {
+    // TODO: Implement hamburger menu slide-out
+    console.log("Menu clicked");
+  };
+
+  const handleLocationClick = () => {
+    setLocation("/update-location");
   };
 
   const handleResourceClick = (resourceId: string) => {
@@ -103,11 +123,36 @@ export default function ResourcesListPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Global Navigation */}
-      <GlobalNavbar showBackButton={true} onBackClick={handleBack} />
-      
-      {/* Content with top padding for fixed navbar */}
-      <div style={{ paddingTop: '66px' }}>
+      {/* Navigation Bar */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleBack}
+            className="p-1"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleMenuClick}
+            className="p-1"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={handleLocationClick}
+          className="p-1"
+        >
+          <MapPin className="h-5 w-5" />
+        </Button>
+      </div>
 
       {/* Header */}
       <div className="text-center py-6 bg-white">
@@ -116,26 +161,8 @@ export default function ResourcesListPage() {
         </h1>
       </div>
 
-      {/* Filters and Controls - as shown in List Screen PDF */}
+      {/* Filters and Controls */}
       <div className="px-4 py-4 bg-white border-b border-gray-200">
-        <div className="flex justify-between items-center mb-4">
-          {/* Subcategories Dropdown */}
-          <div className="flex-1 mr-2">
-            <Button variant="outline" className="w-full text-left justify-between">
-              <TranslatedText text="Subcategories" />
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </div>
-          {/* Update Location Button */}
-          <Button 
-            variant="outline"
-            onClick={() => setLocation("/update-location")}
-            className="whitespace-nowrap"
-          >
-            <TranslatedText text="Update Location" />
-          </Button>
-        </div>
-        
         <div className="flex space-x-2 mb-4">
           {/* Subcategories Dropdown */}
           {filteredSubcategories.length > 0 && (
@@ -156,11 +183,11 @@ export default function ResourcesListPage() {
               </SelectContent>
             </Select>
           )}
-          
+
           {/* Update Location Button */}
           <Button 
             variant="outline"
-            onClick={() => setLocation("/update-location")}
+            onClick={handleLocationClick}
             className="whitespace-nowrap"
           >
             <TranslatedText text="Update Location" />
@@ -213,42 +240,11 @@ export default function ResourcesListPage() {
                     </span>
                   )}
                 </div>
-                
+
                 <p className="text-gray-600 text-sm mb-2 line-clamp-2">
                   <TranslatedText text={resource.description} />
                 </p>
-                
+
                 <div className="flex items-center text-sm text-gray-500">
                   <MapPin className="h-4 w-4 mr-1" />
                   <span><TranslatedText text={resource.location} /></span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Navigation - as shown in PDFs */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div className="flex justify-around items-center py-3">
-          <button className="flex flex-col items-center space-y-1 text-gray-600">
-            <div className="text-xs">Search</div>
-          </button>
-          <button className="flex flex-col items-center space-y-1 text-gray-600">
-            <div className="text-xs">Favorites</div>
-          </button>
-          <button className="flex flex-col items-center space-y-1 text-gray-600">
-            <div className="text-xs">Search</div>
-          </button>
-          <button className="flex flex-col items-center space-y-1 text-gray-600">
-            <div className="text-xs">About</div>
-          </button>
-          <button className="flex flex-col items-center space-y-1 text-gray-600">
-            <div className="text-xs">Settings</div>
-          </button>
-        </div>
-      </div>
-      </div>
-    </div>
-  );
-}
