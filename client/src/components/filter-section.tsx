@@ -175,16 +175,18 @@ export default function FilterSection({
                   <SelectContent className="max-h-80">
                     <SelectGroup>
                       <SelectItem value="all" className="font-medium">{allCategoriesText}</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id} className="py-3">
-                          <div className="flex items-center">
-                            {getCategoryIcon(category)}
-                            <span className="font-medium">
-                              <CategoryName category={category} />
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {categories
+                        .filter((category) => category.id && category.id.trim() !== '')
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id} className="py-3">
+                            <div className="flex items-center">
+                              {getCategoryIcon(category)}
+                              <span className="font-medium">
+                                <CategoryName category={category} />
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -216,11 +218,13 @@ export default function FilterSection({
                     <SelectContent className="max-h-80">
                       <SelectGroup>
                         <SelectItem value="all" className="font-medium">{allSubcategoriesText}</SelectItem>
-                        {subcategories.map((subcategory) => (
-                          <SelectItem key={subcategory.id} value={subcategory.id} className="py-2">
-                            <span className="font-medium">{subcategory.name}</span>
-                          </SelectItem>
-                        ))}
+                        {subcategories
+                          .filter((subcategory) => subcategory.id && subcategory.id.trim() !== '')
+                          .map((subcategory) => (
+                            <SelectItem key={subcategory.id} value={subcategory.id} className="py-2">
+                              <span className="font-medium">{subcategory.name}</span>
+                            </SelectItem>
+                          ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>

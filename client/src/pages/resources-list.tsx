@@ -43,7 +43,7 @@ interface SubcategoriesResponse {
 export default function ResourcesListPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [userLocation, setUserLocation] = useState<string>("");
 
   // Parse URL parameters
@@ -87,7 +87,7 @@ export default function ResourcesListPage() {
   // Build query parameters for resources
   const resourceParams = new URLSearchParams();
   if (categoryId) resourceParams.set('categoryId', categoryId);
-  if (selectedSubcategory) resourceParams.set('subcategoryId', selectedSubcategory);
+  if (selectedSubcategory && selectedSubcategory !== 'all') resourceParams.set('subcategoryId', selectedSubcategory);
   if (keyword) resourceParams.set('keyword', keyword);
   if (useApi) resourceParams.set('useApi', 'true');
   if (userLocation) resourceParams.set('zipCode', userLocation);
@@ -177,14 +177,16 @@ export default function ResourcesListPage() {
                 <ChevronDown className="h-4 w-4" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">
+                <SelectItem value="all">
                   <TranslatedText text="All Subcategories" />
                 </SelectItem>
-                {filteredSubcategories.map((subcategory: Subcategory) => (
-                  <SelectItem key={subcategory.id} value={subcategory.id}>
-                    <TranslatedText text={subcategory.name} />
-                  </SelectItem>
-                ))}
+                {filteredSubcategories
+                  .filter((subcategory: Subcategory) => subcategory.id && subcategory.id.trim() !== '')
+                  .map((subcategory: Subcategory) => (
+                    <SelectItem key={subcategory.id} value={subcategory.id}>
+                      <TranslatedText text={subcategory.name} />
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           )}
