@@ -170,7 +170,7 @@ export default function ResourcesListPage() {
           {/* Update Location Button */}
           <Button 
             variant="outline"
-            onClick={handleLocationClick}
+            onClick={() => setLocation("/update-location")}
             className="whitespace-nowrap"
           >
             <TranslatedText text="Update Location" />
