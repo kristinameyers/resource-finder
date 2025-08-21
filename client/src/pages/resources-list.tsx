@@ -17,6 +17,7 @@ interface Resource {
   location: string;
   zipCode?: string;
   address: string;
+  serviceAreas?: string;
   distanceMiles?: number;
 }
 
@@ -93,10 +94,20 @@ export default function ResourcesListPage() {
       return filterSantaBarbaraAndSort(userLocation, resources);
     } else {
       // Filter for Santa Barbara County even without user location
-      return resources.filter((resource: Resource) => 
-        resource.address?.toLowerCase().includes('santa barbara') ||
-        resource.location?.toLowerCase().includes('santa barbara')
-      );
+      return resources.filter((resource: Resource) => {
+        const address = resource.address?.toLowerCase() || '';
+        const location = resource.location?.toLowerCase() || '';
+        const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
+        
+        return address.includes('santa barbara') ||
+               address.includes(', ca') ||
+               location.includes('santa barbara') ||
+               serviceAreas.includes('santa barbara') ||
+               // Include Lompoc, Santa Maria, Guadalupe as they are in Santa Barbara County
+               address.includes('lompoc') ||
+               address.includes('santa maria') ||
+               address.includes('guadalupe');
+      });
     }
   })() : [];
 

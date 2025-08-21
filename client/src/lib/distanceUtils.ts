@@ -45,12 +45,21 @@ export function filterSantaBarbaraAndSort(userZipCode: string, resources: any[])
   return resources
     .filter((resource: any) => {
       // Filter for Santa Barbara County resources
-      if (!resource.address) return false;
+      const address = resource.address?.toLowerCase() || '';
+      const location = resource.location?.toLowerCase() || '';
+      const serviceAreas = resource.serviceAreas?.toLowerCase() || '';
       
-      const address = resource.address.toLowerCase();
-      return address.includes('santa barbara') || 
-             address.includes('ca') ||
-             resource.serviceAreas?.toLowerCase().includes('santa barbara');
+      return address.includes('santa barbara') ||
+             address.includes(', ca') ||
+             location.includes('santa barbara') ||
+             serviceAreas.includes('santa barbara') ||
+             // Include other Santa Barbara County cities
+             address.includes('lompoc') ||
+             address.includes('santa maria') ||
+             address.includes('guadalupe') ||
+             address.includes('goleta') ||
+             address.includes('carpinteria') ||
+             address.includes('solvang');
     })
     .map((resource: any) => {
       // Add distance calculation if coordinates are available
