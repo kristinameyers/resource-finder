@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
-import { getCategoryTaxonomyCode, getSubcategoryTaxonomyCode, getOfficialCategoryCode, getOfficialSubcategoryCode } from '../data/taxonomy';
+import { getOfficialCategoryTaxonomyCode, getOfficialSubcategoryTaxonomyCode } from '../data/officialTaxonomy';
+
 
 // Define interfaces for the 211 API responses
 interface National211Resource {
@@ -1446,32 +1447,28 @@ export async function searchResources(
   }
 
   // Get the proper taxonomy code using the taxonomy data exactly like your working app
-  let taxonomyCode: string;
+let taxonomyCode: string | null = null;
   
   // Use official taxonomy codes for both category and subcategory searches
   if (subcategory) {
-    // Try official subcategory taxonomy code first
-    taxonomyCode = getOfficialSubcategoryCode(category, subcategory) || '';
-    if (!taxonomyCode) {
-      // Fallback to existing subcategory system
-      taxonomyCode = getSubcategoryTaxonomyCode(category, subcategory);
-    }
-    if (!taxonomyCode) {
-      // Final fallback to category taxonomy code
-      taxonomyCode = getOfficialCategoryCode(category);
-      console.log(`No subcategory taxonomy code found, using category code: ${taxonomyCode} for ${subcategory}`);
-    } else {
-      console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
-    }
-  } else {
-    taxonomyCode = getOfficialCategoryCode(category);
-    console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
-  }
-
+  taxonomyCode = getOfficialSubcategoryTaxonomyCode(category, subcategory);
   if (!taxonomyCode) {
-    console.log(`No taxonomy code found for category: ${category}`);
-    return { resources: [], total: 0 };
+    // Fallback to category taxonomy
+    taxonomyCode = getOfficialCategoryTaxonomyCode(category);
+    console.log(`No subcategory taxonomy code found, using category code: ${taxonomyCode} for ${subcategory}`);
+  } else {
+    console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
   }
+} else {
+  taxonomyCode = getOfficialCategoryTaxonomyCode(category);
+  console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
+}
+
+if (!taxonomyCode) {
+  console.log(`No taxonomy code found for category: ${category}`);
+  return { resources: [], total: 0 };
+}
+// Now taxonomyCode is guaranteed to be a string (not null)
 
   // Use National 211 API with taxonomy codes (applying principles from your sample)
   console.log(`Using National 211 API with taxonomy code: ${taxonomyCode}`);
@@ -1503,4 +1500,8 @@ export async function searchResources(
     console.error(`National 211 API search failed:`, error);
     return { resources: [], total: 0 };
   }
+}
+
+function getOfficialCategoryCode(category: string): string {
+  throw new Error('Function not implemented.');
 }
