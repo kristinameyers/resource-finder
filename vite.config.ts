@@ -30,4 +30,9 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
+  server: {
+    allowedHosts: [
+      "96c14a12-0c35-4094-bb9e-82e96ecfc487-00-cpe54o4q2gk3.spock.replit.dev"
+    ]
+  }
 });
