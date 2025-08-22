@@ -221,7 +221,8 @@ export const SUBCATEGORIES = {
     { id: 'energy-efficient', name: 'Energy Efficient Home Improvement Assistance', taxonomyCode: 'BV-8900.9300-180' }
   ],
   'food': [
-    { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000' },
+    { id: 'food', name: 'Food', taxonomyCode: 'BD-1800' },
+    { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000.1500' },
     { id: 'food-pantries', name: 'Food Pantries', taxonomyCode: 'BD-1800.2000' },
     { id: 'calfresh', name: 'CalFresh (Food Stamps)', taxonomyCode: 'NL-6000.2000' },
     { id: 'wic', name: 'Women, Infants, & Children (WIC)', taxonomyCode: 'NL-6000.9500' },
@@ -236,6 +237,15 @@ export const SUBCATEGORIES = {
 /**
  * Get the official taxonomy code for a main category with proper error handling
  */
+export function getSubcategoriesForCategory(categoryId: string) {
+  const normalized = categoryId.toLowerCase().trim();
+  if (normalized in SUBCATEGORIES) {
+    return SUBCATEGORIES[normalized as keyof typeof SUBCATEGORIES];
+  }
+  return [];
+}
+
+
 export function getOfficialCategoryTaxonomyCode(categoryId: string): string | null {
   if (!categoryId) {
     console.warn(`[Taxonomy] Empty categoryId provided`);
