@@ -485,28 +485,19 @@ export async function searchResourcesByTaxonomyCode(
         
         // Use category name as search term - updated with new taxonomy codes
         const categoryNames: { [key: string]: string } = {
-          'BD': 'food',
-          'BD-1800.2000': 'food',
-          'BH': 'housing',
-          'BH-1800': 'housing',
-          'NL-1000': 'employment',
-          'N': 'employment',
+          'BD-500': 'food',
+          'BH-1800.8500': 'housing',
+          'NL-1000': 'finance-employment',
           'LN': 'healthcare',
-          'L': 'healthcare',
-          'FT': 'legal',
-          'F': 'legal',
+          'FT': 'legal-assistance',
           'HD-1800.8000': 'education',
-          'H': 'education',
           'BT-4500': 'transportation',
-          'BT': 'transportation',
-          'PH': 'family',
-          'P': 'family',
-          'RX-8250': 'substance',
-          'RX': 'substance',
-          'RP-1400': 'mental health',
-          'R': 'mental health',
-          'PS-9800': 'youth',
-          'YB-9000': 'youth'
+          'PH-2360.2400': 'children-family',
+          'RX-8250': 'substance-use',
+          'RP-1400': 'mental-wellness',
+          'PS-9800': 'young-adults',
+          'BV': 'utilities',
+          'BM-3000':'hygiene-household'
         };
         
         const searchTerm = categoryNames[taxonomyCode] || categoryNames[taxonomyCode.split('-')[0]] || 'food';
@@ -888,19 +879,18 @@ export async function getResourceById(id: string): Promise<Resource | null> {
 
 // Mapping of taxonomy codes to our category IDs
 const taxonomyToCategory: { [key: string]: string } = {
-  'BH': 'housing',
-  'N': 'finance-employment',
-  'BD': 'food',
-  'BT': 'transportation',
-  'L': 'healthcare',
+  'BH-1800.8500': 'housing',
+  'NL-1000': 'finance-employment',
+  'BD-5000': 'food',
+  'BT-4500': 'transportation',
+  'LN': 'healthcare',
   'BM-3000': 'hygiene-household',
-  'RR': 'mental-wellness',
-  'RX': 'substance-use',
-  'P': 'children-family',
-  'YB-9000': 'young-adults',
-  'H': 'education',
+  'RP-1400': 'mental-wellness',
+  'RX-8250': 'substance-use',
+  'PH-2360.2400': 'children-family',
+  'PS-9800': 'young-adults',
+  'HD-1800.8000': 'education',
   'YB-8000': 'seniors-caregivers',
-  'F': 'legal',
   'FT': 'legal', // Lawyer referral services (FT-4800)
   'BV': 'utilities',
 };
@@ -1500,8 +1490,4 @@ if (!taxonomyCode) {
     console.error(`National 211 API search failed:`, error);
     return { resources: [], total: 0 };
   }
-}
-
-function getOfficialCategoryCode(category: string): string {
-  throw new Error('Function not implemented.');
 }

@@ -18,7 +18,8 @@ export const MAIN_CATEGORIES = {
   'education': { name: 'Education', taxonomyCode: 'HD-1800.8000' },
   'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
   'utilities': { name: 'Utilities', taxonomyCode: 'BV' },
-  'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' }
+  'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' },
+  'hygiene-household': { name: 'Hygiene & Household', taxonomyCode: 'BM-3000' }
 } as const;
 
 // Subcategories with official taxonomy codes
@@ -231,6 +232,13 @@ export const SUBCATEGORIES = {
     { id: 'emergency-food', name: 'Emergency Food Assistance', taxonomyCode: 'BD-1800.2000' },
     { id: 'home-delivery-meals', name: 'Home Delivery Meals', taxonomyCode: 'BD-5000.3500' },
     { id: 'pet-food', name: 'Pet Food', taxonomyCode: 'PD-6250.6600' }
+  ],
+  'hygiene-household': [
+    { id: 'hygiene-household', name: 'Hygiene & Household', taxonomyCode: 'BM-3000' },
+    { id: 'disaster-related', name: 'Disaster Related Clothing & Emergency Supplies', taxonomyCode: 'TH-2600.1550' },
+    { id: 'grooming-supplies', name: 'Grooming Supplies', taxonomyCode: 'TI-1800.6700' },
+    { id: 'household-hazardous-materials', name: 'Household Hazardous Materials Information', taxonomyCode: 'JR-8200.3000-300' },
+    { id: 'animal-control', name: 'Animal Control', taxonomyCode: 'PD-0700.0400' }
   ]
 } as const;
 
