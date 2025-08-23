@@ -15,7 +15,6 @@ import SearchCategoryPage from "@/pages/search-category";
 import SearchKeywordPage from "@/pages/search-keyword";
 import UpdateLocationPage from "@/pages/update-location";
 import ResourcesListPage from "@/pages/resources-list";
-import { BottomNavigation } from "@/components/BottomNavigation";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { OnboardingFlow, OnboardingPreferences } from "@/components/onboarding/OnboardingFlow";
@@ -75,7 +74,6 @@ function App() {
           {!isLoading && hasCompletedOnboarding === true && (
             <>
               <Router />
-              <BottomNavigation />
             </>
           )}
           <Toaster />
