@@ -9,7 +9,7 @@
 export const MAIN_CATEGORIES = {
   'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
   'finance-employment': { name: 'Finance & Employment', taxonomyCode: 'NL-1000' },
-  'food': { name: 'Food', taxonomyCode: 'BD-1800.2000' },
+  'food': { name: 'Food', taxonomyCode: 'BD-5000' },
   'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
   'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
   'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
@@ -222,8 +222,8 @@ export const SUBCATEGORIES = {
     { id: 'energy-efficient', name: 'Energy Efficient Home Improvement Assistance', taxonomyCode: 'BV-8900.9300-180' }
   ],
   'food': [
-    { id: 'food', name: 'Food', taxonomyCode: 'BD-1800' },
-    { id: 'meals', name: 'Meals', taxonomyCode: 'BD-5000.1500' },
+    { id: 'food', name: 'Food', taxonomyCode: 'BD-5000' },
+    { id: 'meals', name: 'Hot Meals', taxonomyCode: 'BD-5000' },
     { id: 'food-pantries', name: 'Food Pantries', taxonomyCode: 'BD-1800.2000' },
     { id: 'calfresh', name: 'CalFresh (Food Stamps)', taxonomyCode: 'NL-6000.2000' },
     { id: 'wic', name: 'Women, Infants, & Children (WIC)', taxonomyCode: 'NL-6000.9500' },
