@@ -112,3 +112,5 @@ Thumbs.db
 # Replit specific
 .replit
 replit.nix
+
+/attached_assets

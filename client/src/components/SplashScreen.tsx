@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import logoPath from "@assets/logo-2020_1754948553294.png";
+import logoPath from "../assets/logo-2020_1754948553294.png";
 
 interface SplashScreenProps {
   isVisible: boolean;
