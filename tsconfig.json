@@ -1,16 +1,9 @@
 {
-  "include": [
-    "client/src/**/*",
-    "shared/**/*",
-    "server/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "**/*.test.ts"
-  ],
+  "include": ["server/**/*"],
+  "exclude": ["node_modules", "client", "shared"],
   "compilerOptions": {
+    "target": "ESNext",
+    "outDir": "dist",
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
     "noEmit": true,
@@ -40,5 +33,4 @@
       "@assets/*": ["./client/src/assets/*"]
     }
   },
-  "extends": "expo/tsconfig.base"
 }
