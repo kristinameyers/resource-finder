@@ -107,13 +107,21 @@ export default function ResourcesListPage() {
   if (useApi) resourceParams.set('useApi', 'true');
   if (userLocation) resourceParams.set('zipCode', userLocation);
 
-  // Fetch resources
+  // Fetch resources and store in localStorage for resource detail access
   const { data: resourcesData, isLoading } = useQuery({
     queryKey: ["/api/resources", resourceParams.toString()],
     queryFn: async () => {
       const response = await fetch(`/api/resources?${resourceParams.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch resources');
-      return response.json();
+      const result = await response.json();
+      
+      // Store resources in localStorage for resource detail page access
+      if (result.resources && result.resources.length > 0) {
+        localStorage.setItem('recentResources', JSON.stringify(result.resources));
+        console.log(`Stored ${result.resources.length} resources in localStorage`);
+      }
+      
+      return result;
     },
     enabled: !!(categoryId || keyword),
   });

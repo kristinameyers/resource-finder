@@ -106,8 +106,9 @@ export default function ResourceDetail() {
         }
       }
       
-      // If not in localStorage, this means direct link access - show error
-      throw new Error('Resource not found. Please search for resources first.');
+      // If not in localStorage, fallback to API call
+      console.log(`Resource ${id} not found in localStorage, fetching from API...`);
+      return await fetchResourceById(id, true);
     },
     enabled: !!id
   });
