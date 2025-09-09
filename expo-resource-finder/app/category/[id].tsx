@@ -1,3 +1,5 @@
+// app/category/[id].tsx
+
 import React, { useState } from 'react';
 import {
   View,
