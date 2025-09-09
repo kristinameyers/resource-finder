@@ -33,7 +33,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const { text: descriptionText } = useTranslatedText("Find essential services, including food, shelter, health care and more.");
   const { text: letsGoText } = useTranslatedText("Let's Go");
   const { text: findResourcesText } = useTranslatedText("Find Resources Closest To You");
-  // const { text: locationDescText } = useTranslatedText("Use Your Current Location or Enter Your Zip Code");
+  const { text: locationDescText } = useTranslatedText("Use Your Current Location or Enter Your Zip Code");
   const { text: enterZipText } = useTranslatedText("Enter your zip code");
   const { text: useLocationText } = useTranslatedText("Click to use your current location");
   const { text: saveText } = useTranslatedText("Save");
