@@ -3,6 +3,14 @@
 ## Overview
 This project is a comprehensive full-stack Resource Finder application designed to connect users with essential community services. It integrates with the National 211 API V2 to display real-time resource information, including contact details, hours, and service descriptions. The platform features a mobile-first design with a 5-tab bottom navigation, comprehensive accessibility settings, and a polished user interface. The application aims to provide a professional, user-friendly experience for accessing vital community resources.
 
+## Recent Changes (September 9, 2025)
+**Critical App Startup Fixes:**
+- **Fixed Expo Configuration**: Restored `client/tsconfig.json` to properly extend from Expo's base TypeScript configuration (`../node_modules/expo/tsconfig.base.json`)
+- **Resolved TypeScript Issues**: Updated `server/tsconfig.json` with essential libraries (ES2020, DOM, dom.iterable) to resolve type compilation errors  
+- **Fixed Express Compatibility**: Downgraded Express from 5.1.0 to 4.19.2 to resolve path-to-regexp routing conflicts with catch-all routes (`*` pattern)
+- **Package Dependencies**: Installed compatible path-to-regexp@6.2.1 to work with Express 4.x
+- **App Status**: Application now runs successfully on port 5000 with all National 211 API services functioning properly
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
