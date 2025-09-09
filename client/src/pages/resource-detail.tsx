@@ -249,7 +249,7 @@ export default function ResourceDetail() {
         </div>
       
       {/* Favorites Section */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-white">
         <CardHeader>
           <CardTitle>{saveToFavoritesText}</CardTitle>
         </CardHeader>
@@ -264,7 +264,7 @@ export default function ResourceDetail() {
 
 
       {/* About this Resource (organizationDescription) */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-white">
         <CardHeader>
           <CardTitle>{aboutThisResourceText}</CardTitle>
         </CardHeader>
@@ -286,7 +286,7 @@ export default function ResourceDetail() {
       </Card>
       
       {/* Application Process */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-white">
         <CardHeader>
           <CardTitle className="flex items-center">
             <CheckCircle className="h-5 w-5 mr-2 text-primary" />
@@ -305,7 +305,7 @@ export default function ResourceDetail() {
       </Card>
 
       {/* Documents */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-white">
         <CardHeader>
           <CardTitle className="flex items-center">
             <FileText className="h-5 w-5 mr-2 text-primary" />
@@ -324,7 +324,7 @@ export default function ResourceDetail() {
       </Card>
 
       {/* Fees */}
-      <Card className="mb-6">
+      <Card className="mb-6 bg-white">
         <CardHeader>
           <CardTitle className="flex items-center">
             <DollarSign className="h-5 w-5 mr-2 text-primary" />
@@ -346,7 +346,7 @@ export default function ResourceDetail() {
       
       {/* Contact information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Card>
+        <Card className="bg-white">
           <CardHeader>
             <CardTitle>{contactInfoText}</CardTitle>
           </CardHeader>
@@ -603,7 +603,7 @@ export default function ResourceDetail() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white">
           <CardHeader>
             <CardTitle>{serviceDetailsText}</CardTitle>
           </CardHeader>
