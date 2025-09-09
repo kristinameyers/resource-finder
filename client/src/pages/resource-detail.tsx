@@ -253,7 +253,7 @@ export default function ResourceDetail() {
         <CardHeader>
           <CardTitle>{saveToFavoritesText}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-white">
           <FavoriteButton 
             resourceId={resource.id}
             showText={true}
@@ -268,7 +268,7 @@ export default function ResourceDetail() {
         <CardHeader>
           <CardTitle>{aboutThisResourceText}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-white">
           <div className="whitespace-pre-line">
             {(detailedInfo?.descriptionService || resource.description)?.split('\n').map((line: string, index: number) => {
               if (line.trim().startsWith('•')) {
@@ -293,7 +293,7 @@ export default function ResourceDetail() {
             {applicationProcessText}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-white">
           <p className="whitespace-pre-line text-sm">
             {detailedInfo?.applicationProcess ? (
               <TranslatedResourceText text={detailedInfo.applicationProcess} />
@@ -312,7 +312,7 @@ export default function ResourceDetail() {
             {documentsText}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-white">
           <p className="whitespace-pre-line text-sm">
             {detailedInfo?.documentsRequired ? (
               <TranslatedResourceText text={detailedInfo.documentsRequired} />
@@ -331,7 +331,7 @@ export default function ResourceDetail() {
             {feesText}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="bg-white">
             <p className="whitespace-pre-line text-sm">
               {detailedInfo?.fees ? (
                 <TranslatedResourceText text={detailedInfo.fees} />
@@ -350,7 +350,7 @@ export default function ResourceDetail() {
           <CardHeader>
             <CardTitle>{contactInfoText}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 bg-white">
             {/* Service Phones from service-at-location-details */}
             {detailedInfo?.servicePhones && detailedInfo.servicePhones.length > 0 ? (
               // Display servicePhones from service-at-location-details endpoint
@@ -607,7 +607,7 @@ export default function ResourceDetail() {
           <CardHeader>
             <CardTitle>{serviceDetailsText}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 bg-white">
             {/* Eligibility */}
             <div className="flex items-start">
               <Users className="h-5 w-5 mr-2 text-muted-foreground shrink-0 mt-0.5" />
