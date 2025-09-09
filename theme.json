@@ -1,6 +1,21 @@
 {
-  "variant": "professional", 
-  "primary": "#005191",
-  "appearance": "light",
-  "radius": 0.75
+  "colors": {
+    "variant": "professional",
+    "primary": "#005191",
+    "secondary": "#f59e0b",
+    "background": "#ffffff",
+    "foreground": "#000000",
+    "border": "#e5e7eb",
+    "radius": 0.75
+  },
+  "space": {
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px"
+  },
+  "radii": {
+    "sm": "4px",
+    "md": "8px",
+    "lg": "12px"
+  }
 }
