@@ -6,28 +6,28 @@
 
 /* Enhanced accessibility font size classes with global scaling */
 .font-small {
-  --base-font-size: 0.85;
+  --base-font-size: 0.95;
 }
 
 .font-medium {
-  --base-font-size: 1.0;
+  --base-font-size: 1.15;
 }
 
 .font-large {
-  --base-font-size: 1.25;
+  --base-font-size: 1.35;
 }
 
 /* Apply font scaling to all text elements */
 .font-small * {
-  font-size: calc(1rem * 0.85) !important;
+  font-size: calc(1rem * 0.95) !important;
 }
 
 .font-medium * {
-  font-size: calc(1rem * 1.0);
+  font-size: calc(1rem * 1.15);
 }
 
 .font-large * {
-  font-size: calc(1rem * 1.25) !important;
+  font-size: calc(1rem * 1.35) !important;
 }
 
 /* Enhanced high contrast mode */
