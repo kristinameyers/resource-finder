@@ -113,4 +113,5 @@ Thumbs.db
 .replit
 replit.nix
 
-/attached_assets
+# Screenshots
+attached_assets

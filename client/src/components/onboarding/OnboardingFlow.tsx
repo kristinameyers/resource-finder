@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+// OnboardingFlow.tsx
+
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MapPin, ArrowRight, Check } from "lucide-react";
+import { MapPin, ArrowRight } from "lucide-react";
 import { useTranslatedText } from "@/components/TranslatedText";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import new211Logo from "@/assets/new-211-logo.png";
@@ -126,7 +128,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               />
               <p className="text-sm text-gray-600 mt-2">Get connected. Get Help.</p>
             </div>
-            
             <div className="mb-12">
               <h1 className="text-2xl font-normal text-gray-800 mb-4">
                 {welcomeText}<br />{santaBarbaraText}
@@ -135,7 +136,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 {descriptionText}
               </p>
             </div>
-
             <Button 
               onClick={handleNext}
               className="bg-[#FFB351] hover:bg-[#e89d42] text-white px-12 py-3 rounded-lg flex items-center gap-2"
@@ -147,6 +147,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </motion.div>
         )}
 
+        {/* Combined Step 2 */}
         {currentStep === 2 && (
           <motion.div
             key="step2"
@@ -157,117 +158,72 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             transition={{ duration: reduceMotion ? 0 : 0.3 }}
             className="flex-1 flex flex-col items-center justify-center p-8 text-center"
           >
-            <div className="mb-12">
+            <div className="mb-8">
               <img 
                 src={new211Logo} 
                 alt="Santa Barbara County 211 Logo" 
-                className="h-20 w-auto mx-auto mb-4"
+                className="h-24 w-auto mx-auto mb-4"
               />
               <p className="text-sm text-gray-600">Get connected. Get Help.</p>
             </div>
 
-            <div className="mb-12 w-full max-w-sm">
-              <h2 className="text-xl font-normal text-gray-800 mb-4">
-                {findResourcesText}
-              </h2>
-              <p className="text-gray-600 mb-8">
-                {locationDescText}
-              </p>
-
-              <div className="space-y-4">
-                <Input
-                  type="text"
-                  placeholder={enterZipText}
-                  value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
-                  className="w-full"
-                  aria-label="Enter zip code"
-                />
-
-                <Button
-                  variant="outline"
-                  onClick={handleLocationRequest}
-                  className="w-full flex items-center gap-2"
-                  aria-label="Use current location"
-                >
-                  <MapPin className="w-4 h-4" />
-                  {useLocationText}
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-4 w-full max-w-sm">
-              <Button 
-                onClick={handleNext}
-                className="bg-[#FFB351] hover:bg-[#e89d42] text-white w-full flex items-center justify-center gap-2"
-                aria-label="Save location preferences"
-              >
-                {saveText}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-
-              <Button 
-                variant="outline"
-                onClick={handleNext}
-                className="bg-[#005191] text-white border-[#005191] hover:bg-[#004080] w-full"
-                aria-label="Skip location setup"
-              >
-                {skipText}
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {currentStep === 3 && (
-          <motion.div
-            key="step3"
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: reduceMotion ? 0 : 0.3 }}
-            className="flex-1 flex flex-col p-8 h-full"
-          >
-            <div className="text-center mb-6">
-              <img 
-                src={new211Logo} 
-                alt="Santa Barbara County 211 Logo" 
-                className="h-16 w-auto mx-auto mb-3"
+            {/* Location and Category Section */}
+            <div className="w-full max-w-md mx-auto">
+              {/* Location Entry */}
+              <h2 className="text-xl font-normal text-gray-800 mb-4">{findResourcesText}</h2>
+              <p className="text-gray-600 mb-4">{locationDescText}</p>
+              <Input
+                type="text"
+                placeholder={enterZipText}
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                className="w-full mb-4"
+                aria-label="Enter zip code"
               />
-              <p className="text-sm text-gray-600 mb-4">Get connected. Get Help.</p>
-              
-              <h2 className="text-lg font-normal text-gray-800 mb-4">
+              <Button
+                variant="outline"
+                onClick={handleLocationRequest}
+                className="w-full flex items-center gap-2 mb-4"
+                aria-label="Use current location"
+              >
+                <MapPin className="w-4 h-4" />
+                {useLocationText}
+              </Button>
+
+              {/* Category Selection */}
+              <h2 className="text-lg font-normal text-gray-800 mb-4 mt-8">
                 {selectThreeText}
               </h2>
-            </div>
-
-            <div className="flex-1 overflow-y-auto mb-6 max-h-96">
-              <div className="space-y-3 max-w-sm mx-auto">
-                {categories.map((category) => (
-                  <div 
-                    key={category.id}
-                    className="flex items-center space-x-3 p-2"
-                  >
-                    <Checkbox
-                      id={category.id}
-                      checked={selectedCategories.includes(category.id)}
-                      onCheckedChange={() => handleCategoryToggle(category.id)}
-                      disabled={!selectedCategories.includes(category.id) && selectedCategories.length >= 3}
-                      aria-label={`Select ${category.name} category`}
-                    />
-                    <label 
-                      htmlFor={category.id}
-                      className="text-gray-800 cursor-pointer flex-1"
+              <div className="flex-1 overflow-y-auto mb-4 max-h-52">
+                <div className="space-y-3 max-w-sm mx-auto">
+                  {categories.map((category) => (
+                    <div 
+                      key={category.id}
+                      className="flex items-center space-x-3 p-2"
                     >
-                      {category.name}
-                    </label>
-                  </div>
-                ))}
+                      <Checkbox
+                        id={category.id}
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={() => handleCategoryToggle(category.id)}
+                        disabled={!selectedCategories.includes(category.id) && selectedCategories.length >= 3}
+                        aria-label={`Select ${category.name} category`}
+                      />
+                      <label 
+                        htmlFor={category.id}
+                        className="text-gray-800 cursor-pointer flex-1"
+                      >
+                        {category.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Fixed button at bottom - ALWAYS VISIBLE */}
-            <div className="mt-auto space-y-4 w-full max-w-sm mx-auto bg-white pt-4">
+              <p className="text-sm text-gray-600 text-center font-medium mb-4">
+                {selectedCategories.length > 0 
+                  ? `${selectedCategories.length} of 3 categories selected`
+                  : "Categories are optional - click Continue to proceed"
+                }
+              </p>
               <Button 
                 onClick={handleComplete}
                 className="bg-[#005191] hover:bg-[#004080] text-white w-full py-4 flex items-center justify-center gap-2 font-bold text-xl shadow-xl border-4 border-yellow-400"
@@ -277,13 +233,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 🏠 Continue to Home
                 <ArrowRight className="w-6 h-6" />
               </Button>
-              
-              <p className="text-sm text-gray-600 text-center font-medium">
-                {selectedCategories.length > 0 
-                  ? `${selectedCategories.length} of 3 categories selected`
-                  : "Categories are optional - click Continue to proceed"
-                }
-              </p>
+              <Button 
+                variant="outline"
+                onClick={handleComplete}
+                className="bg-[#FFB351] text-white border-[#FFB351] hover:bg-[#e89d42] w-full mt-3"
+                aria-label="Skip location and category setup"
+              >
+                {skipText}
+              </Button>
             </div>
           </motion.div>
         )}
