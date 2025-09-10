@@ -1440,6 +1440,7 @@ function formatSchedules(schedules: any[]): string | undefined {
   }).join('\n\n');
 }
 
+
 /**
  * Main searchResources function - uses proper taxonomy codes
  */
@@ -1466,8 +1467,64 @@ export async function searchResources(
     return { resources: [], total: 0 };
   }
 
-  // Get the proper taxonomy code using the taxonomy data exactly like your working app
-let taxonomyCode: string | null = null;
+  // Special handling for Finance & Employment: try keywords first
+  if (category === 'finance-employment' && !subcategory) {
+    const categoryData = MAIN_CATEGORIES[category];
+    if (categoryData?.keywords) {
+      console.log(`Using keywords-first search for ${category}: ${categoryData.keywords.join(', ')}`);
+      
+      // Try each keyword first
+      for (const keyword of categoryData.keywords) {
+        console.log(`Trying keyword: ${keyword}`);
+        try {
+          const keywordResult = await searchResourcesByKeyword(
+            keyword,
+            zipCode,
+            latitude,
+            longitude,
+            take, // size parameter
+            skip  // offset parameter
+          );
+          
+          if (keywordResult.resources.length > 0) {
+            console.log(`Keyword search succeeded with "${keyword}": ${keywordResult.resources.length} resources found`);
+            return keywordResult;
+          }
+        } catch (error) {
+          console.log(`Keyword search failed for "${keyword}":`, error);
+        }
+      }
+      
+      // If keywords failed, try taxonomy code as fallback
+      const taxonomyCode = getMainCategoryTaxonomyCode(category);
+      if (taxonomyCode) {
+        console.log(`Keywords failed, trying taxonomy code fallback: ${taxonomyCode}`);
+        try {
+          const taxonomyResult = await searchResourcesByTaxonomyCode(
+            taxonomyCode,
+            zipCode,
+            latitude,
+            longitude,
+            take,
+            skip
+          );
+          
+          if (taxonomyResult.resources.length > 0) {
+            console.log(`Taxonomy fallback succeeded: ${taxonomyResult.resources.length} resources found`);
+            return taxonomyResult;
+          }
+        } catch (error) {
+          console.log(`Taxonomy fallback failed:`, error);
+        }
+      }
+      
+      console.log(`All search attempts failed for finance-employment category`);
+      return { resources: [], total: 0 };
+    }
+  }
+
+  // Regular taxonomy-first search for all other categories
+  let taxonomyCode: string | null = null;
   
   // Use official taxonomy codes for both category and subcategory searches
   if (subcategory) {
