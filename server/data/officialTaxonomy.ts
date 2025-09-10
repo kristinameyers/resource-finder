@@ -45,7 +45,7 @@ export const SUBCATEGORIES = {
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
   ],
   'finance-employment': [
-    { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'NL-1000' },
+    { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'ND-9000' },
     { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
     { id: 'employment-discrimination', name: 'Employment Discrimination Assistance', taxonomyCode: 'FT-1800.1850' },
@@ -234,7 +234,7 @@ export const SUBCATEGORIES = {
     { id: 'pet-food', name: 'Pet Food', taxonomyCode: 'PD-6250.6600' }
   ],
   'hygiene-household': [
-    { id: 'hygiene-household', name: 'Hygiene & Household', taxonomyCode: 'BM-3000' },
+    { id: 'hygiene-household', name: 'Hygiene & Household', taxonomyCode: 'BM' },
     { id: 'disaster-related', name: 'Disaster Related Clothing & Emergency Supplies', taxonomyCode: 'TH-2600.1550' },
     { id: 'grooming-supplies', name: 'Grooming Supplies', taxonomyCode: 'TI-1800.6700' },
     { id: 'household-hazardous-materials', name: 'Household Hazardous Materials Information', taxonomyCode: 'JR-8200.3000-300' },
