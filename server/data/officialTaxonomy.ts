@@ -45,7 +45,7 @@ export const SUBCATEGORIES = {
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
   ],
   'finance-employment': [
-    { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'ND-9000' },
+    { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'NL-1000' },
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
     { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
