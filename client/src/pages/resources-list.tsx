@@ -71,9 +71,23 @@ export default function ResourcesListPage() {
     const zipCode = localStorage.getItem('userZipCode');
     if (zipCode) setUserLocation(zipCode);
   }, []);
+  
   useEffect(() => {
     saveFavorites(favorites);
   }, [favorites]);
+
+  // Store search context whenever URL parameters change
+  useEffect(() => {
+    if (categoryId || keyword) {
+      const searchContext = {
+        categoryId: categoryId || null,
+        subcategoryId: selectedSubcategory !== 'all' ? selectedSubcategory : null,
+        location: userLocation ? { type: 'zipCode', value: userLocation } : null
+      };
+      localStorage.setItem('searchContext', JSON.stringify(searchContext));
+      console.log('Stored search context:', searchContext);
+    }
+  }, [categoryId, keyword, selectedSubcategory, userLocation]);
 
   // Fetch category data
   const { data: categoriesResponse } = useQuery<CategoriesResponse>({
@@ -120,14 +134,6 @@ export default function ResourcesListPage() {
         localStorage.setItem('recentResources', JSON.stringify(result.resources));
         console.log(`Stored ${result.resources.length} resources in localStorage`);
       }
-      
-      // Store search context for back navigation
-      const searchContext = {
-        categoryId: categoryId || null,
-        subcategoryId: selectedSubcategory !== 'all' ? selectedSubcategory : null,
-        location: userLocation ? { type: 'zipCode', value: userLocation } : null
-      };
-      localStorage.setItem('searchContext', JSON.stringify(searchContext));
       
       return result;
     },
