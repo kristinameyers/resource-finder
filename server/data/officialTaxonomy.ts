@@ -46,7 +46,8 @@ export const SUBCATEGORIES = {
   ],
   'finance-employment': [
     { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'ND-9000' },
-    { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
+    // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
+    { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
     { id: 'employment-discrimination', name: 'Employment Discrimination Assistance', taxonomyCode: 'FT-1800.1850' },
     { id: 'vocational-rehabilitation', name: 'Vocational Rehabilitation', taxonomyCode: 'ND-9000' },
@@ -204,7 +205,7 @@ export const SUBCATEGORIES = {
     { id: 'education', name: 'Education', taxonomyCode: 'HD-1800.8000' },
     //{ id: 'adult-literacy', name: 'Adult Literacy and Basic Education', taxonomyCode: 'HD-0100.0200' },
     { id: 'computer-literacy', name: 'Computer Literacy Training Programs', taxonomyCode: 'PL-7400.1500' },
-    { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
+    // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
     { id: 'financial-literacy', name: 'Financial Literacy', taxonomyCode: 'NL-1000.2100' },
     { id: 'esl', name: 'English as a Second Language', taxonomyCode: 'HL-2000.0550' },
     { id: 'technical-schools', name: 'Technical/Trade Schools', taxonomyCode: 'HD-6000.9000' },
