@@ -136,8 +136,8 @@ export default function ResourceDetail() {
       const { categoryId, subcategoryId, location } = JSON.parse(searchContext);
       const params = new URLSearchParams();
       
-      if (categoryId) params.set('category', categoryId);
-      if (subcategoryId) params.set('subcategory', subcategoryId);
+      if (categoryId) params.set('categoryId', categoryId);
+      if (subcategoryId) params.set('subcategoryId', subcategoryId);
       if (location) {
         if (location.type === 'zipCode') {
           params.set('zipCode', location.value);
@@ -147,9 +147,9 @@ export default function ResourceDetail() {
         }
       }
       
-      return `/?${params.toString()}`;
+      return `/resources?${params.toString()}`;
     }
-    return '/'; // Default fallback
+    return '/'; // Default fallback to home page
   };
 
   const resource = resourceQuery.data;
