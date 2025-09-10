@@ -14,7 +14,7 @@ type Subcategory = { id: string; name: string; taxonomyCode: string; keywords?: 
 // Main Categories (some use taxonomyCode, some use keywords)
 export const MAIN_CATEGORIES: Record<string, MainCategory> = {
   'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
-  'finance-employment': { name: 'Finance & Employment', keywords: ['finance'] },
+  'finance-employment': { name: 'Finance & Employment', taxonomyCode: 'NL-1000.8500' },
   'food': { name: 'Food', taxonomyCode: 'BD-5000' },
   'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
   'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
@@ -51,9 +51,9 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
   ],
   'finance-employment': [
-    { id: 'finance-employment', name: 'Finance Employment', keywords: ['finance'], taxonomyCode: 'NL-1000' },
+    { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'NL-1000.8500' },
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
-    { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
+    // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
     { id: 'employment-discrimination', name: 'Employment Discrimination Assistance', taxonomyCode: 'FT-1800.1850' },
     { id: 'vocational-rehabilitation', name: 'Vocational Rehabilitation', taxonomyCode: 'ND-9000' },
