@@ -121,6 +121,14 @@ export default function ResourcesListPage() {
         console.log(`Stored ${result.resources.length} resources in localStorage`);
       }
       
+      // Store search context for back navigation
+      const searchContext = {
+        categoryId: categoryId || null,
+        subcategoryId: selectedSubcategory !== 'all' ? selectedSubcategory : null,
+        location: userLocation ? { type: 'zipCode', value: userLocation } : null
+      };
+      localStorage.setItem('searchContext', JSON.stringify(searchContext));
+      
       return result;
     },
     enabled: !!(categoryId || keyword),

@@ -138,6 +138,7 @@ export default function ResourceDetail() {
       
       if (categoryId) params.set('categoryId', categoryId);
       if (subcategoryId) params.set('subcategoryId', subcategoryId);
+      params.set('useApi', 'true'); // Always use API when navigating back
       if (location) {
         if (location.type === 'zipCode') {
           params.set('zipCode', location.value);
