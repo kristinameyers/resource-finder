@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
-import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, getMainCategoryTaxonomyCode } from '../data/officialTaxonomy';
+import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, getMainCategoryTaxonomyCode, MAIN_CATEGORIES } from '../data/officialTaxonomy';
 
 
 // Define interfaces for the 211 API responses
@@ -518,8 +518,38 @@ export async function searchResourcesByTaxonomyCode(
           response = fallbackResponse;
           console.log('Text search fallback succeeded');
         } else {
-          console.log('Both taxonomy and text search failed - no results found');
-          return { resources: [], total: 0 };
+          // Try keyword fallback for categories that have keywords defined
+          const categoryForTaxonomy = Object.entries(MAIN_CATEGORIES).find(([id, cat]) => cat.taxonomyCode === taxonomyCode);
+          
+          if (categoryForTaxonomy && categoryForTaxonomy[1].keywords) {
+            console.log(`Category text search failed, trying keywords: ${categoryForTaxonomy[1].keywords.join(', ')}`);
+            
+            for (const keyword of categoryForTaxonomy[1].keywords) {
+              const keywordParams = new URLSearchParams(queryParams);
+              keywordParams.set('keywords', keyword);
+              
+              const keywordUrl = `${requestUrl}?${keywordParams.toString()}`;
+              console.log(`Trying keyword search: ${keyword}`);
+              
+              const keywordResponse = await handleRateLimitedRequest(async () => {
+                return await fetch(keywordUrl, {
+                  method: 'GET',
+                  headers: fallbackHeaders
+                });
+              });
+              
+              if (keywordResponse.ok) {
+                response = keywordResponse;
+                console.log(`Keyword search succeeded with: ${keyword}`);
+                break;
+              }
+            }
+          }
+          
+          if (!response.ok) {
+            console.log('All search attempts failed - no results found');
+            return { resources: [], total: 0 };
+          }
         }
       }
       
