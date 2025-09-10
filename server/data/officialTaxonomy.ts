@@ -8,8 +8,7 @@
 type MainCategory =
   | { name: string; taxonomyCode: string; keywords?: never }
   | { name: string; keywords: string[]; taxonomyCode?: never };
-
-type Subcategory = { id: string; name: string; taxonomyCode: string; keywords?: string[] };
+  type Subcategory = { id: string; name: string; taxonomyCode: string; keywords?: string[] };
 
 // Main Categories (some use taxonomyCode, some use keywords)
 export const MAIN_CATEGORIES: Record<string, MainCategory> = {
@@ -21,14 +20,14 @@ export const MAIN_CATEGORIES: Record<string, MainCategory> = {
   'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
   'children-family': { name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
   'young-adults': { name: 'Young Adults', taxonomyCode: 'PS-9800' },
-  'education': { name: 'Education', taxonomyCode: 'HD-1800.8000' },
   'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
   'utilities': { name: 'Utilities', taxonomyCode: 'BV' },
   'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' },
   'hygiene-household': { name: 'Hygiene & Household', taxonomyCode: 'BM-3000' },
 
 // Keywords only categories
-  'finance-employment': { name: 'Finance & Employment', keywords: ['finance'] }
+  'finance-employment': { name: 'Finance & Employment', keywords: ['finance', 'job', 'employment', 'money', 'work', 'career'] },
+  'education': { name: 'Education', keywords: ['education', 'school', 'learning', 'study', 'teach', 'class'] }
 };
 
 // Subcategories structure (only taxonomyCode required; optional keywords)
@@ -54,7 +53,7 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
   ],
   'finance-employment': [
-    { id: 'finance-employment', name: 'Finance Employment', keywords: ['finance'], taxonomyCode: 'NL-1000' },
+    { id: 'finance-employment', name: 'Finance & Employment', taxonomyCode: 'NL-1000' }, // Add this
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
     //{ id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
@@ -211,7 +210,7 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'teen-pregnancy-prevention', name: 'Teen Pregnancy Prevention', taxonomyCode: 'LJ-8000.8500' }
   ],
   'education': [
-    { id: 'education', name: 'Education', taxonomyCode: 'HD-1800.8000' },
+    { id: 'education', name: 'Education', taxonomyCode: 'HD-1800.8000' }, // Add this
     // { id: 'adult-literacy', name: 'Adult Literacy and Basic Education', taxonomyCode: 'HD-0100.0200' },
     { id: 'computer-literacy', name: 'Computer Literacy Training Programs', taxonomyCode: 'PL-7400.1500' },
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
@@ -261,7 +260,8 @@ export function getSubcategoriesForCategory(categoryId: string) {
 /** Lookup by taxonomyCode (main categories only) */
 export function getCategoryByTaxonomyCode(code: string): { id: string; name: string } | null {
   for (const [id, cat] of Object.entries(MAIN_CATEGORIES)) {
-    if (cat.taxonomyCode && cat.taxonomyCode === code) { // ✅ Safe access
+    // Use proper type guard
+    if ('taxonomyCode' in cat && cat.taxonomyCode === code) {
       return { id, name: cat.name };
     }
   }
@@ -272,7 +272,10 @@ export function getCategoryByTaxonomyCode(code: string): { id: string; name: str
 export function getCategoryByKeyword(keyword: string): { id: string; name: string } | null {
   const norm = keyword.toLowerCase().trim();
   for (const [id, cat] of Object.entries(MAIN_CATEGORIES)) {
-    if (cat.keywords && cat.keywords.some(kw => norm.includes(kw))) { // ✅ Safe access
+    // More explicit type guard and null check
+    if ('keywords' in cat && cat.keywords && cat.keywords.some(kw => 
+      kw.toLowerCase().includes(norm) || norm.includes(kw.toLowerCase())
+    )) {
       return { id, name: cat.name };
     }
   }
@@ -283,7 +286,12 @@ export function getCategoryByKeyword(keyword: string): { id: string; name: strin
 export function getMainCategoryTaxonomyCode(categoryId: string): string | null {
   const normalized = categoryId.toLowerCase().trim();
   const category = MAIN_CATEGORIES[normalized];
-  return category?.taxonomyCode ?? null; // ✅ Already safe
+  
+  // Use proper type guard and handle undefined
+  if (category && 'taxonomyCode' in category) {
+    return category.taxonomyCode ?? null; // Convert undefined to null
+  }
+  return null;
 }
 
 /** Subcategory taxonomy code lookup */
