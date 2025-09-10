@@ -180,7 +180,7 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'drug-alcohol-testing', name: 'Drug & Alcohol Testing', taxonomyCode: 'RX-0400.1850' }
   ],
   'children-family': [
-    { id: 'children-family', name: 'Children & Family', taxonomyCode: 'PH' },
+    { id: 'children-family', name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
     { id: 'family-law-courts', name: 'Family Law Courts', taxonomyCode: 'FC-8200.8100-200' },
     { id: 'child-custody', name: 'Child Custody', taxonomyCode: 'FT-3000.1500' },
     { id: 'child-support', name: 'Child Support', taxonomyCode: 'FT-3000.1600' },
