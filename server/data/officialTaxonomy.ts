@@ -28,7 +28,7 @@ export const MAIN_CATEGORIES: Record<string, MainCategory> = {
   'hygiene-household': { name: 'Hygiene & Household', taxonomyCode: 'BM-3000' },
 
 // Keywords only categories
-  'finance-employment': { name: 'Finance & Employment', keywords: ['finance', 'jobs', 'employment', 'money', 'work'] }
+  'finance-employment': { name: 'Finance & Employment', keywords: ['finance'] }
 };
 
 // Subcategories structure (only taxonomyCode required; optional keywords)
