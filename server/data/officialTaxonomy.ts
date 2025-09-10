@@ -6,8 +6,9 @@
 
 // Types for categories (discriminated union)
 type MainCategory =
-  | { name: string; taxonomyCode: string }
-  | { name: string; keywords: string[] };
+  | { name: string; taxonomyCode: string; keywords?: never }
+  | { name: string; keywords: string[]; taxonomyCode?: never }
+  | { name: string; taxonomyCode: string; keywords: string[] };
 
 type Subcategory = { id: string; name: string; taxonomyCode: string; keywords?: string[] };
 
@@ -258,7 +259,7 @@ export function getSubcategoriesForCategory(categoryId: string) {
 /** Lookup by taxonomyCode (main categories only) */
 export function getCategoryByTaxonomyCode(code: string): { id: string; name: string } | null {
   for (const [id, cat] of Object.entries(MAIN_CATEGORIES)) {
-    if ('taxonomyCode' in cat && cat.taxonomyCode === code) {
+    if (cat.taxonomyCode === code) {
       return { id, name: cat.name };
     }
   }
@@ -269,14 +270,21 @@ export function getCategoryByTaxonomyCode(code: string): { id: string; name: str
 export function getCategoryByKeyword(keyword: string): { id: string; name: string } | null {
   const norm = keyword.toLowerCase().trim();
   for (const [id, cat] of Object.entries(MAIN_CATEGORIES)) {
-    if ('keywords' in cat && cat.keywords.some(kw => norm.includes(kw))) {
+    if (cat.keywords && cat.keywords.some(kw => norm.includes(kw))) {
       return { id, name: cat.name };
     }
   }
   return null;
 }
 
-  /** Subcategory taxonomy code lookup */
+/** Get taxonomy code safely from main category */
+export function getMainCategoryTaxonomyCode(categoryId: string): string | null {
+  const normalized = categoryId.toLowerCase().trim();
+  const category = MAIN_CATEGORIES[normalized];
+  return category?.taxonomyCode ?? null;
+}
+
+/** Subcategory taxonomy code lookup */
 export function getOfficialSubcategoryTaxonomyCode(categoryId: string, subcategoryId: string): string | null {
   const normalizedCategoryId = categoryId.toLowerCase().trim();
   const normalizedSubcategoryId = subcategoryId.toLowerCase().trim();
