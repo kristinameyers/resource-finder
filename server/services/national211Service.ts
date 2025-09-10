@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
-import { getOfficialCategoryTaxonomyCode, getOfficialSubcategoryTaxonomyCode } from '../data/officialTaxonomy';
+import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, MAIN_CATEGORIES } from '../data/officialTaxonomy';
 
 
 // Define interfaces for the 211 API responses
@@ -1444,13 +1444,13 @@ let taxonomyCode: string | null = null;
   taxonomyCode = getOfficialSubcategoryTaxonomyCode(category, subcategory);
   if (!taxonomyCode) {
     // Fallback to category taxonomy
-    taxonomyCode = getOfficialCategoryTaxonomyCode(category);
+    taxonomyCode = MAIN_CATEGORIES[category]?.taxonomyCode || null;
     console.log(`No subcategory taxonomy code found, using category code: ${taxonomyCode} for ${subcategory}`);
   } else {
     console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
   }
 } else {
-  taxonomyCode = getOfficialCategoryTaxonomyCode(category);
+  taxonomyCode = MAIN_CATEGORIES[category]?.taxonomyCode || null;
   console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
 }
 
