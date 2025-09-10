@@ -26,13 +26,17 @@ const CATEGORY_ORDER = [
 // Helper: Build categories array from officialTaxonomy with UI order
 const orderedCategories: Category[] = CATEGORY_ORDER
   .filter(id => id in MAIN_CATEGORIES)
-  .map(id => ({
-    id,
-    name: MAIN_CATEGORIES[id as keyof typeof MAIN_CATEGORIES].name,
-    taxonomyCode: MAIN_CATEGORIES[id as keyof typeof MAIN_CATEGORIES].taxonomyCode,
-    icon: getIconForCategory(id)
-  }));
+  .map(id => {
+    const cat = MAIN_CATEGORIES[id as keyof typeof MAIN_CATEGORIES];
 
+    // Use a type guard to access taxonomyCode safely
+    return {
+      id,
+      name: cat.name,
+      taxonomyCode: 'taxonomyCode' in cat ? cat.taxonomyCode : "",
+      icon: getIconForCategory(id),
+    };
+  });
 
 function getIconForCategory(id: string): string | undefined {
   // Optionally map IDs to icon names (adjust as needed)
