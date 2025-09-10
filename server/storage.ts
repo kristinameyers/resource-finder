@@ -3,7 +3,8 @@ import fetch from "node-fetch";
 import { calculateDistanceFromZipCodes } from "./data/zipCodes";
 import { 
   MAIN_CATEGORIES, 
-  getSubcategoriesForCategory 
+  getSubcategoriesForCategory,
+  getCategoryByKeyword // ← Add this import
 } from "./data/officialTaxonomy";
 
 // If you want UI order, define it as an array of IDs:
@@ -64,7 +65,17 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
 
   // Resources related methods
-  getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string, sortBy?: 'relevance' | 'distance' | 'name'): Promise<Resource[]>;
+  getResources(
+    categoryId?: string,
+    subcategoryId?: string,
+    zipCode?: string,
+    latitude?: number,
+    longitude?: number,
+    sessionId?: string,
+    ipAddress?: string,
+    sortBy?: 'relevance' | 'distance' | 'name',
+    keyword?: string // ← Add this
+  ): Promise<Resource[]>;
   getCategories(): Promise<Category[]>;
   getSubcategories(categoryId: string): Promise<Subcategory[]>;
   getLocations(): Promise<Location[]>;
@@ -121,7 +132,27 @@ export class MemStorage implements IStorage {
     return user;
   }
 
-  async getResources(categoryId?: string, subcategoryId?: string, zipCode?: string, latitude?: number, longitude?: number, sessionId?: string, ipAddress?: string, sortBy?: 'relevance' | 'distance' | 'name'): Promise<Resource[]> {
+  async getResources(
+  categoryId?: string, 
+  subcategoryId?: string, 
+  zipCode?: string, 
+  latitude?: number, 
+  longitude?: number, 
+  sessionId?: string, 
+  ipAddress?: string, 
+  sortBy?: 'relevance' | 'distance' | 'name',
+  keyword?: string // ← Add this
+): Promise<Resource[]> {
+
+  // Handle keyword search - translate to categoryId
+  if (keyword && !categoryId) {
+    const matchedCategory = getCategoryByKeyword(keyword);
+    if (matchedCategory) {
+      categoryId = matchedCategory.id;
+      console.log(`Keyword "${keyword}" matched to category: ${categoryId}`);
+    }
+  }
+
     // (Retain your mock or API logic for resources as needed)
     // ... (your existing resource logic here)
     return []; // placeholder
