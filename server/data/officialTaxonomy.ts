@@ -8,7 +8,7 @@
 
 export const MAIN_CATEGORIES = {
   'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
-  'finance-employment': { name: 'Finance & Employment', taxonomyCode: 'NL-1000' },
+  'finance-employment': { name: 'Finance & Employment', keywords: ['finance', 'jobs', 'money', 'work'] },
   'food': { name: 'Food', taxonomyCode: 'BD-5000' },
   'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
   'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
@@ -45,7 +45,7 @@ export const SUBCATEGORIES = {
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
   ],
   'finance-employment': [
-    { id: 'finance-employment', name: 'Finance Employment', taxonomyCode: 'NL-1000' },
+    { id: 'finance-employment', name: 'Finance Employment', keywords: ['finance', 'jobs', 'money', 'work'] },
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
     { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
