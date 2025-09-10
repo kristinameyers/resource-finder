@@ -4,9 +4,15 @@
  * This is the authoritative mapping between categories/subcategories and their official taxonomy codes
  */
 
-// Main Categories with official taxonomy codes - Updated January 2025 per user requirements
+// Types for categories (discriminated union)
+type MainCategory =
+  | { name: string; taxonomyCode: string }
+  | { name: string; keywords: string[] };
 
-export const MAIN_CATEGORIES = {
+type Subcategory = { id: string; name: string; taxonomyCode: string; keywords?: string[] };
+
+// Main Categories (some use taxonomyCode, some use keywords)
+export const MAIN_CATEGORIES: Record<string, MainCategory> = {
   'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
   'finance-employment': { name: 'Finance & Employment', keywords: ['finance', 'jobs'] },
   'food': { name: 'Food', taxonomyCode: 'BD-5000' },
@@ -15,15 +21,15 @@ export const MAIN_CATEGORIES = {
   'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
   'children-family': { name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
   'young-adults': { name: 'Young Adults', taxonomyCode: 'PS-9800' },
-  'education': { name: 'Education', taxonomyCode: 'HD-1800.8000' },
+  'education': { name: 'Education', keywords: ['school', 'reading', 'education', 'learning'] },
   'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
   'utilities': { name: 'Utilities', taxonomyCode: 'BV' },
   'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' },
   'hygiene-household': { name: 'Hygiene & Household', taxonomyCode: 'BM-3000' }
-} as const;
+};
 
-// Subcategories with official taxonomy codes
-export const SUBCATEGORIES = {
+// Subcategories structure (only taxonomyCode required; optional keywords)
+export const SUBCATEGORIES: Record<string, Subcategory[]> = {
   'housing': [
     { id: 'housing', name: 'Housing', taxonomyCode: 'BH-1800.8500' },
     { id: 'domestic-violence-shelters', name: 'Domestic Violence Shelters', taxonomyCode: 'BH-1800.1500-100' },
@@ -45,7 +51,7 @@ export const SUBCATEGORIES = {
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
   ],
   'finance-employment': [
-    { id: 'finance-employment', name: 'Finance Employment', keywords: ['finance', 'jobs'] },
+    { id: 'finance-employment', name: 'Finance Employment', keywords: ['finance', 'jobs'], taxonomyCode: 'NL-1000' },
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
     { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
@@ -243,65 +249,39 @@ export const SUBCATEGORIES = {
   ]
 } as const;
 
-/**
- * Get the official taxonomy code for a main category with proper error handling
- */
+/** Get subcategories by category ID */
 export function getSubcategoriesForCategory(categoryId: string) {
   const normalized = categoryId.toLowerCase().trim();
-  if (normalized in SUBCATEGORIES) {
-    return SUBCATEGORIES[normalized as keyof typeof SUBCATEGORIES];
-  }
-  return [];
+  return SUBCATEGORIES[normalized] ?? [];
 }
 
-
-export function getOfficialCategoryTaxonomyCode(categoryId: string): string | null {
-  if (!categoryId) {
-    console.warn(`[Taxonomy] Empty categoryId provided`);
-    return null;
+/** Lookup by taxonomyCode (main categories only) */
+export function getCategoryByTaxonomyCode(code: string): { id: string; name: string } | null {
+  for (const [id, cat] of Object.entries(MAIN_CATEGORIES)) {
+    if ('taxonomyCode' in cat && cat.taxonomyCode === code) {
+      return { id, name: cat.name };
+    }
   }
-
-  // Ensure lowercase for consistent lookups
-  const normalizedCategoryId = categoryId.toLowerCase().trim();
-  const category = MAIN_CATEGORIES[normalizedCategoryId as keyof typeof MAIN_CATEGORIES];
-
-  if (!category) {
-    console.warn(`[Taxonomy] No main category mapping found for categoryId="${categoryId}" (normalized: "${normalizedCategoryId}")`);
-    console.warn(`[Taxonomy] Available categories: ${Object.keys(MAIN_CATEGORIES).join(', ')}`);
-    return null;
-  }
-
-  console.log(`[Taxonomy] ✅ Mapped categoryId "${categoryId}" → taxonomy code "${category.taxonomyCode}"`);
-  return category.taxonomyCode;
+  return null;
 }
 
-/**
- * Get the official taxonomy code for a subcategory with proper error handling
- */
+/** Lookup by keyword (main categories only) */
+export function getCategoryByKeyword(keyword: string): { id: string; name: string } | null {
+  const norm = keyword.toLowerCase().trim();
+  for (const [id, cat] of Object.entries(MAIN_CATEGORIES)) {
+    if ('keywords' in cat && cat.keywords.some(kw => norm.includes(kw))) {
+      return { id, name: cat.name };
+    }
+  }
+  return null;
+}
+
+  /** Subcategory taxonomy code lookup */
 export function getOfficialSubcategoryTaxonomyCode(categoryId: string, subcategoryId: string): string | null {
-  if (!categoryId || !subcategoryId) {
-    console.warn(`[Taxonomy] Missing categoryId or subcategoryId: ${categoryId}, ${subcategoryId}`);
-    return null;
-  }
-
-  // Ensure lowercase for consistent lookups
   const normalizedCategoryId = categoryId.toLowerCase().trim();
   const normalizedSubcategoryId = subcategoryId.toLowerCase().trim();
-
-  const subcategoriesForCategory = SUBCATEGORIES[normalizedCategoryId as keyof typeof SUBCATEGORIES];
-  if (!subcategoriesForCategory) {
-    console.warn(`[Taxonomy] No subcategories found for categoryId="${categoryId}" (normalized: "${normalizedCategoryId}")`);
-    console.warn(`[Taxonomy] Available categories: ${Object.keys(SUBCATEGORIES).join(', ')}`);
-    return null;
-  }
-
-  const subcategory = subcategoriesForCategory.find(sub => sub.id === normalizedSubcategoryId);
-  if (!subcategory) {
-    console.warn(`[Taxonomy] No subcategory mapping found for subcategoryId="${subcategoryId}" in category="${categoryId}"`);
-    console.warn(`[Taxonomy] Available subcategories in "${categoryId}": ${subcategoriesForCategory.map(sub => sub.id).join(', ')}`);
-    return null;
-  }
-
-  console.log(`[Taxonomy] ✅ Mapped subcategoryId "${subcategoryId}" in category "${categoryId}" → taxonomy code "${subcategory.taxonomyCode}"`);
-  return subcategory.taxonomyCode;
+  const subcategories = SUBCATEGORIES[normalizedCategoryId];
+  if (!subcategories) return null;
+  const sub = subcategories.find(s => s.id === normalizedSubcategoryId);
+  return sub?.taxonomyCode ?? null;
 }
