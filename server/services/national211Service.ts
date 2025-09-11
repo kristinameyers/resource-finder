@@ -1483,39 +1483,21 @@ export async function searchResources(
     // Finance & Employment -> only search for "finance"
     if (category === 'finance-employment') {
       console.log(`Home screen Finance & Employment: searching only for keyword "finance"`);
-      
-      // Try multiple attempts to handle 500 errors from 211 API
-      let lastError: any;
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          console.log(`Finance keyword search attempt ${attempt}/3`);
-          const result = await searchResourcesByKeyword(
-            'finance',
-            zipCode,
-            latitude,
-            longitude,
-            15, // Request 15 results specifically for Finance & Employment
-            skip
-          );
-          console.log(`Finance keyword search returned ${result.resources.length} resources`);
-          return result;
-        } catch (error) {
-          lastError = error;
-          console.log(`Finance keyword search attempt ${attempt} failed:`, error);
-          
-          // If it's a 500 error, wait a bit before retry
-          if (error instanceof Error && error.message.includes('500')) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-            continue;
-          }
-          
-          // For other errors, break and return 0
-          break;
-        }
+      try {
+        const result = await searchResourcesByKeyword(
+          'finance',
+          zipCode,
+          latitude,
+          longitude,
+          15, // Request 15 results specifically for Finance & Employment
+          skip
+        );
+        console.log(`Finance keyword search returned ${result.resources.length} resources`);
+        return result;
+      } catch (error) {
+        console.log(`Finance keyword search failed:`, error);
+        return { resources: [], total: 0 };
       }
-      
-      console.log(`All Finance keyword search attempts failed - returning 0 results (no fallback for main categories)`);
-      return { resources: [], total: 0 };
     }
     
     // Education -> only search for "education"
