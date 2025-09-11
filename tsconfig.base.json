@@ -24,7 +24,9 @@
       "@shared/*": ["packages/shared-schema/src/*"],
       "@sb211/hooks/*": ["packages/hooks/src/*"],
       "@sb211/components/*": ["packages/components/src/*"],
+      "@sb211/shared-schema/*": ["packages/shared-schema/src/*"],
       "@sb211/shared-schema": ["packages/shared-schema/src/index.ts"],
+      "@sb211/taxonomy": ["packages/taxonomy/src/index.ts"],
       "@sb211/ui-kit/*": ["packages/ui-kit/src/*"]
     },
     "typeRoots": ["node_modules/@types"]
