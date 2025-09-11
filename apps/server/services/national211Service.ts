@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { Resource } from '../../shared/schema';
+import { Resource } from '../shared/schema';
 import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, getMainCategoryTaxonomyCode, MAIN_CATEGORIES } from '../data/officialTaxonomy';
 import { calculateDistanceFromZipCodes } from "../data/zipCodes";
 

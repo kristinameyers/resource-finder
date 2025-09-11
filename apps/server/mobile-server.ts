@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getOfficialCategories, getSubcategoriesForCategory } from './data/officialTaxonomy';
+import { MAIN_CATEGORIES } from '../../packages/taxonomy/index';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,18 +15,21 @@ app.get('/health', (req, res) => {
 
 // Get categories
 app.get('/api/categories', (req, res) => {
-  const categories = getOfficialCategories();
+  const categories = Object.entries(MAIN_CATEGORIES).map(([id, category]) => ({
+    id,
+    ...category
+  }));
   res.json({ categories });
 });
 
-// Get subcategories
+// Get subcategories - placeholder for now
 app.get('/api/subcategories', (req, res) => {
   const { categoryId } = req.query;
   if (!categoryId || typeof categoryId !== 'string') {
     return res.status(400).json({ error: 'Category ID required' });
   }
-  const subcategories = getSubcategoriesForCategory(categoryId);
-  res.json({ subcategories });
+  // Return empty array for now as subcategories will be loaded from 211 API
+  res.json({ subcategories: [] });
 });
 
 // Search resources - placeholder for now
