@@ -2,6 +2,11 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -30,23 +35,49 @@ export async function setupVite(app: any, server: any) {
     return;
   }
 
+  // Set up correct paths for Vite
+  const projectRoot = path.resolve(__dirname, "../../");
+  const clientRoot = path.resolve(projectRoot, "client");
+  
+  // Use inline config to avoid temp file generation and import issues
   const vite = await createViteServer({
-    server: { middlewareMode: true, hmr: { server } },
+    root: clientRoot,
+    configFile: false, // Prevent Vite from loading config file and creating temp files
+    cacheDir: path.resolve(projectRoot, '.vite-dev-cache'),
+    server: { 
+      middlewareMode: true, 
+      hmr: { server },
+      watch: { 
+        ignored: ['**/node_modules/.vite-temp/**', '**/.vite-temp/**', '**/node_modules/**'] 
+      }
+    },
     appType: "custom",
+    resolve: {
+      alias: {
+        "@": path.resolve(clientRoot, "./src"),
+        "@assets": path.resolve(clientRoot, "./assets"),
+        "@lib": path.resolve(clientRoot, "./src/lib"),
+        "@shared": path.resolve(projectRoot, "./shared"),
+      },
+    },
   });
 
   app.use(vite.middlewares);
   
+  // Only serve HTML for navigation requests, not module/asset requests
   app.use("*", async (req: any, res: any, next: any) => {
-    const url = req.originalUrl;
+    // Skip non-GET requests and non-HTML requests
+    if (req.method !== "GET" || !req.headers.accept?.includes("text/html")) {
+      return next();
+    }
 
     try {
-      const template = fs.readFileSync(
-        path.resolve("client/index.html"),
+      const template = await fs.promises.readFile(
+        path.resolve(clientRoot, "index.html"),
         "utf-8",
       );
       
-      const html = await vite.transformIndexHtml(url, template);
+      const html = await vite.transformIndexHtml(req.originalUrl, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
