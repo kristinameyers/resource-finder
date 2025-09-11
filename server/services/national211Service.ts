@@ -1469,22 +1469,22 @@ export async function searchResources(
 
   // Special handling for home screen categories: use only keyword search
   if (!subcategory) {
-    // Finance & Employment -> only search for "finance"
+    // Finance & Employment -> only search for "employment" (broader term for more results)
     if (category === 'finance-employment') {
-      console.log(`Home screen Finance & Employment: searching only for keyword "finance"`);
+      console.log(`Home screen Finance & Employment: searching only for keyword "employment"`);
       try {
         const result = await searchResourcesByKeyword(
-          'finance',
+          'employment',
           zipCode,
           latitude,
           longitude,
           take,
           skip
         );
-        console.log(`Finance keyword search returned ${result.resources.length} resources`);
+        console.log(`Employment keyword search returned ${result.resources.length} resources`);
         return result;
       } catch (error) {
-        console.log(`Finance keyword search failed:`, error);
+        console.log(`Employment keyword search failed:`, error);
         return { resources: [], total: 0 };
       }
     }

@@ -243,7 +243,7 @@ export class MemStorage implements IStorage {
       results.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    return results;
+    return results || [];
   }
 
   async getCategories() { return this.categories; }
