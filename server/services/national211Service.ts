@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
 import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, getMainCategoryTaxonomyCode, MAIN_CATEGORIES } from '../data/officialTaxonomy';
-import { getCoordinatesForZip } from "../../client/src/data/zipcode-db";
+import { calculateDistanceFromZipCodes } from "../data/zipCodes";
 
 // Define interfaces for the 211 API responses
 interface National211Resource {
@@ -153,7 +153,9 @@ export async function searchResourcesByKeyword(
       keywords: keyword, // Free text keyword instead of taxonomy code
       distance: '25',
       size: size.toString(),
-      offset: offset.toString()
+      offset: offset.toString(),
+      keywordIsTaxonomyCode: 'false', // Moved from headers to query params
+      locationMode: 'Within'
     });
     
     // Add location parameter using same logic as working taxonomy search
@@ -173,14 +175,14 @@ export async function searchResourcesByKeyword(
     const fullUrl = `${requestUrl}?${queryParams.toString()}`;
     console.log(`Request URL: ${fullUrl}`);
     
-    const response = await fetch(fullUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY || '',
-        'locationMode': 'Within',
-        'keywordIsTaxonomyCode': 'false' // Set to false for keyword search
-      }
+    const response = await handleRateLimitedRequest(async () => {
+      return await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Api-Key': SUBSCRIPTION_KEY || ''
+        }
+      });
     });
     
     if (!response.ok) {
@@ -191,7 +193,7 @@ export async function searchResourcesByKeyword(
     
     const data: any = await response.json();
     console.log(`API response received with ${data.results?.length || 0} resources`);
-    console.log(`Total available results: ${data.totalCount || 0}`);
+    console.log(`Total available results: ${data.count || 0}`);
     console.log(`API Response structure:`, Object.keys(data));
     console.log(`Sample API fields:`, Object.keys(data.results?.[0] || {}));
     
@@ -205,7 +207,7 @@ export async function searchResourcesByKeyword(
     console.log(`Transformed ${basicResources.length} resources from 211 API keyword search`);
     return { 
       resources: basicResources, 
-      total: data.totalCount || basicResources.length 
+      total: data.count || basicResources.length 
     };
   } catch (error) {
     console.error('Error searching resources by keyword:', error);
@@ -227,67 +229,53 @@ export async function searchAllResourcesByKeyword(
   console.log(`\n=== FETCHING RESOURCES FOR KEYWORD: ${keyword} (skip: ${skip}, take: ${take}) ===`);
   
   try {
-    console.log(`Fetching resources with pagination - skip: ${skip}, take: ${take}`);
+    let allResources: Resource[] = [];
+    let currentOffset = skip;
+    const pageSize = 10; // API cap per page
+    let hasMoreResults = true;
+    let apiTotalCount = 0;
     
-    const pageResult = await searchResourcesByKeyword(
-      keyword,
-      zipCode,
-      latitude,
-      longitude,
-      take, // use take as size
-      skip  // use skip as offset
-    );
-    
-    console.log(`API returned ${pageResult.resources.length} resources for keyword: ${keyword}`);
-    
-    let resources = pageResult.resources;
-    
-    // With this:
-if (zipCode && resources.length > 0) {
-  console.log(`Calculating distances from user zip code: ${zipCode}`);
-  
-  // Get user coordinates from ZIP database
-  const userCoords = getCoordinatesForZip(zipCode);
-  
-  if (userCoords) {
-    resources = resources.map(resource => {
-      let distance: number | undefined = undefined;
+    // Iterate through pages until we have enough results or no more pages
+    while (hasMoreResults && allResources.length < take) {
+      console.log(`Fetching page starting at offset: ${currentOffset}`);
       
-      if (resource.zipCode) {
-        const resourceCoords = getCoordinatesForZip(resource.zipCode);
-        if (resourceCoords) {
-          distance = Number(calculateDistance(
-            userCoords.latitude,
-            userCoords.longitude,
-            resourceCoords.latitude,
-            resourceCoords.longitude
-          ).toFixed(1));
-        }
+      const pageResult = await searchResourcesByKeyword(
+        keyword,
+        zipCode,
+        latitude,
+        longitude,
+        pageSize, // Size per page
+        currentOffset  // Current offset
+      );
+      
+      if (pageResult.resources.length === 0) {
+        console.log('No more results available from API');
+        hasMoreResults = false;
+        break;
       }
       
-      return {
-        ...resource,
-        distance
-      };
-    });
-  }
+      allResources.push(...pageResult.resources);
+      apiTotalCount = pageResult.total;
+      currentOffset += pageSize;
       
-      // Sort by distance if we have distance data
-      resources.sort((a, b) => {
-        if (a.distance === undefined && b.distance === undefined) return 0;
-        if (a.distance === undefined) return 1;
-        if (b.distance === undefined) return -1;
-        return (a.distance || 0) - (b.distance || 0);
-      });
+      console.log(`Accumulated ${allResources.length} resources so far (total available: ${apiTotalCount})`);
       
-      console.log(`Applied distance calculations and sorting for ${resources.length} resources`);
+      // Stop if we've reached the total available or the API returned fewer than requested
+      if (allResources.length >= apiTotalCount || pageResult.resources.length < pageSize) {
+        hasMoreResults = false;
+      }
     }
     
-    console.log(`=== KEYWORD SEARCH COMPLETE: ${resources.length} resources ===\n`);
+    // Limit to requested take amount
+    if (allResources.length > take) {
+      allResources = allResources.slice(0, take);
+    }
+    
+    console.log(`Final result: ${allResources.length} resources for keyword: ${keyword}`);
     
     return {
-      resources: resources,
-      total: pageResult.total
+      resources: allResources,
+      total: apiTotalCount
     };
   } catch (error) {
     console.error('Error in keyword search with pagination:', error);
@@ -358,42 +346,8 @@ export async function searchAllResourcesByTaxonomyCode(
     }
   }
   
-  // Add distance calculations if user provided a zip code
-  if (zipCode && allResources.length > 0) {
-    console.log(`Calculating distances from user zip code: ${zipCode}`);
-    
-    const userCoords = getCoordinatesForZip(zipCode);
-    
-    if (userCoords) {
-      allResources = allResources.map(resource => {
-        if (resource.zipCode) {
-          if (resource.zipCode === zipCode) {
-            return {
-              ...resource,
-              distanceMiles: 0
-            };
-          } else {
-            const resourceCoords = getCoordinatesForZip(resource.zipCode);
-            if (resourceCoords) {
-              const distance = calculateDistance(
-                userCoords.latitude,
-                userCoords.longitude,
-                resourceCoords.latitude,
-                resourceCoords.longitude
-              );
-              return {
-                ...resource,
-                distanceMiles: Number(distance.toFixed(1))
-              };
-            }
-          }
-        }
-        return resource;
-      });
-      
-      console.log(`Added distance calculations to ${allResources.filter(r => r.distanceMiles !== undefined).length} resources`);
-    }
-  }
+  // Distance calculations are now handled by the storage layer
+  console.log(`Distance calculations will be handled by storage layer if needed`);
 
   console.log(`=== COMPLETED: Retrieved ${allResources.length} total resources for ${taxonomyCode} ===`);
   return { resources: allResources, total: Math.max(allResources.length, apiTotalCount) };
@@ -461,7 +415,9 @@ export async function searchResourcesByTaxonomyCode(
       keywords: taxonomyCode,
       distance: '25',
       size: Math.min(limit, 10).toString(), // API seems to cap at 10
-      skip: offset.toString()
+      offset: offset.toString(), // Use offset consistently across all searches
+      keywordIsTaxonomyCode: 'true', // Moved from headers to query params
+      locationMode: 'Serving'
     });
     
     // Add location parameter - use Santa Barbara County by default
@@ -484,13 +440,11 @@ export async function searchResourcesByTaxonomyCode(
     try {
       const headers: HeadersInit = {
         'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY || '',
-        'locationMode': 'Serving'
+        'Api-Key': SUBSCRIPTION_KEY || ''
       };
       
       // Log the taxonomy code being used
       console.log(`Searching with taxonomy code: ${taxonomyCode}`);
-      headers['keywordIsTaxonomyCode'] = 'true';
       
       console.log('Trying GET method with correct parameters...');
       let response = await handleRateLimitedRequest(async () => {
@@ -513,9 +467,7 @@ export async function searchResourcesByTaxonomyCode(
         console.log(`Retrying with same location: ${queryParams.get('location')}`);
         const fallbackHeaders: HeadersInit = {
           'Accept': 'application/json',
-          'Api-Key': SUBSCRIPTION_KEY || '',
-          'locationMode': 'Serving',
-          'keywordIsTaxonomyCode': 'false'
+          'Api-Key': SUBSCRIPTION_KEY || ''
         };
         
         // Use category name as search term - updated with new taxonomy codes
@@ -538,6 +490,8 @@ export async function searchResourcesByTaxonomyCode(
         const searchTerm = categoryNames[taxonomyCode] || categoryNames[taxonomyCode.split('-')[0]] || 'food';
         const fallbackParams = new URLSearchParams(queryParams);
         fallbackParams.set('keywords', searchTerm);
+        fallbackParams.set('keywordIsTaxonomyCode', 'false');
+        fallbackParams.set('locationMode', 'Serving');
         
         const fallbackUrl = `${requestUrl}?${fallbackParams.toString()}`;
         console.log(`Trying text search fallback: ${fallbackUrl}`);
