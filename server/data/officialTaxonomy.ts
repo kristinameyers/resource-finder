@@ -4,30 +4,25 @@
  * This is the authoritative mapping between categories/subcategories and their official taxonomy codes
  */
 
-// Types for categories (discriminated union)
-type MainCategory =
-  | { name: string; taxonomyCode: string; keywords?: never }
-  | { name: string; keywords: string[]; taxonomyCode?: never };
+// Types for categories
+type MainCategory = { name: string; keywords: string[] };
   type Subcategory = { id: string; name: string; taxonomyCode: string; keywords?: string[] };
 
-// Main Categories (some use taxonomyCode, some use keywords)
+// Main Categories (all use keywords)
 export const MAIN_CATEGORIES: Record<string, MainCategory> = {
-    // Taxonomy code only categories
-  'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
-  'food': { name: 'Food', taxonomyCode: 'BD-5000' },
-  'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
-  'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
-  'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
-  'children-family': { name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
-  'young-adults': { name: 'Young Adults', taxonomyCode: 'PS-9800' },
-  'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
-  'utilities': { name: 'Utilities', taxonomyCode: 'BV' },
-  'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' },
-  'hygiene-household': { name: 'Hygiene & Household', taxonomyCode: 'BM-3000' },
-
-// Keywords only categories
   'finance-employment': { name: 'Finance & Employment', keywords: ['finance'] },
-  'education': { name: 'Education', keywords: ['education'] }
+  'education': { name: 'Education', keywords: ['education'] },
+  'housing': { name: 'Housing', keywords: ['housing'] },
+  'food': { name: 'Food', keywords: ['food'] },
+  'healthcare': { name: 'Health Care', keywords: ['healthcare'] },
+  'mental-wellness': { name: 'Mental Wellness', keywords: ['mental wellness'] },
+  'substance-use': { name: 'Substance Use', keywords: ['substance use'] },
+  'children-family': { name: 'Children & Family', keywords: ['children and family'] },
+  'young-adults': { name: 'Young Adults', keywords: ['young adults'] },
+  'legal-assistance': { name: 'Legal Assistance', keywords: ['legal assistance'] },
+  'utilities': { name: 'Utilities', keywords: ['utilities'] },
+  'transportation': { name: 'Transportation', keywords: ['transportation'] },
+  'hygiene-household': { name: 'Hygiene & Household', keywords: ['hygiene'] }
 };
 
 // Subcategories structure (only taxonomyCode required; optional keywords)
@@ -259,12 +254,7 @@ export function getSubcategoriesForCategory(categoryId: string) {
 
 /** Lookup by taxonomyCode (main categories only) */
 export function getCategoryByTaxonomyCode(code: string): { id: string; name: string } | null {
-  for (const [id, cat] of Object.entries(MAIN_CATEGORIES)) {
-    // Use proper type guard
-    if ('taxonomyCode' in cat && cat.taxonomyCode === code) {
-      return { id, name: cat.name };
-    }
-  }
+  // All main categories now use keywords, not taxonomy codes
   return null;
 }
 
@@ -284,13 +274,7 @@ export function getCategoryByKeyword(keyword: string): { id: string; name: strin
 
 /** Get taxonomy code safely from main category */
 export function getMainCategoryTaxonomyCode(categoryId: string): string | null {
-  const normalized = categoryId.toLowerCase().trim();
-  const category = MAIN_CATEGORIES[normalized];
-  
-  // Use proper type guard and handle undefined
-  if (category && 'taxonomyCode' in category) {
-    return category.taxonomyCode ?? null; // Convert undefined to null
-  }
+  // All main categories now use keywords, not taxonomy codes
   return null;
 }
 

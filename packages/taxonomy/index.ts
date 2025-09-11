@@ -4,19 +4,19 @@
  */
 
 export const MAIN_CATEGORIES = {
-  'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
-  'food': { name: 'Food', taxonomyCode: 'BD-5000' },
-  'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
-  'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
-  'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
-  'children-family': { name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
-  'young-adults': { name: 'Young Adults', taxonomyCode: 'PS-9800' },
-  'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
-  'utilities': { name: 'Utilities', taxonomyCode: 'BV' },
-  'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' },
-  'hygiene-household': { name: 'Hygiene & Household', taxonomyCode: 'BM-3000' },
   'finance-employment': { name: 'Finance & Employment', keywords: ['finance'] },
-  'education': { name: 'Education', keywords: ['education'] }
+  'education': { name: 'Education', keywords: ['education'] },
+  'housing': { name: 'Housing', keywords: ['housing'] },
+  'food': { name: 'Food', keywords: ['food'] },
+  'healthcare': { name: 'Health Care', keywords: ['healthcare'] },
+  'mental-wellness': { name: 'Mental Wellness', keywords: ['mental wellness'] },
+  'substance-use': { name: 'Substance Use', keywords: ['substance use'] },
+  'children-family': { name: 'Children & Family', keywords: ['children and family'] },
+  'young-adults': { name: 'Young Adults', keywords: ['young adults'] },
+  'legal-assistance': { name: 'Legal Assistance', keywords: ['legal assistance'] },
+  'utilities': { name: 'Utilities', keywords: ['utilities'] },
+  'transportation': { name: 'Transportation', keywords: ['transportation'] },
+  'hygiene-household': { name: 'Hygiene & Household', keywords: ['hygiene'] }
 };
 
 export interface Resource {
@@ -49,10 +49,7 @@ export function shouldUseKeywordSearch(categoryId: string): boolean {
 }
 
 export function getTaxonomyCode(categoryId: string): string | null {
-  const category = getCategoryById(categoryId);
-  if (category && 'taxonomyCode' in category) {
-    return category.taxonomyCode;
-  }
+  // All categories now use keywords, not taxonomy codes
   return null;
 }
 
