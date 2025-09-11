@@ -118,7 +118,7 @@ export default function ResourcesListPage() {
   if (categoryId) resourceParams.set('categoryId', categoryId);
   if (selectedSubcategory && selectedSubcategory !== 'all') resourceParams.set('subcategoryId', selectedSubcategory);
   if (keyword) resourceParams.set('keyword', keyword);
-  if (useApi) resourceParams.set('useApi', 'true');
+  if (useApi) resourceParams.set('use211Api', 'true');
   if (userLocation) resourceParams.set('zipCode', userLocation);
 
   // Fetch resources and store in localStorage for resource detail access
