@@ -55,7 +55,7 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
   'finance-employment': [
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
     //{ id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
-    { id: 'finance-employment', name: 'Finance & Employment', taxonomyCode: 'NL-1000' }, // Add this
+    { id: 'finance-employment', name: 'Finance & Employment', taxonomyCode: 'NL-1000.8500' }, // Add this
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
     { id: 'employment-discrimination', name: 'Employment Discrimination Assistance', taxonomyCode: 'FT-1800.1850' },
     { id: 'vocational-rehabilitation', name: 'Vocational Rehabilitation', taxonomyCode: 'ND-9000' },

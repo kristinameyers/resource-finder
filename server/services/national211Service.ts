@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
 import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, getMainCategoryTaxonomyCode, MAIN_CATEGORIES } from '../data/officialTaxonomy';
-
+import { getCoordinatesForZip } from "../../client/src/data/zipcode-db";
 
 // Define interfaces for the 211 API responses
 interface National211Resource {
@@ -56,6 +56,18 @@ const SUBSCRIPTION_KEY = process.env.NATIONAL_211_API_KEY;
 console.log('National 211 API V2 configuration set up');
 console.log(`API URL: ${API_BASE_URL}`);
 console.log('Using proper National 211 API credentials');
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3959; // miles
+  const dLat = (lat2 - lat1) * Math.PI/180;
+  const dLon = (lon2 - lon1) * Math.PI/180;
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+    Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
 /**
  * Transform iCarol API resource to our Resource format (based on your sample code)
@@ -166,7 +178,7 @@ export async function searchResourcesByKeyword(
       headers: {
         'Accept': 'application/json',
         'Api-Key': SUBSCRIPTION_KEY || '',
-        'locationMode': 'Serving',
+        'locationMode': 'Within',
         'keywordIsTaxonomyCode': 'false' // Set to false for keyword search
       }
     });
@@ -230,18 +242,35 @@ export async function searchAllResourcesByKeyword(
     
     let resources = pageResult.resources;
     
-    // Add distance calculations if user provided a zip code
-    if (zipCode && resources.length > 0) {
-      console.log(`Calculating distances from user zip code: ${zipCode}`);
-      const { calculateDistanceFromZipCodes } = await import('../data/zipCodes');
+    // With this:
+if (zipCode && resources.length > 0) {
+  console.log(`Calculating distances from user zip code: ${zipCode}`);
+  
+  // Get user coordinates from ZIP database
+  const userCoords = getCoordinatesForZip(zipCode);
+  
+  if (userCoords) {
+    resources = resources.map(resource => {
+      let distance: number | undefined = undefined;
       
-      resources = resources.map(resource => {
-        const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode || '');
-        return {
-          ...resource,
-          distance: distance !== null ? Number(distance.toFixed(1)) : undefined
-        };
-      });
+      if (resource.zipCode) {
+        const resourceCoords = getCoordinatesForZip(resource.zipCode);
+        if (resourceCoords) {
+          distance = Number(calculateDistance(
+            userCoords.latitude,
+            userCoords.longitude,
+            resourceCoords.latitude,
+            resourceCoords.longitude
+          ).toFixed(1));
+        }
+      }
+      
+      return {
+        ...resource,
+        distance
+      };
+    });
+  }
       
       // Sort by distance if we have distance data
       resources.sort((a, b) => {
@@ -279,7 +308,7 @@ export async function searchAllResourcesByTaxonomyCode(
   
   let allResources: Resource[] = [];
   let currentPage = 0;
-  const pageSize = 10; // API seems to cap at 10 resources per page
+  const pageSize = 50; // API cap 
   let hasMoreResults = true;
   let apiTotalCount = 0;
   
@@ -332,32 +361,38 @@ export async function searchAllResourcesByTaxonomyCode(
   // Add distance calculations if user provided a zip code
   if (zipCode && allResources.length > 0) {
     console.log(`Calculating distances from user zip code: ${zipCode}`);
-    const { calculateDistanceFromZipCodes } = await import('../data/zipCodes');
     
-    // Debug: Uncomment for distance debugging
-    // console.log(`First 3 resource zip codes:`, allResources.slice(0, 3).map(r => ({ name: r.name, zipCode: r.zipCode })));
+    const userCoords = getCoordinatesForZip(zipCode);
     
-    allResources = allResources.map(resource => {
-      if (resource.zipCode) {
-        if (resource.zipCode === zipCode) {
-          // For same zip code, set distance to 0
-          return {
-            ...resource,
-            distanceMiles: 0
-          };
-        } else {
-          const distance = calculateDistanceFromZipCodes(zipCode, resource.zipCode);
-          return {
-            ...resource,
-            distanceMiles: distance || undefined
-          };
+    if (userCoords) {
+      allResources = allResources.map(resource => {
+        if (resource.zipCode) {
+          if (resource.zipCode === zipCode) {
+            return {
+              ...resource,
+              distanceMiles: 0
+            };
+          } else {
+            const resourceCoords = getCoordinatesForZip(resource.zipCode);
+            if (resourceCoords) {
+              const distance = calculateDistance(
+                userCoords.latitude,
+                userCoords.longitude,
+                resourceCoords.latitude,
+                resourceCoords.longitude
+              );
+              return {
+                ...resource,
+                distanceMiles: Number(distance.toFixed(1))
+              };
+            }
+          }
         }
-      } else {
         return resource;
-      }
-    });
-    
-    console.log(`Added distance calculations to ${allResources.filter(r => r.distanceMiles !== undefined).length} resources`);
+      });
+      
+      console.log(`Added distance calculations to ${allResources.filter(r => r.distanceMiles !== undefined).length} resources`);
+    }
   }
 
   console.log(`=== COMPLETED: Retrieved ${allResources.length} total resources for ${taxonomyCode} ===`);
@@ -487,7 +522,7 @@ export async function searchResourcesByTaxonomyCode(
         const categoryNames: { [key: string]: string } = {
           'BD-500': 'food',
           'BH-1800.8500': 'housing',
-          'NL-1000': 'finance-employment',
+          'NL-1000.8500': 'finance-employment',
           'LN': 'healthcare',
           'FT': 'legal-assistance',
           'HD-1800.8000': 'education',
@@ -910,7 +945,7 @@ export async function getResourceById(id: string): Promise<Resource | null> {
 // Mapping of taxonomy codes to our category IDs
 const taxonomyToCategory: { [key: string]: string } = {
   'BH-1800.8500': 'housing',
-  'NL-1000': 'finance-employment',
+  'NL-1000.8500': 'finance-employment',
   'BD-5000': 'food',
   'BT-4500': 'transportation',
   'LN': 'healthcare',
@@ -1153,13 +1188,12 @@ function transformResource(apiResource: any): Resource {
     categoryId,
     subcategoryId: taxonomy.taxonomyTerm ? taxonomy.taxonomyTerm.toLowerCase().replace(/\s+/g, '-') : undefined,
     location: apiResource.nameLocation || address.city || 'Unknown location',
-    zipCode: address.postalCode || 
-             geoPoint.postalCode ||
-             extractZipCodeFromAddress(address.streetAddress || '') || 
-             extractZipCodeFromDescription(apiResource.descriptionService) ||
-             extractZipCodeFromServiceAreas(apiResource.serviceAreas) ||
-             getZipFromCoordinates(address.latitude, address.longitude) ||
-             undefined, // Let each resource keep its actual location, don't force a default
+    zipCode: address.postalCode ||
+      geoPoint.postalCode ||
+      extractZipCodeFromAddress(address.streetAddress || '') ||
+      extractZipCodeFromDescription(apiResource.descriptionService) ||
+      extractZipCodeFromServiceAreas(apiResource.serviceAreas) ||
+      undefined,
     url: detailedService.url || apiResource.url || apiResource.website || extractUrlFromDescription(apiResource.descriptionService),
     phone: servicePhones[0]?.number || apiResource.detailedServiceInfo?.servicePhones?.[0]?.number || phoneNumbers?.main || phones[0]?.number || apiResource.phone || extractPhoneFromDescription(apiResource.descriptionService),
     email: apiResource.email || extractEmailFromDescription(apiResource.descriptionService),
@@ -1401,28 +1435,6 @@ function extractZipCodeFromServiceAreas(serviceAreas: any[]): string | undefined
   return undefined;
 }
 
-// Rough coordinate-to-zip mapping for Santa Barbara County
-function getZipFromCoordinates(lat: string, lon: string): string | undefined {
-  if (!lat || !lon) return undefined;
-  
-  const latitude = parseFloat(lat);
-  const longitude = parseFloat(lon);
-  
-  // Rough Santa Barbara area zip code mapping based on coordinates
-  if (latitude >= 34.40 && latitude <= 34.50 && longitude >= -119.80 && longitude <= -119.60) {
-    // Santa Barbara city area
-    if (latitude >= 34.42 && latitude <= 34.44) {
-      return undefined; // No default zip code for distance calculations
-    } else if (latitude >= 34.44 && latitude <= 34.46) {
-      return '93110'; // Upper State Street area
-    } else {
-      return '93111'; // Goleta area
-    }
-  }
-  
-  return undefined;
-}
-
 function formatSchedules(schedules: any[]): string | undefined {
   if (!schedules?.length) return undefined;
   
@@ -1439,7 +1451,6 @@ function formatSchedules(schedules: any[]): string | undefined {
     return 'Contact for specific hours';
   }).join('\n\n');
 }
-
 
 /**
  * Main searchResources function - uses proper taxonomy codes
@@ -1515,24 +1526,24 @@ export async function searchResources(
   
   // Use official taxonomy codes for both category and subcategory searches
   if (subcategory) {
-  taxonomyCode = getOfficialSubcategoryTaxonomyCode(category, subcategory);
-  if (!taxonomyCode) {
-    // Fallback to category taxonomy
-    taxonomyCode = getMainCategoryTaxonomyCode(category);
-    console.log(`No subcategory taxonomy code found, using category code: ${taxonomyCode} for ${subcategory}`);
+    taxonomyCode = getOfficialSubcategoryTaxonomyCode(category, subcategory);
+    if (!taxonomyCode) {
+      // Fallback to category taxonomy
+      taxonomyCode = getMainCategoryTaxonomyCode(category);
+      console.log(`No subcategory taxonomy code found, using category code: ${taxonomyCode} for ${subcategory}`);
+    } else {
+      console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
+    }
   } else {
-    console.log(`Using subcategory taxonomy code: ${taxonomyCode} for ${subcategory}`);
+    taxonomyCode = getMainCategoryTaxonomyCode(category);
+    console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
   }
-} else {
-  taxonomyCode = getMainCategoryTaxonomyCode(category);
-  console.log(`Using category taxonomy code: ${taxonomyCode} for ${category}`);
-}
 
-if (!taxonomyCode) {
-  console.log(`No taxonomy code found for category: ${category}`);
-  return { resources: [], total: 0 };
-}
-// Now taxonomyCode is guaranteed to be a string (not null)
+  if (!taxonomyCode) {
+    console.log(`No taxonomy code found for category: ${category}`);
+    return { resources: [], total: 0 };
+  }
+  // Now taxonomyCode is guaranteed to be a string (not null)
 
   // Use National 211 API with taxonomy codes (applying principles from your sample)
   console.log(`Using National 211 API with taxonomy code: ${taxonomyCode}`);
