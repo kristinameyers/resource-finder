@@ -1,13 +1,28 @@
+// server/storage.ts
 import { users, type User, type InsertUser, type Resource, type Category, type Subcategory, type Location } from "@shared/schema";
 import fetch from "node-fetch";
 import { calculateDistanceFromZipCodes } from "./data/zipCodes";
-import { 
-  MAIN_CATEGORIES, 
+import { getCoordinatesForZip } from "../client/src/data/zipcode-db";
+import {
+  MAIN_CATEGORIES,
   getSubcategoriesForCategory,
-  getCategoryByKeyword // ← Add this import
+  getCategoryByKeyword
 } from "./data/officialTaxonomy";
 
-// If you want UI order, define it as an array of IDs:
+// Helper function to calculate distance between coordinates
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// UI order for categories
 const CATEGORY_ORDER = [
   'children-family',
   'food',
@@ -24,13 +39,11 @@ const CATEGORY_ORDER = [
   'utilities'
 ];
 
-// Helper: Build categories array from officialTaxonomy with UI order
+// Build ordered categories array
 const orderedCategories: Category[] = CATEGORY_ORDER
   .filter(id => id in MAIN_CATEGORIES)
   .map(id => {
     const cat = MAIN_CATEGORIES[id as keyof typeof MAIN_CATEGORIES];
-
-    // Use a type guard to access taxonomyCode safely
     return {
       id,
       name: cat.name,
@@ -40,7 +53,6 @@ const orderedCategories: Category[] = CATEGORY_ORDER
   });
 
 function getIconForCategory(id: string): string | undefined {
-  // Optionally map IDs to icon names (adjust as needed)
   const icons: Record<string, string> = {
     'children-family': 'users',
     'food': 'utensils',
@@ -64,7 +76,6 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
-  // Resources related methods
   getResources(
     categoryId?: string,
     subcategoryId?: string,
@@ -74,15 +85,15 @@ export interface IStorage {
     sessionId?: string,
     ipAddress?: string,
     sortBy?: 'relevance' | 'distance' | 'name',
-    keyword?: string // ← Add this
+    keyword?: string
   ): Promise<Resource[]>;
+
   getCategories(): Promise<Category[]>;
   getSubcategories(categoryId: string): Promise<Subcategory[]>;
   getLocations(): Promise<Location[]>;
   getLocationByZipCode(zipCode: string): Promise<Location | undefined>;
   getLocationByCoordinates(latitude: number, longitude: number): Promise<Location | undefined>;
 
-  // Rating related methods (now using Firebase Firestore)
   getRatings(resourceId: string): Promise<{ thumbsUp: number; thumbsDown: number }>;
   getUserVote(resourceId: string, sessionId: string, ipAddress: string): Promise<'up' | 'down' | null>;
   submitVote(resourceId: string, sessionId: string, ipAddress: string, vote: 'up' | 'down'): Promise<void>;
@@ -90,42 +101,26 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private resources: Resource[];
-  private categories: Category[];
-  private locations: Location[];
+  private users = new Map<number, User>();
+  private resources: Resource[] = [];
+  private categories: Category[] = orderedCategories;
+  private locations: Location[] = [
+    { id: 'new-york', name: 'New York, NY', zipCode: '10001', latitude: 40.7128, longitude: -74.0060 },
+    { id: 'los-angeles', name: 'Los Angeles, CA', zipCode: '90001', latitude: 34.0522, longitude: -118.2437 },
+    { id: 'chicago', name: 'Chicago, IL', zipCode: '60601', latitude: 41.8781, longitude: -87.6298 },
+    { id: 'houston', name: 'Houston, TX', zipCode: '77001', latitude: 29.7604, longitude: -95.3698 },
+    { id: 'phoenix', name: 'Phoenix, AZ', zipCode: '85001', latitude: 33.4484, longitude: -112.0740 },
+    { id: 'santa-barbara', name: 'Santa Barbara, CA', zipCode: '93101', latitude: 34.4217, longitude: -119.7026 },
+    { id: 'san-francisco', name: 'San Francisco, CA', zipCode: '94102', latitude: 37.7749, longitude: -122.4194 },
+    { id: 'seattle', name: 'Seattle, WA', zipCode: '98101', latitude: 47.6062, longitude: -122.3321 }
+  ];
+  private currentId = 1;
 
-  currentId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.currentId = 1;
-    this.resources = []; // Optionally populate with mock data as before
-    // Always use the ordered, canonical categories from officialTaxonomy
-    this.categories = orderedCategories;
-    this.locations = [
-      { id: 'new-york', name: 'New York, NY', zipCode: '10001', latitude: 40.7128, longitude: -74.0060 },
-      { id: 'los-angeles', name: 'Los Angeles, CA', zipCode: '90001', latitude: 34.0522, longitude: -118.2437 },
-      { id: 'chicago', name: 'Chicago, IL', zipCode: '60601', latitude: 41.8781, longitude: -87.6298 },
-      { id: 'houston', name: 'Houston, TX', zipCode: '77001', latitude: 29.7604, longitude: -95.3698 },
-      { id: 'phoenix', name: 'Phoenix, AZ', zipCode: '85001', latitude: 33.4484, longitude: -112.0740 },
-      { id: 'santa-barbara', name: 'Santa Barbara, CA', zipCode: '93101', latitude: 34.4217, longitude: -119.7026 },
-      { id: 'san-francisco', name: 'San Francisco, CA', zipCode: '94102', latitude: 37.7749, longitude: -122.4194 },
-      { id: 'seattle', name: 'Seattle, WA', zipCode: '98101', latitude: 47.6062, longitude: -122.3321 }
-    ];
+  async getUser(id: number) { return this.users.get(id); }
+  async getUserByUsername(username: string) {
+    return Array.from(this.users.values()).find(u => u.username === username);
   }
-
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: InsertUser) {
     const id = this.currentId++;
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
@@ -133,91 +128,188 @@ export class MemStorage implements IStorage {
   }
 
   async getResources(
-  categoryId?: string, 
-  subcategoryId?: string, 
-  zipCode?: string, 
-  latitude?: number, 
-  longitude?: number, 
-  sessionId?: string, 
-  ipAddress?: string, 
-  sortBy?: 'relevance' | 'distance' | 'name',
-  keyword?: string // ← Add this
-): Promise<Resource[]> {
+    categoryId?: string,
+    subcategoryId?: string,
+    zipCode?: string,
+    latitude?: number,
+    longitude?: number,
+    sessionId?: string,
+    ipAddress?: string,
+    sortBy?: 'relevance' | 'distance' | 'name',
+    keyword?: string
+  ): Promise<Resource[]> {
+    let serviceTaxonomyCode: string | undefined;
+    let freeKeyword: string | undefined;
+    let userLatitude = latitude;
+    let userLongitude = longitude;
 
-  // Handle keyword search - translate to categoryId
-  if (keyword && !categoryId) {
-    const matchedCategory = getCategoryByKeyword(keyword);
-    if (matchedCategory) {
-      categoryId = matchedCategory.id;
-      console.log(`Keyword "${keyword}" matched to category: ${categoryId}`);
+    if (categoryId) {
+      const cat = MAIN_CATEGORIES[categoryId];
+      if ('taxonomyCode' in cat) {
+        serviceTaxonomyCode = cat.taxonomyCode;
+      } else {
+        freeKeyword = cat.keywords.join(' ');
+      }
+    } else if (keyword) {
+      const match = getCategoryByKeyword(keyword);
+      if (match) {
+        const cat = MAIN_CATEGORIES[match.id];
+        if ('taxonomyCode' in cat) {
+          serviceTaxonomyCode = cat.taxonomyCode;
+        } else {
+          freeKeyword = cat.keywords.join(' ');
+        }
+      } else {
+        freeKeyword = keyword;
+      }
     }
+
+    const url = new URL('https://api.211.org/resources/v2/search/keyword');
+    if (serviceTaxonomyCode) {
+      url.searchParams.set('serviceTaxonomyCode', serviceTaxonomyCode);
+    } else if (freeKeyword) {
+      url.searchParams.set('keywords', freeKeyword);
+    }
+    if (zipCode) {
+      url.searchParams.set('location', zipCode);
+      url.searchParams.set('locationMode', 'Within');
+    } else if (userLatitude != null && userLongitude != null) {
+      url.searchParams.set('location', `${userLatitude},${userLongitude}`);
+      url.searchParams.set('locationMode', 'Near');
+      url.searchParams.set('distance', '25');
+    }
+
+    // If sorting by distance and we have a ZIP but no coordinates, resolve them
+    if (sortBy === 'distance' && zipCode && userLatitude == null && userLongitude == null) {
+      const userLoc = await this.getLocationByZipCode(zipCode);
+      if (userLoc && userLoc.latitude != null && userLoc.longitude != null) {
+        userLatitude = userLoc.latitude;
+        userLongitude = userLoc.longitude;
+      }
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Api-Key': process.env.API_211_KEY!,
+        'Accept': 'application/json'
+      }
+    });
+
+    interface SearchResponse {
+      count: number;
+      results: Resource[];
+    }
+
+    const data = (await response.json()) as SearchResponse;
+    const results = data.results;
+
+    // Apply distance sorting if requested and we have user coordinates
+    if (sortBy === 'distance' && userLatitude != null && userLongitude != null) {
+      const withDistance = await Promise.all(
+        results.map(async (resource) => {
+          let distance = Infinity;
+
+          // resource.location is a ZIP string
+          const resourceZip = typeof resource.location === 'string'
+            ? resource.location
+            : undefined;
+          if (resourceZip) {
+            const resourceLoc = await this.getLocationByZipCode(resourceZip);
+            if (
+              resourceLoc &&
+              resourceLoc.latitude != null &&
+              resourceLoc.longitude != null
+            ) {
+              distance = calculateDistance(
+                userLatitude,
+                userLongitude,
+                resourceLoc.latitude,
+                resourceLoc.longitude
+              );
+            }
+          }
+
+          return { resource, distance };
+        })
+      );
+
+      // Sort by distance and return resources
+      withDistance.sort((a, b) => a.distance - b.distance);
+      return withDistance.map(item => item.resource);
+    }
+
+    // Apply name sorting if requested
+    if (sortBy === 'name') {
+      results.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return results;
   }
 
-    // (Retain your mock or API logic for resources as needed)
-    // ... (your existing resource logic here)
-    return []; // placeholder
-  }
+  async getCategories() { return this.categories; }
 
-  async getCategories(): Promise<Category[]> {
-    // Use the canonical, ordered categories
-    return this.categories;
-  }
-
-  async getSubcategories(categoryId: string): Promise<Subcategory[]> {
-    // Get from officialTaxonomy, and append categoryId & optional icon if needed
+  async getSubcategories(categoryId: string) {
     return getSubcategoriesForCategory(categoryId).map(sub => ({
       ...sub,
       categoryId,
-      icon: undefined // or map icon if your UI requires
+      icon: undefined
     }));
   }
 
-  async getLocations(): Promise<Location[]> {
-    return this.locations;
-  }
+  async getLocations() { return this.locations; }
 
   async getLocationByZipCode(zipCode: string): Promise<Location | undefined> {
-    const existingLocation = this.locations.find(loc => loc.zipCode === zipCode);
-    if (existingLocation) {
-      return existingLocation;
+    const normalized = zipCode.trim().padStart(5, '0');
+
+    // Check cache first
+    let location = this.locations.find(l => l.zipCode === normalized);
+    if (location) {
+      return location;
     }
-    if (zipCode && zipCode.length === 5 && /^\d+$/.test(zipCode)) {
-      const newLocation: Location = {
-        id: `zip-${zipCode}`,
-        name: `Zip Code ${zipCode}`,
-        zipCode: zipCode,
-        latitude: undefined,
-        longitude: undefined
-      };
-      this.locations.push(newLocation);
-      return newLocation;
+
+    // Lookup coordinates from ZIP database
+    const coords = getCoordinatesForZip(normalized);
+    if (!coords) {
+      return undefined; // ZIP not found in database
     }
-    return undefined;
+
+    // Create new location and cache it
+    location = {
+      id: `zip-${normalized}`,
+      name: `Zip Code ${normalized}`,
+      zipCode: normalized,
+      latitude: coords.latitude,
+      longitude: coords.longitude
+    };
+
+    this.locations.push(location);
+    return location;
   }
 
   async getLocationByCoordinates(latitude: number, longitude: number): Promise<Location | undefined> {
-    console.log(`Finding location by coordinates: ${latitude}, ${longitude}`);
-    return this.locations[0];
+    // Find closest existing location (optional implementation)
+    // For now, return undefined or implement reverse lookup if needed
+    return undefined;
   }
 
-  async getRatings(resourceId: string): Promise<{ thumbsUp: number; thumbsDown: number }> {
+  async getRatings(resourceId: string) {
     const { getVoteStats } = await import('./services/firestoreVotingService');
-    return await getVoteStats(resourceId);
+    return getVoteStats(resourceId);
   }
 
-  async getUserVote(resourceId: string, sessionId: string, ipAddress: string): Promise<'up' | 'down' | null> {
+  async getUserVote(resourceId: string, sessionId: string, ipAddress: string) {
     const { getUserVote } = await import('./services/firestoreVotingService');
-    return await getUserVote(resourceId, sessionId, ipAddress);
+    return getUserVote(resourceId, sessionId, ipAddress);
   }
 
-  async submitVote(resourceId: string, sessionId: string, ipAddress: string, vote: 'up' | 'down'): Promise<void> {
+  async submitVote(resourceId: string, sessionId: string, ipAddress: string, vote: 'up' | 'down') {
     const { submitVote } = await import('./services/firestoreVotingService');
-    await submitVote(resourceId, sessionId, ipAddress, vote);
+    return submitVote(resourceId, sessionId, ipAddress, vote);
   }
 
-  async removeVote(resourceId: string, sessionId: string, ipAddress: string): Promise<void> {
+  async removeVote(resourceId: string, sessionId: string, ipAddress: string) {
     const { removeVote } = await import('./services/firestoreVotingService');
-    await removeVote(resourceId, sessionId, ipAddress);
+    return removeVote(resourceId, sessionId, ipAddress);
   }
 }
 

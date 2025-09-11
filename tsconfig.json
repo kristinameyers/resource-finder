@@ -9,6 +9,7 @@
     "noEmit": true,
     "module": "ESNext",
     "strict": true,
+    "resolveJsonModule": true,
     "lib": [
       "esnext",
       "dom",
@@ -25,7 +26,8 @@
       "../node_modules/@types"
     ],
     "types": [
-      "node"
+      "node",
+      "csv-parse"
     ],
     "paths": {
       "@/*": ["./client/src/*"],
