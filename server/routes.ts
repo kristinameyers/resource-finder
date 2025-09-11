@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? parseFloat(String(req.query.longitude))
         : undefined;
         
-      const useApi = req.query.useApi === 'true';
+      const useApi = req.query.use211Api === 'true';
       const sortBy = req.query.sortBy as 'relevance' | 'distance' | 'name' || 'relevance';
       const keyword = req.query.keyword ? String(req.query.keyword) : undefined;
       
@@ -428,7 +428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/resources/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const useApi = req.query.useApi === 'true';
+      const useApi = req.query.use211Api === 'true';
       
       if (!id) {
         return res.status(400).json({

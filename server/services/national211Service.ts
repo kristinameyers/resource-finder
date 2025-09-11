@@ -154,8 +154,7 @@ export async function searchResourcesByKeyword(
       distance: '25',
       size: size.toString(),
       offset: offset.toString(),
-      keywordIsTaxonomyCode: 'false', // Moved from headers to query params
-      locationMode: 'Within'
+      keywordIsTaxonomyCode: 'false' // This stays as query param
     });
     
     // Add location parameter using same logic as working taxonomy search
@@ -180,7 +179,8 @@ export async function searchResourcesByKeyword(
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Api-Key': SUBSCRIPTION_KEY || ''
+          'Api-Key': SUBSCRIPTION_KEY || '',
+          'locationMode': 'Within'  // API requires this as a header
         }
       });
     });
@@ -188,6 +188,44 @@ export async function searchResourcesByKeyword(
     if (!response.ok) {
       const errorText = await response.text();
       console.log(`211 API Error: ${response.status} ${errorText}`);
+      
+      // If we get a 500 error with a zip code, retry with Santa Barbara County
+      if (response.status === 500 && zipCode) {
+        console.log('Retrying with Santa Barbara County instead of zip code...');
+        queryParams.set('location', 'Santa Barbara County, CA');
+        queryParams.set('distance', '100');
+        const countyUrl = `${requestUrl}?${queryParams.toString()}`;
+        console.log(`Retry URL: ${countyUrl}`);
+        
+        const retryResponse = await handleRateLimitedRequest(async () => {
+          return await fetch(countyUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Api-Key': SUBSCRIPTION_KEY || '',
+              'locationMode': 'Within'
+            }
+          });
+        });
+        
+        if (retryResponse.ok) {
+          const data: any = await retryResponse.json();
+          console.log(`Retry successful - API response received with ${data.results?.length || 0} resources`);
+          console.log(`Total available results: ${data.count || 0}`);
+          
+          if (!data.results || data.results.length === 0) {
+            return { resources: [], total: 0 };
+          }
+          
+          const basicResources = data.results.map(transformResource);
+          console.log(`Transformed ${basicResources.length} resources from 211 API keyword search`);
+          return { 
+            resources: basicResources, 
+            total: data.count || basicResources.length 
+          };
+        }
+      }
+      
       throw new Error(`211 API Error: ${response.status} - ${errorText}`);
     }
     
@@ -416,8 +454,7 @@ export async function searchResourcesByTaxonomyCode(
       distance: '25',
       size: Math.min(limit, 10).toString(), // API seems to cap at 10
       offset: offset.toString(), // Use offset consistently across all searches
-      keywordIsTaxonomyCode: 'true', // Moved from headers to query params
-      locationMode: 'Serving'
+      keywordIsTaxonomyCode: 'true' // This stays as query param
     });
     
     // Add location parameter - use Santa Barbara County by default
@@ -440,7 +477,8 @@ export async function searchResourcesByTaxonomyCode(
     try {
       const headers: HeadersInit = {
         'Accept': 'application/json',
-        'Api-Key': SUBSCRIPTION_KEY || ''
+        'Api-Key': SUBSCRIPTION_KEY || '',
+        'locationMode': 'Serving'  // API requires this as a header
       };
       
       // Log the taxonomy code being used
@@ -467,7 +505,8 @@ export async function searchResourcesByTaxonomyCode(
         console.log(`Retrying with same location: ${queryParams.get('location')}`);
         const fallbackHeaders: HeadersInit = {
           'Accept': 'application/json',
-          'Api-Key': SUBSCRIPTION_KEY || ''
+          'Api-Key': SUBSCRIPTION_KEY || '',
+          'locationMode': 'Serving'  // API requires this as a header
         };
         
         // Use category name as search term - updated with new taxonomy codes
@@ -491,7 +530,6 @@ export async function searchResourcesByTaxonomyCode(
         const fallbackParams = new URLSearchParams(queryParams);
         fallbackParams.set('keywords', searchTerm);
         fallbackParams.set('keywordIsTaxonomyCode', 'false');
-        fallbackParams.set('locationMode', 'Serving');
         
         const fallbackUrl = `${requestUrl}?${fallbackParams.toString()}`;
         console.log(`Trying text search fallback: ${fallbackUrl}`);
@@ -1438,13 +1476,13 @@ export async function searchResources(
     if (category === 'finance-employment') {
       console.log(`Home screen Finance & Employment: searching only for keyword "finance"`);
       try {
-        const result = await searchResourcesByKeyword(
+        const result = await searchAllResourcesByKeyword(
           'finance',
           zipCode,
           latitude,
           longitude,
-          15, // Request 15 results specifically for Finance & Employment
-          skip
+          skip,
+          15 // Request 15 results specifically for Finance & Employment
         );
         console.log(`Finance keyword search returned ${result.resources.length} resources`);
         return result;
