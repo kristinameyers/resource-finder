@@ -1515,6 +1515,28 @@ export async function searchResources(
       }
       
       console.log(`All Finance keyword search attempts failed:`, lastError);
+      console.log(`Trying Finance & Employment fallback with taxonomy code NL-1000`);
+      
+      // Fallback to taxonomy code when keyword search fails
+      try {
+        const taxonomyResult = await searchResourcesByTaxonomyCode(
+          'NL-1000',
+          zipCode,
+          latitude,
+          longitude,
+          15,
+          skip
+        );
+        
+        if (taxonomyResult.resources.length > 0) {
+          console.log(`Finance & Employment taxonomy fallback succeeded: ${taxonomyResult.resources.length} resources found`);
+          return taxonomyResult;
+        }
+      } catch (taxonomyError) {
+        console.log(`Finance & Employment taxonomy fallback also failed:`, taxonomyError);
+      }
+      
+      console.log(`All Finance & Employment search methods exhausted`);
       return { resources: [], total: 0 };
     }
     
