@@ -2,22 +2,6 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger } from "vite";
-import { nanoid } from "nanoid";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const viteLogger = createLogger();
-
-// Import vite config with error handling
-let viteConfig: any = {};
-try {
-  const configModule = await import("../vite.config.mjs");
-  viteConfig = configModule.default || configModule;
-} catch (e) {
-  console.warn("Could not load vite config, using defaults");
-}
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -31,49 +15,39 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: any, server: any) {
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { server },
-  };
+  // Skip Vite setup in production
+  if (process.env.NODE_ENV === "production") {
+    console.log("Production mode: skipping Vite setup");
+    return;
+  }
 
-  const config = {
-    ...viteConfig,
-    configFile: false,
-    customLogger: {
-      ...viteLogger,
-      error: (msg: any, options: any) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
-      },
-    },
-    server: {
-      ...(viteConfig.server ?? {}),
-      ...serverOptions,
-    },
+  // Use dynamic import to handle ESM/CJS interop - import from node_modules
+  const mod = await import('../../node_modules/vite/dist/node/index.js');
+  const createViteServer = mod.createServer ?? mod.default?.createServer;
+  
+  if (typeof createViteServer !== 'function') {
+    console.warn('Vite createServer not available, skipping Vite setup');
+    return;
+  }
+
+  const vite = await createViteServer({
+    server: { middlewareMode: true, hmr: { server } },
     appType: "custom",
-  };
-
-  const vite = await createViteServer(config);
+  });
 
   app.use(vite.middlewares);
+  
   app.use("*", async (req: any, res: any, next: any) => {
     const url = req.originalUrl;
 
     try {
-      const clientTemplate = path.resolve(
-        __dirname,
-        "..",
-        "client", 
-        "index.html",
+      const template = fs.readFileSync(
+        path.resolve("client/index.html"),
+        "utf-8",
       );
-
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
-      );
-      const page = await vite.transformIndexHtml(url, template);
-      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+      
+      const html = await vite.transformIndexHtml(url, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
@@ -82,17 +56,18 @@ export async function setupVite(app: any, server: any) {
 }
 
 export function serveStatic(app: any) {
-  const distPath = path.resolve(__dirname, "public");
-
-  if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+  const distPath = path.resolve("dist/public");
+  
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
   }
-
-  app.use(express.static(distPath));
-
+  
   app.use("*", (_req: any, res: any) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    const indexPath = path.resolve(distPath, "index.html");
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).send("Application not built. Please run build first.");
+    }
   });
 }

@@ -2,7 +2,7 @@
 import { users, type User, type InsertUser, type Resource, type Category, type Subcategory, type Location } from "@shared/schema";
 import fetch from "node-fetch";
 import { calculateDistanceFromZipCodes } from "../../packages/taxonomy/src/zipCodes";
-import { getCoordinatesForZip } from "../client/src/data/zipcode-db";
+import { getCoordinatesForZip } from "../../packages/geo/src/zipcode-db";
 import {
   MAIN_CATEGORIES,
   getSubcategoriesForCategory,
