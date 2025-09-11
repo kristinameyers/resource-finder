@@ -9,22 +9,30 @@ import {
   SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { MAIN_CATEGORIES } from '../../../packages/taxonomy/index';
 
-const categories = [
-  { id: 'housing', name: 'Housing', icon: 'home', color: '#4A90E2' },
-  { id: 'food', name: 'Food', icon: 'restaurant', color: '#F5A623' },
-  { id: 'healthcare', name: 'Healthcare', icon: 'medkit', color: '#BD10E0' },
-  { id: 'mental-wellness', name: 'Mental Wellness', icon: 'heart', color: '#7ED321' },
-  { id: 'substance-use', name: 'Substance Use', icon: 'medical', color: '#9013FE' },
-  { id: 'children-family', name: 'Children & Family', icon: 'people', color: '#50E3C2' },
-  { id: 'young-adults', name: 'Young Adults', icon: 'school', color: '#B8E986' },
-  { id: 'legal-assistance', name: 'Legal Assistance', icon: 'briefcase', color: '#417505' },
-  { id: 'utilities', name: 'Utilities', icon: 'bulb', color: '#F8E71C' },
-  { id: 'transportation', name: 'Transportation', icon: 'car', color: '#D0021B' },
-  { id: 'hygiene-household', name: 'Hygiene & Household', icon: 'water', color: '#4A4A4A' },
-  { id: 'finance-employment', name: 'Finance & Employment', icon: 'cash', color: '#F5A623' },
-  { id: 'education', name: 'Education', icon: 'book', color: '#002766' }
-];
+// Map categories from shared taxonomy with UI properties
+const categoryIconMap: { [key: string]: { icon: string; color: string } } = {
+  'housing': { icon: 'home', color: '#4A90E2' },
+  'food': { icon: 'restaurant', color: '#F5A623' },
+  'healthcare': { icon: 'medkit', color: '#BD10E0' },
+  'mental-wellness': { icon: 'heart', color: '#7ED321' },
+  'substance-use': { icon: 'medical', color: '#9013FE' },
+  'children-family': { icon: 'people', color: '#50E3C2' },
+  'young-adults': { icon: 'school', color: '#B8E986' },
+  'legal-assistance': { icon: 'briefcase', color: '#417505' },
+  'utilities': { icon: 'bulb', color: '#F8E71C' },
+  'transportation': { icon: 'car', color: '#D0021B' },
+  'hygiene-household': { icon: 'water', color: '#4A4A4A' },
+  'finance-employment': { icon: 'cash', color: '#F5A623' },
+  'education': { icon: 'book', color: '#002766' }
+};
+
+const categories = Object.entries(MAIN_CATEGORIES).map(([id, category]) => ({
+  id,
+  name: category.name,
+  ...categoryIconMap[id]
+}));
 
 export default function HomeScreen({ navigation }: any) {
   const [searchQuery, setSearchQuery] = useState('');

@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { Linking } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
 import ResourceListScreen from '../screens/ResourceListScreen';
@@ -75,7 +76,7 @@ export default function AppNavigator() {
               // Prevent default action
               e.preventDefault();
               // Open 211 hotline
-              // Linking.openURL('tel:211');
+              Linking.openURL('tel:211');
             },
           }}
         />

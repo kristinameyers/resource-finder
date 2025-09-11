@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Constants from 'expo-constants';
 
 interface Resource {
   id: string;
@@ -21,7 +23,20 @@ interface Resource {
   distance?: number;
 }
 
-const API_URL = 'http://localhost:5000';
+// Get API URL from Expo config or use development defaults
+const getApiUrl = () => {
+  if (Constants.expoConfig?.extra?.apiUrl) {
+    return Constants.expoConfig.extra.apiUrl;
+  }
+  // For development, use local IP based on platform
+  if (Platform.OS === 'ios' || Platform.OS === 'android') {
+    // Replace with your machine's IP address when testing on physical device
+    return 'http://192.168.1.1:5000'; // Update this with your actual IP
+  }
+  return 'http://localhost:5000';
+};
+
+const API_URL = getApiUrl();
 
 export default function ResourceListScreen({ route, navigation }: any) {
   const { categoryId, categoryName, keyword, zipCode, use211Api } = route.params;
