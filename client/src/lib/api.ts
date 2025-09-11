@@ -55,7 +55,7 @@ export async function fetchResources(
   }
   
   // Add parameter to use National 211 API
-  queryParams.append('useApi', useApi.toString());
+  queryParams.append('use211Api', useApi.toString());
   
   // Add sort parameter
   queryParams.append('sortBy', sortBy);
