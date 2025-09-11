@@ -148,7 +148,8 @@ export class MemStorage implements IStorage {
       if ('taxonomyCode' in cat) {
         serviceTaxonomyCode = cat.taxonomyCode;
       } else {
-        freeKeyword = cat.keywords.join(' ');
+        // Use the first keyword for category-based fallback
+        freeKeyword = cat.keywords[0];
       }
     } else if (keyword) {
       const match = getCategoryByKeyword(keyword);
@@ -157,13 +158,12 @@ export class MemStorage implements IStorage {
         if ('taxonomyCode' in cat) {
           serviceTaxonomyCode = cat.taxonomyCode;
         } else {
-          freeKeyword = cat.keywords.join(' ');
+          freeKeyword = cat.keywords[0];
         }
       } else {
         freeKeyword = keyword;
       }
     }
-
     const url = new URL('https://api.211.org/resources/v2/search/keyword');
     if (serviceTaxonomyCode) {
       url.searchParams.set('serviceTaxonomyCode', serviceTaxonomyCode);

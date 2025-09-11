@@ -53,9 +53,9 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'animal-shelters', name: 'Animal Shelters', taxonomyCode: 'PD-7600.0600' }
   ],
   'finance-employment': [
-    { id: 'finance-employment', name: 'Finance & Employment', taxonomyCode: 'NL-1000' }, // Add this
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HL-2500.8035' },
     //{ id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
+    { id: 'finance-employment', name: 'Finance & Employment', taxonomyCode: 'NL-1000' }, // Add this
     { id: 'job-assistance', name: 'Job Assistance Centers', taxonomyCode: 'ND-1500' },
     { id: 'employment-discrimination', name: 'Employment Discrimination Assistance', taxonomyCode: 'FT-1800.1850' },
     { id: 'vocational-rehabilitation', name: 'Vocational Rehabilitation', taxonomyCode: 'ND-9000' },
@@ -115,26 +115,26 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'parking-permits', name: 'Parking Permits People With Disabilities/Health Conditions', taxonomyCode: 'DF-7000.6550' }
   ],
   'healthcare': [
+    // { id: 'psychiatric-hospitals', name: 'Psychiatric hospitals', taxonomyCode: 'RM-3300.6500' },
+    // { id: 'aca-counseling', name: 'Affordable Care Act Information & Counseling', taxonomyCode: 'LH-3500.0200' },
+    // { id: 'general-dentistry', name: 'General Dentistry', taxonomyCode: 'LV-1600.2400' },
+    // { id: 'newborn-care', name: 'Newborn Care', taxonomyCode: 'YB-9500.6000' },
+    // { id: 'tattoo-removal', name: 'Tattoo Removal', taxonomyCode: 'LT-8500' },
     { id: 'healthcare', name: 'Health Care', taxonomyCode: 'LN' },
     { id: 'clinics-urgent-care', name: 'Clinics & Urgent Care', taxonomyCode: 'LN' },
     { id: 'hospitals', name: 'Hospitals', taxonomyCode: 'LL-3000' },
-    // { id: 'psychiatric-hospitals', name: 'Psychiatric hospitals', taxonomyCode: 'RM-3300.6500' },
-    // { id: 'aca-counseling', name: 'Affordable Care Act Information & Counseling', taxonomyCode: 'LH-3500.0200' },
     { id: 'medicaid', name: 'Medicaid', taxonomyCode: 'NL-5000.5000' },
     { id: 'medicare', name: 'Medicare', taxonomyCode: 'NS-8000.5000' },
     { id: 'patient-rights', name: 'Patient Rights Assistance', taxonomyCode: 'FT-6200' },
     { id: 'prescription-assistance', name: 'Prescription Drug Patient Assistance Programs', taxonomyCode: 'LH-6700.6300' },
     { id: 'cancer-clinics', name: 'Cancer Clinics', taxonomyCode: 'LT-1750.1500' },
     { id: 'eye-screening', name: 'Eye Screening', taxonomyCode: 'LF-4900.2000' },
-    // { id: 'general-dentistry', name: 'General Dentistry', taxonomyCode: 'LV-1600.2400' },
     { id: 'physical-examinations', name: 'General Physical Examinations', taxonomyCode: 'LF-7100.2500' },
     { id: 'hearing-screening', name: 'Hearing Screening', taxonomyCode: 'LF-4900.2150' },
     { id: 'immunizations', name: 'Immunizations', taxonomyCode: 'LT-3400' },
     { id: 'mammograms', name: 'Mammograms', taxonomyCode: 'LF-4900.1500-500' },
-    // { id: 'newborn-care', name: 'Newborn Care', taxonomyCode: 'YB-9500.6000' },
     { id: 'physical-therapy', name: 'Physical Therapy', taxonomyCode: 'LR-6600' },
     { id: 'postpartum-depression', name: 'Postpartum Depression', taxonomyCode: 'RP-1400.8000-655' },
-    // { id: 'tattoo-removal', name: 'Tattoo Removal', taxonomyCode: 'LT-8500' },
     { id: 'abortion-services', name: 'Abortion Services', taxonomyCode: 'LJ-2000.0100' },
     { id: 'birth-control', name: 'Birth Control', taxonomyCode: 'LJ-2000.1000' },
     { id: 'reproductive-health', name: 'General Sexuality/Reproductive Health Education', taxonomyCode: 'LJ-8000.2500' },
@@ -182,11 +182,11 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'drug-alcohol-testing', name: 'Drug & Alcohol Testing', taxonomyCode: 'RX-0400.1850' }
   ],
   'children-family': [
+    // { id: 'foster-care-legal', name: 'Foster Care Legal Services', taxonomyCode: 'FT-3000.2100' },
     { id: 'children-family', name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
     { id: 'family-law-courts', name: 'Family Law Courts', taxonomyCode: 'FC-8200.8100-200' },
     { id: 'child-custody', name: 'Child Custody', taxonomyCode: 'FT-3000.1500' },
     { id: 'child-support', name: 'Child Support', taxonomyCode: 'FT-3000.1600' },
-    // { id: 'foster-care-legal', name: 'Foster Care Legal Services', taxonomyCode: 'FT-3000.2100' },
     { id: 'child-abuse-prevention', name: 'Child Abuse Prevention', taxonomyCode: 'FN-1500.1900-150' },
     { id: 'child-abuse-reporting', name: 'Child Abuse Reporting', taxonomyCode: 'PH-6500.1500-140' },
     { id: 'safe-surrender', name: 'Safe Surrender for Newborns', taxonomyCode: 'LJ-5000.8000' },
@@ -210,10 +210,10 @@ export const SUBCATEGORIES: Record<string, Subcategory[]> = {
     { id: 'teen-pregnancy-prevention', name: 'Teen Pregnancy Prevention', taxonomyCode: 'LJ-8000.8500' }
   ],
   'education': [
-    { id: 'education', name: 'Education', taxonomyCode: 'HD-1800.8000' }, // Add this
     // { id: 'adult-literacy', name: 'Adult Literacy and Basic Education', taxonomyCode: 'HD-0100.0200' },
-    { id: 'computer-literacy', name: 'Computer Literacy Training Programs', taxonomyCode: 'PL-7400.1500' },
     // { id: 'career-counseling', name: 'Career Counseling', taxonomyCode: 'HH-1000.1400' },
+    { id: 'education', name: 'Education', taxonomyCode: 'HD-1800.8000' },
+    { id: 'computer-literacy', name: 'Computer Literacy Training Programs', taxonomyCode: 'PL-7400.1500' },
     { id: 'financial-literacy', name: 'Financial Literacy', taxonomyCode: 'NL-1000.2100' },
     { id: 'esl', name: 'English as a Second Language', taxonomyCode: 'HL-2000.0550' },
     { id: 'technical-schools', name: 'Technical/Trade Schools', taxonomyCode: 'HD-6000.9000' },
