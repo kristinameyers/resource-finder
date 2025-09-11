@@ -1467,59 +1467,46 @@ export async function searchResources(
     return { resources: [], total: 0 };
   }
 
-  // Special handling for Finance & Employment: try keywords first
-  if (category === 'finance-employment' && !subcategory) {
-    const categoryData = MAIN_CATEGORIES[category];
-    if (categoryData?.keywords) {
-      console.log(`Using keywords-first search for ${category}: ${categoryData.keywords.join(', ')}`);
-      
-      // Try each keyword first
-      for (const keyword of categoryData.keywords) {
-        console.log(`Trying keyword: ${keyword}`);
-        try {
-          const keywordResult = await searchResourcesByKeyword(
-            keyword,
-            zipCode,
-            latitude,
-            longitude,
-            take, // size parameter
-            skip  // offset parameter
-          );
-          
-          if (keywordResult.resources.length > 0) {
-            console.log(`Keyword search succeeded with "${keyword}": ${keywordResult.resources.length} resources found`);
-            return keywordResult;
-          }
-        } catch (error) {
-          console.log(`Keyword search failed for "${keyword}":`, error);
-        }
+  // Special handling for home screen categories: use only keyword search
+  if (!subcategory) {
+    // Finance & Employment -> only search for "finance"
+    if (category === 'finance-employment') {
+      console.log(`Home screen Finance & Employment: searching only for keyword "finance"`);
+      try {
+        const result = await searchResourcesByKeyword(
+          'finance',
+          zipCode,
+          latitude,
+          longitude,
+          take,
+          skip
+        );
+        console.log(`Finance keyword search returned ${result.resources.length} resources`);
+        return result;
+      } catch (error) {
+        console.log(`Finance keyword search failed:`, error);
+        return { resources: [], total: 0 };
       }
-      
-      // If keywords failed, try taxonomy code as fallback
-      const taxonomyCode = getMainCategoryTaxonomyCode(category);
-      if (taxonomyCode) {
-        console.log(`Keywords failed, trying taxonomy code fallback: ${taxonomyCode}`);
-        try {
-          const taxonomyResult = await searchResourcesByTaxonomyCode(
-            taxonomyCode,
-            zipCode,
-            latitude,
-            longitude,
-            take,
-            skip
-          );
-          
-          if (taxonomyResult.resources.length > 0) {
-            console.log(`Taxonomy fallback succeeded: ${taxonomyResult.resources.length} resources found`);
-            return taxonomyResult;
-          }
-        } catch (error) {
-          console.log(`Taxonomy fallback failed:`, error);
-        }
+    }
+    
+    // Education -> only search for "education"
+    if (category === 'education') {
+      console.log(`Home screen Education: searching only for keyword "education"`);
+      try {
+        const result = await searchResourcesByKeyword(
+          'education',
+          zipCode,
+          latitude,
+          longitude,
+          take,
+          skip
+        );
+        console.log(`Education keyword search returned ${result.resources.length} resources`);
+        return result;
+      } catch (error) {
+        console.log(`Education keyword search failed:`, error);
+        return { resources: [], total: 0 };
       }
-      
-      console.log(`All search attempts failed for finance-employment category`);
-      return { resources: [], total: 0 };
     }
   }
 
