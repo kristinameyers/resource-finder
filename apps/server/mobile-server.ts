@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { MAIN_CATEGORIES } from '../../packages/taxonomy/index';
+import { MAIN_CATEGORIES } from '../../packages/taxonomy/src/index';
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -1,13 +1,13 @@
 // server/storage.ts
 import { users, type User, type InsertUser, type Resource, type Category, type Subcategory, type Location } from "@shared/schema";
 import fetch from "node-fetch";
-import { calculateDistanceFromZipCodes } from "./data/zipCodes";
+import { calculateDistanceFromZipCodes } from "../../packages/taxonomy/src/zipCodes";
 import { getCoordinatesForZip } from "../client/src/data/zipcode-db";
 import {
   MAIN_CATEGORIES,
   getSubcategoriesForCategory,
   getCategoryByKeyword
-} from "./data/officialTaxonomy";
+} from "../../packages/taxonomy/src/officialTaxonomy";
 
 // Helper function to calculate distance between coordinates
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -293,22 +293,22 @@ export class MemStorage implements IStorage {
   }
 
   async getRatings(resourceId: string) {
-    const { getVoteStats } = await import('./services/firestoreVotingService');
+    const { getVoteStats } = await import('./src/services/firestoreVotingService');
     return getVoteStats(resourceId);
   }
 
   async getUserVote(resourceId: string, sessionId: string, ipAddress: string) {
-    const { getUserVote } = await import('./services/firestoreVotingService');
+    const { getUserVote } = await import('./src/services/firestoreVotingService');
     return getUserVote(resourceId, sessionId, ipAddress);
   }
 
   async submitVote(resourceId: string, sessionId: string, ipAddress: string, vote: 'up' | 'down') {
-    const { submitVote } = await import('./services/firestoreVotingService');
+    const { submitVote } = await import('./src/services/firestoreVotingService');
     return submitVote(resourceId, sessionId, ipAddress, vote);
   }
 
   async removeVote(resourceId: string, sessionId: string, ipAddress: string) {
-    const { removeVote } = await import('./services/firestoreVotingService');
+    const { removeVote } = await import('./src/services/firestoreVotingService');
     return removeVote(resourceId, sessionId, ipAddress);
   }
 }

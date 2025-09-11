@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/client/src/*"],
+      "@assets/*": ["apps/client/src/assets/*"],
+      "@shared/*": ["packages/shared-schema/src/*"],
+      "@sb211/hooks/*": ["packages/hooks/src/*"],
+      "@sb211/components/*": ["packages/components/src/*"],
+      "@sb211/shared-schema": ["packages/shared-schema/src/index.ts"],
+      "@sb211/ui-kit/*": ["packages/ui-kit/src/*"]
+    },
+    "typeRoots": ["node_modules/@types"]
+  }
+}

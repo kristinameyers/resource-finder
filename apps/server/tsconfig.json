@@ -14,6 +14,6 @@
       "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["**/*"],
+  "include": ["**/*", "../../packages/taxonomy/src/officialTaxonomy.ts", "../../packages/taxonomy/src/zipCodes.ts", "../../packages/taxonomy/src/sampleICarolResource.ts"],
   "exclude": ["node_modules", "client", "shared"]
 }

@@ -1,6 +1,18 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
-  }
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "react-native",
+    "allowJs": true,
+    "strict": true,
+    "baseUrl": ".",                       // root of mobile app
+    "paths": {
+      "@sb211/hooks/*": ["../../packages/hooks/src/*"],
+      "@sb211/components/*": ["../../packages/components/src/*"],
+      "@sb211/shared-schema": ["../../packages/shared-schema/src/index.ts"]
+      // add other package mappings as needed
+    },
+    // …other existing options…
+  },
+  "include": ["src/**/*"]
 }

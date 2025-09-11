@@ -1,11 +1,15 @@
 {
-  "type": "module",
-  "name": "rest-express",
+  "name": "sb211-monorepo",
   "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "tsx server/index.ts --tsconfig server/tsconfig.json",
+    "dev": "pnpm -r run dev",
     "client:dev": "cd client && vite --config ../vite.config.mjs",
-    "build": "vite build --config client/vite.config.ts && esbuild server/index.ts --platform=node --bundle --outdir=dist",
+    "build": "pnpm -r run build",
     "build:zipdb": "ts-node scripts/build-zipcode-db.ts",
     "check": "tsc -p server/tsconfig.json && tsc -p client/tsconfig.json --noEmit",
     "db:push": "drizzle-kit push"

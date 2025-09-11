@@ -10,8 +10,8 @@ import {
   getResourceById, 
   getServiceAtLocationDetails, 
   searchResources 
-} from "./services/national211Service";
-import { translateText, getSupportedLanguages } from "./services/translationService";
+} from "./src/services/national211Service";
+import { translateText, getSupportedLanguages } from "./src/services/translationService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -137,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Only calculate distances when user has provided a location
             if (zipCode && resources.length > 0) {
-              const { calculateDistanceFromZipCodes } = await import('./data/zipCodes');
+              const { calculateDistanceFromZipCodes } = await import('../../packages/taxonomy/src/zipCodes');
               
               // Add distance to each resource
               resources = resources.map(resource => {
@@ -372,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Try to get detailed service information with servicePhones and serviceHoursText
-      const { getServiceDetails, getPhoneNumbers } = await import('./services/national211Service');
+      const { getServiceDetails, getPhoneNumbers } = await import('./src/services/national211Service');
       let serviceDetails: any = null;
       let comprehensivePhones: any[] = [];
       
