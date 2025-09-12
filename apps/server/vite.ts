@@ -77,10 +77,10 @@ export async function setupVite(app: any, server: any) {
 
   app.use(vite.middlewares);
   
-  // Only serve HTML for navigation requests, not module/asset requests
-  app.use("*", async (req: any, res: any, next: any) => {
+  // Serve index.html for root and all navigation requests
+  const serveHtml = async (req: any, res: any, next: any) => {
     // Skip non-GET requests and non-HTML requests
-    if (req.method !== "GET" || !req.headers.accept?.includes("text/html")) {
+    if (req.method !== "GET" || (req.headers.accept && !req.headers.accept.includes("text/html"))) {
       return next();
     }
 
@@ -96,7 +96,13 @@ export async function setupVite(app: any, server: any) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
     }
-  });
+  };
+  
+  // Explicitly handle root path
+  app.get("/", serveHtml);
+  
+  // Handle all other paths that might be client-side routes
+  app.use("*", serveHtml);
 }
 
 export function serveStatic(app: any) {
