@@ -54,7 +54,15 @@ export async function setupVite(app: any, server: any) {
       hmr: { server },
       watch: { 
         ignored: ['**/node_modules/.vite-temp/**', '**/.vite-temp/**', '**/node_modules/**'] 
-      }
+      },
+      // Allow Replit host
+      host: true,
+      allowedHosts: [
+        "96c14a12-0c35-4094-bb9e-82e96ecfc487-00-cpe54o4q2gk3.spock.replit.dev",
+        ".replit.dev",
+        ".replit.app",
+        "localhost"
+      ]
     },
     appType: "custom",
     resolve: {
