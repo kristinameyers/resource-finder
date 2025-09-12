@@ -35,6 +35,10 @@ export async function setupVite(app: any, server: any) {
     return;
   }
 
+  // Import React plugin with correct path
+  const reactPlugin = await import('../../node_modules/@vitejs/plugin-react/dist/index.js');
+  const react = reactPlugin.default || reactPlugin;
+
   // Set up correct paths for Vite
   const projectRoot = path.resolve(__dirname, "../../");
   const clientRoot = path.resolve(projectRoot, "client");
@@ -44,6 +48,7 @@ export async function setupVite(app: any, server: any) {
     root: clientRoot,
     configFile: false, // Prevent Vite from loading config file and creating temp files
     cacheDir: path.resolve(projectRoot, '.vite-dev-cache'),
+    plugins: [react()],
     server: { 
       middlewareMode: true, 
       hmr: { server },
