@@ -2,17 +2,18 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "jsx": "preserve",
     "strict": true,
     "noEmit": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "moduleResolution": "bundler",
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
     "baseUrl": ".",
+    "moduleResolution": "nodenext",
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react-native",
     "paths": {
       "@/*": [
         "apps/client/src/*"

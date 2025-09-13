@@ -17,6 +17,8 @@ module.exports = (async () => {
       ...defaultConfig.resolver,
       assetExts,
       sourceExts,
+      unstable_enableSymlinks: true,
+      unstable_enablePackageExports: true,
       extraNodeModules: new Proxy(
         {},
         {

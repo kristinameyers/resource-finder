@@ -1,17 +1,33 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "moduleResolution": "nodenext",
+    "jsx": "react-native",
     "target": "esnext",
     "module": "esnext",
-    "jsx": "react-native",
     "allowJs": true,
     "strict": true,
     "baseUrl": ".",
     "outDir": "dist",
     "paths": {
-      "@sb211/hooks/*": ["../../packages/hooks/src/*"],
-      "@sb211/components/*": ["../../packages/components/src/*"],
-      "@sb211/shared-schema": ["../../packages/shared-schema/src/index.ts"]
+      "@sb211/hooks/*": [
+        "../../packages/hooks/src/*"
+      ],
+      "@sb211/components/*": [
+        "../../packages/components/src/*"
+      ],
+      "@sb211/shared-schema": [
+        "../../packages/shared-schema/src/index.ts"
+      ]
     }
   },
-  "include": ["src/**/*", "../../packages/lib/src/utils.ts", "../../packages/lib/src/session.ts", "../../packages/lib/src/queryClient.ts", "../../packages/lib/src/distanceUtils.ts"]
+  "include": [
+    "src/**/*",
+    "../../packages/lib/src/utils.ts",
+    "../../packages/lib/src/session.ts",
+    "../../packages/lib/src/queryClient.ts",
+    "../../packages/lib/src/distanceUtils.ts"
+  ],
+  "extends": "expo/tsconfig.base"
 }

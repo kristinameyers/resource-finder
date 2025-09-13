@@ -16,17 +16,20 @@
     "@react-navigation/drawer": "^6.4.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
-    "@sb211/hooks": "workspace:*",
+    "@sb211/taxonomy": "workspace:*",
     "@sb211/ui-kit": "workspace:*",
     "@sb211/lib": "workspace:*",
     "@sb211/shared-schema": "workspace:*",
+    "@sb211/geo": "workspace:*",
+    "@sb211/geocalc": "workspace:*",
     "expo": "~51.0.0",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.74.5",
     "react-native-safe-area-context": "4.10.5",
-    "react-native-screens": "3.31.1"
+    "react-native-screens": "3.31.1",
+    "@expo/vector-icons": "^14.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -1,10 +1,23 @@
 // OnboardingFlow.tsx
 
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Keyboard, Image } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useTranslatedText } from "@sb211/components/TranslatedText";
-import { useAccessibility } from "@sb211/contexts/AccessibilityContext";
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Keyboard,
+  Image,
+} from 'react-native';
+
+import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+// Use relative or properly aliased imports for modules; adjust as needed.
+import { useTranslatedText } from '../../components/TranslatedText'; // or @sb211/components/TranslatedText if alias is configured
+import { useAccessibility } from '../../contexts/AccessibilityContext';
 
 export interface OnboardingPreferences {
   zipCode?: string;
@@ -17,58 +30,59 @@ interface OnboardingFlowProps {
 }
 
 const categories = [
-  { id: "children-family", name: "Children & Family" },
-  { id: "food", name: "Food" },
-  { id: "education", name: "Education" },
-  { id: "finance-employment", name: "Finance & Employment" },
-  { id: "housing", name: "Housing" },
-  { id: "healthcare", name: "Health Care" },
-  { id: "hygiene-household", name: "Hygiene & Household" },
-  { id: "mental-wellness", name: "Mental Wellness" },
-  { id: "legal-assistance", name: "Legal Assistance" },
-  { id: "substance-use", name: "Substance Use" },
-  { id: "transportation", name: "Transportation" },
-  { id: "young-adults", name: "Young Adults" },
+  { id: 'children-family', name: 'Children & Family' },
+  { id: 'food', name: 'Food' },
+  { id: 'education', name: 'Education' },
+  { id: 'finance-employment', name: 'Finance & Employment' },
+  { id: 'housing', name: 'Housing' },
+  { id: 'healthcare', name: 'Health Care' },
+  { id: 'hygiene-household', name: 'Hygiene & Household' },
+  { id: 'mental-wellness', name: 'Mental Wellness' },
+  { id: 'legal-assistance', name: 'Legal Assistance' },
+  { id: 'substance-use', name: 'Substance Use' },
+  { id: 'transportation', name: 'Transportation' },
+  { id: 'young-adults', name: 'Young Adults' },
 ];
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [zipCode, setZipCode] = useState("");
-  const [useLocation, setUseLocation] = useState(false);
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [zipCode, setZipCode] = useState<string>('');
+  const [useLocation, setUseLocation] = useState<boolean>(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { triggerHaptic } = useAccessibility();
 
   // Translations
-  const { text: welcomeText } = useTranslatedText("Welcome To");
-  const { text: santaBarbaraText } = useTranslatedText("Santa Barbara 211");
-  const { text: descriptionText } = useTranslatedText("Find essential services, including food, shelter, health care and more.");
+  const { text: welcomeText } = useTranslatedText('Welcome To');
+  const { text: santaBarbaraText } = useTranslatedText('Santa Barbara 211');
+  const { text: descriptionText } = useTranslatedText('Find essential services, including food, shelter, health care and more.');
   const { text: letsGoText } = useTranslatedText("Let's Go");
-  const { text: findResourcesText } = useTranslatedText("Find Resources Closest To You");
-  const { text: locationDescText } = useTranslatedText("Use Your Current Location or Enter Your Zip Code");
-  const { text: enterZipText } = useTranslatedText("Enter your zip code");
-  const { text: useLocationText } = useTranslatedText("Click to use your current location");
-  const { text: saveText } = useTranslatedText("Save");
-  const { text: skipText } = useTranslatedText("Skip");
-  const { text: selectThreeText } = useTranslatedText("Select Three Resources That You Use Most Often");
+  const { text: findResourcesText } = useTranslatedText('Find Resources Closest To You');
+  const { text: locationDescText } = useTranslatedText('Use Your Current Location or Enter Your Zip Code');
+  const { text: enterZipText } = useTranslatedText('Enter your zip code');
+  const { text: useLocationText } = useTranslatedText('Click to use your current location');
+  const { text: saveText } = useTranslatedText('Save');
+  const { text: skipText } = useTranslatedText('Skip');
+  const { text: selectThreeText } = useTranslatedText('Select Three Resources That You Use Most Often');
 
-  // Steps
-  const handleNext = () => {
-    triggerHaptic && triggerHaptic("light");
-    setCurrentStep(currentStep + 1);
+  const handleNext = (): void => {
+    if (triggerHaptic) triggerHaptic('light');
+    setCurrentStep((prev) => prev + 1);
     Keyboard.dismiss();
   };
 
-  const handleCategoryToggle = (categoryId: string) => {
-    triggerHaptic && triggerHaptic("light");
-    setSelectedCategories(prev =>
+  const handleCategoryToggle = (categoryId: string): void => {
+    if (triggerHaptic) triggerHaptic('light');
+    setSelectedCategories((prev) =>
       prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : prev.length < 3 ? [...prev, categoryId] : prev
+        ? prev.filter((id) => id !== categoryId)
+        : prev.length < 3
+        ? [...prev, categoryId]
+        : prev
     );
   };
 
-  const handleComplete = () => {
-    triggerHaptic && triggerHaptic("medium");
+  const handleComplete = (): void => {
+    if (triggerHaptic) triggerHaptic('medium');
     onComplete({
       zipCode: zipCode || undefined,
       useLocation,
@@ -77,16 +91,16 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     Keyboard.dismiss();
   };
 
-  const handleLocationRequest = () => {
+  const handleLocationRequest = (): void => {
     setUseLocation(true);
-    triggerHaptic && triggerHaptic("light");
+    if (triggerHaptic) triggerHaptic('light');
   };
 
-  // Replace with your logo asset source
-  // If using expo-asset, import assets properly.
-  const logoSource = require("@sb211/assets/new-211-logo.png");
+  // Import the image via static import if possible.
+  // Place your logo at: apps/mobile/assets/new-211-logo.png
+  // Then import like this:
+  import logoSource from '../../assets/new-211-logo.png';
 
-  // UI
   if (currentStep === 1) {
     return (
       <View style={styles.container}>
@@ -112,7 +126,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     );
   }
 
-  // Step 2: Location/Category selection
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.center}>
@@ -155,7 +168,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <Text
               style={[
                 styles.categoryText,
-                selectedCategories.includes(category.id) && styles.categoryTextSelected
+                selectedCategories.includes(category.id) && styles.categoryTextSelected,
               ]}
             >
               {category.name}
