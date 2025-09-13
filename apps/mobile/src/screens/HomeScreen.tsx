@@ -11,8 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { MAIN_CATEGORIES } from '../../../packages/taxonomy/index';
 
-// Map categories from shared taxonomy with UI properties
-const categoryIconMap: { [key: string]: { icon: string; color: string } } = {
+const categoryIconMap = {
   'housing': { icon: 'home', color: '#4A90E2' },
   'food': { icon: 'restaurant', color: '#F5A623' },
   'healthcare': { icon: 'medkit', color: '#BD10E0' },
@@ -34,25 +33,25 @@ const categories = Object.entries(MAIN_CATEGORIES).map(([id, category]) => ({
   ...categoryIconMap[id]
 }));
 
-export default function HomeScreen({ navigation }: any) {
+export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [zipCode, setZipCode] = useState('');
 
-  const handleCategoryPress = (categoryId: string, categoryName: string) => {
-    navigation.navigate('ResourceList', { 
-      categoryId, 
+  const handleCategoryPress = (categoryId, categoryName) => {
+    navigation.navigate('ResourceList', {
+      categoryId,
       categoryName,
       zipCode,
-      use211Api: true 
+      use211Api: true,
     });
   };
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigation.navigate('ResourceList', { 
+      navigation.navigate('ResourceList', {
         keyword: searchQuery.trim(),
         zipCode,
-        use211Api: true 
+        use211Api: true,
       });
     }
   };
@@ -64,7 +63,6 @@ export default function HomeScreen({ navigation }: any) {
           <Text style={styles.title}>Santa Barbara 211</Text>
           <Text style={styles.subtitle}>Find Resources Near You</Text>
         </View>
-
         <View style={styles.searchSection}>
           <View style={styles.searchBar}>
             <Ionicons name="search" size={20} color="#666" />
@@ -74,9 +72,9 @@ export default function HomeScreen({ navigation }: any) {
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={handleSearch}
+              returnKeyType="search"
             />
           </View>
-
           <View style={styles.locationBar}>
             <Ionicons name="location" size={20} color="#666" />
             <TextInput
@@ -89,20 +87,19 @@ export default function HomeScreen({ navigation }: any) {
             />
           </View>
         </View>
-
         <View style={styles.categoriesSection}>
           <Text style={styles.sectionTitle}>Browse by Category</Text>
           <View style={styles.categoriesGrid}>
-            {categories.map((category) => (
+            {categories.map(category => (
               <TouchableOpacity
                 key={category.id}
                 style={[styles.categoryCard, { backgroundColor: category.color + '20' }]}
                 onPress={() => handleCategoryPress(category.id, category.name)}
               >
-                <Ionicons 
-                  name={category.icon as any} 
-                  size={32} 
-                  color={category.color} 
+                <Ionicons
+                  name={category.icon}
+                  size={32}
+                  color={category.color}
                 />
                 <Text style={styles.categoryName}>{category.name}</Text>
               </TouchableOpacity>
@@ -115,95 +112,35 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: '#005191',
-    padding: 20,
-    paddingTop: 40,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: 'white',
-    marginTop: 5,
-  },
-  searchSection: {
-    padding: 15,
-  },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  header: { backgroundColor: '#005191', padding: 20, paddingTop: 40, alignItems: 'center' },
+  title: { fontSize: 28, fontWeight: 'bold', color: 'white' },
+  subtitle: { fontSize: 16, color: 'white', marginTop: 5 },
+  searchSection: { padding: 15 },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'white',
+    borderRadius: 10, padding: 10, marginBottom: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-  },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
   locationBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'white',
+    borderRadius: 10, padding: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
-  locationInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-  },
-  categoriesSection: {
-    padding: 15,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
+  locationInput: { flex: 1, marginLeft: 10, fontSize: 16 },
+  categoriesSection: { padding: 15 },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#333' },
+  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   categoryCard: {
-    width: '48%',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
+    width: '48%', padding: 15, borderRadius: 10, marginBottom: 15,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
   categoryName: {
-    marginTop: 10,
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: '#333',
+    marginTop: 10, fontSize: 14, fontWeight: '600', textAlign: 'center', color: '#333',
   },
 });

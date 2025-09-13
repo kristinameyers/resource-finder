@@ -1,257 +1,295 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  SafeAreaView,
-  Platform,
-} from 'react-native';
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import Constants from 'expo-constants';
+import { useQuery } from "@tanstack/react-query";
+import { filterSantaBarbaraAndSort } from "@sb211/lib/distanceUtils"; // You may need to move this to a package.
+import { useTranslatedText } from "@sb211/components/TranslatedText";
 
 interface Resource {
   id: string;
   name: string;
-  organization: string;
   description: string;
+  categoryId: string;
+  subcategoryId?: string;
+  location: string;
+  zipCode?: string;
   address: string;
-  phone: string;
-  distance?: number;
+  serviceAreas?: string;
+  distanceMiles?: number;
 }
 
-// Get API URL from Expo config or use development defaults
-const getApiUrl = () => {
-  if (Constants.expoConfig?.extra?.apiUrl) {
-    return Constants.expoConfig.extra.apiUrl;
-  }
-  // For development, use local IP based on platform
-  if (Platform.OS === 'ios' || Platform.OS === 'android') {
-    // Replace with your machine's IP address when testing on physical device
-    return 'http://192.168.1.1:5000'; // Update this with your actual IP
-  }
-  return 'http://localhost:5000';
-};
+interface Category { id: string; name: string; }
+interface Subcategory { id: string; name: string; categoryId: string; }
 
-const API_URL = getApiUrl();
+function getFavorites() {
+  return AsyncStorage.getItem("favorites").then(data => {
+    try {
+      return data ? JSON.parse(data) as string[] : [];
+    } catch {
+      return [];
+    }
+  });
+}
 
-export default function ResourceListScreen({ route, navigation }: any) {
-  const { categoryId, categoryName, keyword, zipCode, use211Api } = route.params;
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function saveFavorites(favs: string[]) {
+  AsyncStorage.setItem("favorites", JSON.stringify(favs));
+}
+
+export default function ResourcesListScreen() {
+  const navigation = useNavigation();
+  // Route params to get category/keyword, or use Context/provider for search state.
+  const route = useRoute();
+  const categoryId = route.params?.categoryId || null;
+  const keyword = route.params?.keyword || null;
+
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
+  const [userLocation, setUserLocation] = useState<string>("");
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<"relevance" | "distance">("relevance");
+  const [filtersActive, setFiltersActive] = useState(false);
+
+  // Translations
+  const { text: sb211Text } = useTranslatedText("Santa Barbara 211");
+  const { text: updateLocationText } = useTranslatedText("Update Location");
+  const { text: loadingText } = useTranslatedText("Loading...");
+  const { text: viewDetailsText } = useTranslatedText("View Details");
+  const { text: favoritedText } = useTranslatedText("Favorited");
+  const { text: addToFavoritesText } = useTranslatedText("Add to Favorites");
+  const { text: allSubcategoriesText } = useTranslatedText("All Subcategories");
+  const { text: clearFiltersText } = useTranslatedText("Clear Filters");
+  const { text: noResourcesText } = useTranslatedText("No resources found in Santa Barbara County.");
+  const { text: resourcesInText } = useTranslatedText("Resources in");
+  const { text: searchResultsText } = useTranslatedText("Search Results");
 
   useEffect(() => {
-    fetchResources();
-  }, [categoryId, keyword, zipCode]);
+    // Get user zip code from AsyncStorage
+    AsyncStorage.getItem('userZipCode').then(zipCode => {
+      if (zipCode) setUserLocation(zipCode);
+    });
+    getFavorites().then(setFavorites);
+  }, []);
 
-  const fetchResources = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const params: any = {};
-      if (categoryId) params.categoryId = categoryId;
-      if (keyword) params.keyword = keyword;
-      if (zipCode) params.zipCode = zipCode;
-      if (use211Api) params.use211Api = 'true';
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
 
-      const response = await axios.get(`${API_URL}/api/resources`, { params });
-      setResources(response.data.resources || []);
-    } catch (err) {
-      setError('Failed to load resources');
-      console.error('Error fetching resources:', err);
-    } finally {
-      setLoading(false);
+  // Fetch categories
+  const { data: categoriesResponse } = useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const response = await fetch('https://api.example.com/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json();
+    },
+  });
+  const categories = categoriesResponse || [];
+
+  // Fetch subcategories
+  const { data: subcategoriesResponse } = useQuery<Subcategory[]>({
+    queryKey: ["subcategories", categoryId],
+    queryFn: async () => {
+      if (!categoryId) throw new Error('Category ID required');
+      const response = await fetch(`https://api.example.com/subcategories?categoryId=${categoryId}`);
+      if (!response.ok) throw new Error('Failed to fetch subcategories');
+      return response.json();
+    },
+    enabled: !!categoryId,
+  });
+  const subcategories = subcategoriesResponse || [];
+
+  // Build query string for resources
+  let queryParams: string[] = [];
+  if (categoryId) queryParams.push(`categoryId=${categoryId}`);
+  if (selectedSubcategory && selectedSubcategory !== 'all') queryParams.push(`subcategoryId=${selectedSubcategory}`);
+  if (keyword) queryParams.push(`keyword=${keyword}`);
+  if (userLocation) queryParams.push(`zipCode=${userLocation}`);
+  const queryStr = queryParams.join('&');
+
+  // Fetch resources
+  const { data: resourcesData, isLoading } = useQuery<Resource[]>({
+    queryKey: ["resources", queryStr],
+    queryFn: async () => {
+      const response = await fetch(`https://api.example.com/resources?${queryStr}`);
+      if (!response.ok) throw new Error('Failed to fetch resources');
+      const result = await response.json();
+      // Save resources for detail screen
+      await AsyncStorage.setItem('recentResources', JSON.stringify(result.resources));
+      return result.resources || [];
+    },
+    enabled: !!(categoryId || keyword),
+  });
+
+  let processedResources: Resource[] = resourcesData || [];
+  const currentCategory = categories.find((cat: Category) => cat.id === categoryId);
+  const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);
+
+  // Distance sorting if requested
+  if (sortBy === "distance" && !!userLocation) {
+    processedResources = filterSantaBarbaraAndSort(processedResources, userLocation);
+  }
+
+  // Handle favorites using AsyncStorage
+  const handleToggleFavorite = async (resource: Resource) => {
+    let next: string[];
+    if (favorites.includes(resource.id)) {
+      next = favorites.filter(id => id !== resource.id);
+    } else {
+      next = [...favorites, resource.id];
     }
+    setFavorites(next);
+    saveFavorites(next);
   };
 
-  const renderResource = ({ item }: { item: Resource }) => (
-    <TouchableOpacity
-      style={styles.resourceCard}
-      onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
-    >
-      <View style={styles.resourceHeader}>
-        <Text style={styles.resourceName} numberOfLines={2}>{item.name}</Text>
-        {item.distance && (
-          <Text style={styles.distance}>{item.distance.toFixed(1)} mi</Text>
-        )}
-      </View>
-      <Text style={styles.organization} numberOfLines={1}>{item.organization}</Text>
-      <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
-      <View style={styles.resourceInfo}>
-        <Ionicons name="location-outline" size={16} color="#666" />
-        <Text style={styles.address} numberOfLines={1}>{item.address}</Text>
-      </View>
-    </TouchableOpacity>
+  // Navigation actions
+  const handleBack = () => navigation.goBack();
+  const handleLocationClick = () => navigation.navigate('UpdateLocation');
+  const handleResourceClick = (resourceId: string) => navigation.navigate('ResourceDetail', { id: resourceId });
+  const handleSortChange = (value: "relevance" | "distance") => setSortBy(value);
+  const handleClearFilters = () => setSelectedSubcategory("all");
+
+  // Dropdown for subcategory selection
+  const SubcategoryPicker = () => (
+    filteredSubcategories.length > 0 ?
+    <View style={styles.pickerContainer}>
+      <TouchableOpacity
+        style={styles.picker}
+        onPress={() => {/* Show picker modal/dialog */}}
+      >
+        <Text style={styles.pickerText}>{selectedSubcategory === "all" ? allSubcategoriesText : filteredSubcategories.find(s => s.id === selectedSubcategory)?.name || allSubcategoriesText}</Text>
+        <Ionicons name="chevron-down" size={16} color="#333" />
+      </TouchableOpacity>
+      {/* Implement picker modal/dialog here as needed */}
+    </View>
+    : null
   );
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#005191" />
-        <Text style={styles.loadingText}>Loading resources...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="alert-circle" size={48} color="#D0021B" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchResources}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="white" />
+    <View style={styles.container}>
+      {/* Navigation Bar */}
+      <View style={styles.navBar}>
+        <TouchableOpacity style={styles.iconBtn} onPress={handleBack}>
+          <Ionicons name="chevron-back" size={24} color="#222" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {categoryName || keyword || 'Resources'}
-        </Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity style={styles.iconBtn} onPress={() => {/* TODO: Hamburger menu */}}>
+          <Ionicons name="menu" size={24} color="#222" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconBtn} onPress={handleLocationClick}>
+          <Ionicons name="location" size={24} color="#222" />
+        </TouchableOpacity>
       </View>
 
-      {resources.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <Ionicons name="search" size={48} color="#999" />
-          <Text style={styles.noResultsText}>No resources found</Text>
-          <Text style={styles.noResultsSubtext}>
-            Try adjusting your search or location
-          </Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>{sb211Text}</Text>
+      </View>
+
+      {/* Filters and Controls */}
+      <View style={styles.filters}>
+        <SubcategoryPicker />
+        <TouchableOpacity style={styles.locationBtn} onPress={handleLocationClick}>
+          <Text style={styles.locationBtnText}>{updateLocationText}</Text>
+        </TouchableOpacity>
+        {/* Sort options: simple segment control */}
+        <View style={styles.sortRow}>
+          <TouchableOpacity onPress={() => handleSortChange("relevance")} style={[styles.sortOption, sortBy === "relevance" && styles.sortActive]}>
+            <Text style={sortBy === "relevance" ? styles.sortActiveText : styles.sortText}>Relevance</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleSortChange("distance")} style={[styles.sortOption, sortBy === "distance" && styles.sortActive]}>
+            <Text style={sortBy === "distance" ? styles.sortActiveText : styles.sortText}>Distance</Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        <FlatList
-          data={resources}
-          renderItem={renderResource}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-        />
-      )}
-    </SafeAreaView>
+        <TouchableOpacity onPress={handleClearFilters} style={styles.clearFiltersBtn}>
+          <Text style={styles.clearFiltersText}>{clearFiltersText}</Text>
+        </TouchableOpacity>
+        <Text style={styles.resultsLabel}>
+          {isLoading ? loadingText :
+            `${processedResources.length} ${resourcesInText} ${(currentCategory?.name || keyword || searchResultsText)}`}
+        </Text>
+      </View>
+
+      {/* Resources List */}
+      <ScrollView contentContainerStyle={styles.listContainer}>
+        {isLoading ? (
+          <View style={styles.centerContainer}><Text>{loadingText}</Text></View>
+        ) : processedResources.length === 0 ? (
+          <View style={styles.centerContainer}><Text>{noResourcesText}</Text></View>
+        ) : (
+          processedResources.map((resource: Resource) => (
+            <TouchableOpacity
+              key={resource.id}
+              style={styles.resourceCard}
+              onPress={() => handleResourceClick(resource.id)}
+            >
+              <View style={styles.cardTitleRow}>
+                <Text style={styles.resourceTitle}>{resource.name}</Text>
+                {resource.distanceMiles && (
+                  <Text style={styles.distanceBadge}>{resource.distanceMiles} mi</Text>
+                )}
+              </View>
+              <Text style={styles.resourceDesc}>{resource.description}</Text>
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={16} color="#666" />
+                <Text style={styles.locationText}>{resource.location}</Text>
+              </View>
+              <View style={styles.cardActions}>
+                <TouchableOpacity
+                  style={styles.favoriteBtn}
+                  onPress={() => handleToggleFavorite(resource)}
+                >
+                  <Ionicons name={favorites.includes(resource.id) ? "heart" : "heart-outline"} size={20} color="#D0021B" />
+                  <Text style={{ marginLeft: 4, color: favorites.includes(resource.id) ? "#D0021B" : "#333" }}>
+                    {favorites.includes(resource.id) ? favoritedText : addToFavoritesText}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.detailsBtn}
+                  onPress={() => handleResourceClick(resource.id)}
+                >
+                  <Ionicons name="eye-outline" size={20} color="#005191" />
+                  <Text style={{ marginLeft: 4, color: "#005191" }}>{viewDetailsText}</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
+      {/* Add your GlobalNavbar here if you migrate it to mobile */}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#005191',
-    padding: 15,
-    paddingTop: 20,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#D0021B',
-    textAlign: 'center',
-  },
-  retryButton: {
-    marginTop: 20,
-    backgroundColor: '#005191',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  noResultsText: {
-    marginTop: 10,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  noResultsSubtext: {
-    marginTop: 5,
-    fontSize: 14,
-    color: '#666',
-  },
-  listContainer: {
-    padding: 10,
-  },
-  resourceCard: {
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  resourceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 5,
-  },
-  resourceName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginRight: 10,
-  },
-  distance: {
-    fontSize: 14,
-    color: '#005191',
-    fontWeight: '600',
-  },
-  organization: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  description: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 10,
-  },
-  resourceInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  address: {
-    flex: 1,
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 5,
-  },
-  separator: {
-    height: 10,
-  },
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  navBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 10, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#e0e0e0" },
+  iconBtn: { padding: 8 },
+  header: { alignItems: "center", paddingVertical: 16, backgroundColor: "#fff" },
+  title: { fontSize: 20, fontWeight: "bold", color: "#005191" },
+  filters: { padding: 12, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#e0e0e0" },
+  pickerContainer: { marginBottom: 8 },
+  picker: { flexDirection: "row", alignItems: "center", padding: 8, borderWidth: 1, borderColor: "#ccc", borderRadius: 6 },
+  pickerText: { fontSize: 15, color: "#222", flex: 1 },
+  locationBtn: { marginBottom: 8, padding: 8, backgroundColor: "#e0e7ef", borderRadius: 4, alignItems: "center" },
+  locationBtnText: { color: "#005191", fontWeight: "600" },
+  sortRow: { flexDirection: "row", marginVertical: 8 },
+  sortOption: { flex: 1, alignItems: "center", padding: 8 },
+  sortActive: { borderBottomWidth: 2, borderBottomColor: "#005191" },
+  sortText: { color: "#222", fontWeight: "500" },
+  sortActiveText: { color: "#005191", fontWeight: "700" },
+  clearFiltersBtn: { marginTop: 8, alignItems: "center" },
+  clearFiltersText: { color: "#007aff", fontWeight: "500" },
+  resultsLabel: { marginTop: 12, textAlign: "center", fontSize: 15, fontWeight: "500", color: "#222" },
+  listContainer: { padding: 16 },
+  centerContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
+  resourceCard: { backgroundColor: "#fff", marginBottom: 12, borderRadius: 8, padding: 14, elevation: 3 },
+  cardTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  resourceTitle: { fontSize: 16, fontWeight: "bold", color: "#222" },
+  distanceBadge: { fontSize: 14, color: "#007aff", fontWeight: "600" },
+  resourceDesc: { color: "#555", fontSize: 14, marginVertical: 4 },
+  locationRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  locationText: { color: "#666",fontSize: 14, marginLeft: 4 },
+  cardActions: { flexDirection: "row", marginTop: 8 },
+  favoriteBtn: { flexDirection: "row", alignItems: "center", marginRight: 18 },
+  detailsBtn: { flexDirection: "row", alignItems: "center" },
 });

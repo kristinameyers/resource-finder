@@ -1,18 +1,10 @@
 // OnboardingFlow.tsx
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MapPin, ArrowRight } from "lucide-react";
-import { useTranslatedText } from "@/components/TranslatedText";
-import { useAccessibility } from "@/contexts/AccessibilityContext";
-import new211Logo from "@/assets/new-211-logo.png";
-
-interface OnboardingFlowProps {
-  onComplete: (preferences: OnboardingPreferences) => void;
-}
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Keyboard, Image } from "react-native";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useTranslatedText } from "@sb211/components/TranslatedText";
+import { useAccessibility } from "@sb211/contexts/AccessibilityContext";
 
 export interface OnboardingPreferences {
   zipCode?: string;
@@ -20,14 +12,33 @@ export interface OnboardingPreferences {
   favoriteCategories: string[];
 }
 
+interface OnboardingFlowProps {
+  onComplete: (preferences: OnboardingPreferences) => void;
+}
+
+const categories = [
+  { id: "children-family", name: "Children & Family" },
+  { id: "food", name: "Food" },
+  { id: "education", name: "Education" },
+  { id: "finance-employment", name: "Finance & Employment" },
+  { id: "housing", name: "Housing" },
+  { id: "healthcare", name: "Health Care" },
+  { id: "hygiene-household", name: "Hygiene & Household" },
+  { id: "mental-wellness", name: "Mental Wellness" },
+  { id: "legal-assistance", name: "Legal Assistance" },
+  { id: "substance-use", name: "Substance Use" },
+  { id: "transportation", name: "Transportation" },
+  { id: "young-adults", name: "Young Adults" },
+];
+
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [zipCode, setZipCode] = useState("");
   const [useLocation, setUseLocation] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const { triggerHaptic, reduceMotion } = useAccessibility();
+  const { triggerHaptic } = useAccessibility();
 
-  // Translated text
+  // Translations
   const { text: welcomeText } = useTranslatedText("Welcome To");
   const { text: santaBarbaraText } = useTranslatedText("Santa Barbara 211");
   const { text: descriptionText } = useTranslatedText("Find essential services, including food, shelter, health care and more.");
@@ -40,211 +51,188 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const { text: skipText } = useTranslatedText("Skip");
   const { text: selectThreeText } = useTranslatedText("Select Three Resources That You Use Most Often");
 
-  const categories = [
-    { id: 'children-family', name: 'Children & Family' },
-    { id: 'food', name: 'Food' },
-    { id: 'education', name: 'Education' },
-    { id: 'finance-employment', name: 'Finance & Employment' },
-    { id: 'housing', name: 'Housing' },
-    { id: 'healthcare', name: 'Health Care' },
-    { id: 'hygiene-household', name: 'Hygiene & Household' },
-    { id: 'mental-wellness', name: 'Mental Wellness' },
-    { id: 'legal-assistance', name: 'Legal Assistance' },
-    { id: 'substance-use', name: 'Substance Use' },
-    { id: 'transportation', name: 'Transportation' },
-    { id: 'young-adults', name: 'Young Adults' }
-  ];
-
-  const handleLocationRequest = async () => {
-    try {
-      setUseLocation(true);
-      triggerHaptic('light');
-    } catch (error) {
-      console.error('Location access failed:', error);
-    }
-  };
-
+  // Steps
   const handleNext = () => {
-    triggerHaptic('light');
+    triggerHaptic && triggerHaptic("light");
     setCurrentStep(currentStep + 1);
+    Keyboard.dismiss();
   };
 
   const handleCategoryToggle = (categoryId: string) => {
-    triggerHaptic('light');
-    setSelectedCategories(prev => {
-      if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId);
-      } else if (prev.length < 3) {
-        return [...prev, categoryId];
-      }
-      return prev;
-    });
+    triggerHaptic && triggerHaptic("light");
+    setSelectedCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : prev.length < 3 ? [...prev, categoryId] : prev
+    );
   };
 
   const handleComplete = () => {
-    triggerHaptic('medium');
+    triggerHaptic && triggerHaptic("medium");
     onComplete({
       zipCode: zipCode || undefined,
       useLocation,
-      favoriteCategories: selectedCategories
+      favoriteCategories: selectedCategories,
     });
+    Keyboard.dismiss();
   };
 
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
-      opacity: 0
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 300 : -300,
-      opacity: 0
-    })
+  const handleLocationRequest = () => {
+    setUseLocation(true);
+    triggerHaptic && triggerHaptic("light");
   };
 
+  // Replace with your logo asset source
+  // If using expo-asset, import assets properly.
+  const logoSource = require("@sb211/assets/new-211-logo.png");
+
+  // UI
+  if (currentStep === 1) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.center}>
+          <Image source={logoSource} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.logoDesc}>Get connected. Get Help.</Text>
+        </View>
+        <View style={styles.center}>
+          <Text style={styles.welcome}>
+            {welcomeText}{"\n"}{santaBarbaraText}
+          </Text>
+          <Text style={styles.description}>{descriptionText}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.primaryBtn}
+          onPress={handleNext}
+          accessibilityLabel="Continue to next step"
+        >
+          <Text style={styles.primaryBtnText}>{letsGoText}</Text>
+          <MaterialIcons name="arrow-forward" size={22} color="#fff" style={{ marginLeft: 7 }} />
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Step 2: Location/Category selection
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
-      <AnimatePresence mode="wait">
-        {currentStep === 1 && (
-          <motion.div
-            key="step1"
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: reduceMotion ? 0 : 0.3 }}
-            className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.center}>
+        <Image source={logoSource} style={styles.logoSmall} resizeMode="contain" />
+        <Text style={styles.logoDesc}>Get connected. Get Help.</Text>
+      </View>
+      <Text style={styles.sectionTitle}>{findResourcesText}</Text>
+      <Text style={styles.description}>{locationDescText}</Text>
+      <TextInput
+        style={styles.input}
+        placeholder={enterZipText}
+        value={zipCode}
+        onChangeText={setZipCode}
+        keyboardType="numeric"
+        maxLength={5}
+        accessibilityLabel="Enter zip code"
+      />
+      <TouchableOpacity
+        style={styles.outlineBtn}
+        onPress={handleLocationRequest}
+        accessibilityLabel="Use current location"
+      >
+        <Ionicons name="location" size={20} color="#005191" style={{ marginRight: 8 }} />
+        <Text style={styles.outlineBtnText}>{useLocationText}</Text>
+      </TouchableOpacity>
+      <Text style={styles.sectionTitle}>{selectThreeText}</Text>
+      <View style={styles.categoriesSection}>
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
+            style={[
+              styles.categoryBtn,
+              selectedCategories.includes(category.id) && styles.categoryBtnSelected,
+              selectedCategories.length >= 3 && !selectedCategories.includes(category.id) ? styles.categoryBtnDisabled : {},
+            ]}
+            onPress={() => handleCategoryToggle(category.id)}
+            disabled={!selectedCategories.includes(category.id) && selectedCategories.length >= 3}
+            accessibilityLabel={`Select ${category.name} category`}
           >
-            <div className="mb-12">
-              <img 
-                src={new211Logo} 
-                alt="Santa Barbara County 211 Logo" 
-                className="h-32 w-auto mx-auto mb-8"
-              />
-              <p className="text-sm text-gray-600 mt-2">Get connected. Get Help.</p>
-            </div>
-            <div className="mb-12">
-              <h1 className="text-2xl font-normal text-gray-800 mb-4">
-                {welcomeText}<br />{santaBarbaraText}
-              </h1>
-              <p className="text-gray-600 px-4">
-                {descriptionText}
-              </p>
-            </div>
-            <Button 
-              onClick={handleNext}
-              className="bg-[#FFB351] hover:bg-[#e89d42] text-white px-12 py-3 rounded-lg flex items-center gap-2"
-              aria-label="Continue to next step"
+            <Text
+              style={[
+                styles.categoryText,
+                selectedCategories.includes(category.id) && styles.categoryTextSelected
+              ]}
             >
-              {letsGoText}
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </motion.div>
-        )}
-
-        {/* Combined Step 2 */}
-        {currentStep === 2 && (
-          <motion.div
-            key="step2"
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: reduceMotion ? 0 : 0.3 }}
-            className="flex-1 flex flex-col items-center justify-center p-8 text-center"
-          >
-            <div className="mb-8">
-              <img 
-                src={new211Logo} 
-                alt="Santa Barbara County 211 Logo" 
-                className="h-24 w-auto mx-auto mb-4"
-              />
-              <p className="text-sm text-gray-600">Get connected. Get Help.</p>
-            </div>
-
-            {/* Location and Category Section */}
-            <div className="w-full max-w-md mx-auto">
-              {/* Location Entry */}
-              <h2 className="text-xl font-normal text-gray-800 mb-4">{findResourcesText}</h2>
-              <p className="text-gray-600 mb-4">{locationDescText}</p>
-              <Input
-                type="text"
-                placeholder={enterZipText}
-                value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-                className="w-full mb-4"
-                aria-label="Enter zip code"
-              />
-              <Button
-                variant="outline"
-                onClick={handleLocationRequest}
-                className="w-full flex items-center gap-2 mb-4"
-                aria-label="Use current location"
-              >
-                <MapPin className="w-4 h-4" />
-                {useLocationText}
-              </Button>
-
-              {/* Category Selection */}
-              <h2 className="text-lg font-normal text-gray-800 mb-4 mt-8">
-                {selectThreeText}
-              </h2>
-              <div className="flex-1 overflow-y-auto mb-4 max-h-52">
-                <div className="space-y-3 max-w-sm mx-auto">
-                  {categories.map((category) => (
-                    <div 
-                      key={category.id}
-                      className="flex items-center space-x-3 p-2"
-                    >
-                      <Checkbox
-                        id={category.id}
-                        checked={selectedCategories.includes(category.id)}
-                        onCheckedChange={() => handleCategoryToggle(category.id)}
-                        disabled={!selectedCategories.includes(category.id) && selectedCategories.length >= 3}
-                        aria-label={`Select ${category.name} category`}
-                      />
-                      <label 
-                        htmlFor={category.id}
-                        className="text-gray-800 cursor-pointer flex-1"
-                      >
-                        {category.name}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 text-center font-medium mb-4">
-                {selectedCategories.length > 0 
-                  ? `${selectedCategories.length} of 3 categories selected`
-                  : "Categories are optional - click Continue to proceed"
-                }
-              </p>
-              <Button 
-                onClick={handleComplete}
-                className="bg-[#005191] hover:bg-[#004080] text-white w-full py-4 flex items-center justify-center gap-2 font-bold text-xl shadow-xl border-4 border-yellow-400"
-                aria-label="Complete onboarding and go to home screen"
-                data-testid="onboarding-complete-button"
-              >
-                🏠 Continue to Home
-                <ArrowRight className="w-6 h-6" />
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleComplete}
-                className="bg-[#FFB351] text-white border-[#FFB351] hover:bg-[#e89d42] w-full mt-3"
-                aria-label="Skip location and category setup"
-              >
-                {skipText}
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+              {category.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Text style={styles.selectedCount}>
+        {selectedCategories.length > 0
+          ? `${selectedCategories.length} of 3 categories selected`
+          : "Categories are optional - click Continue to proceed"}
+      </Text>
+      <TouchableOpacity
+        style={styles.primaryBtn}
+        onPress={handleComplete}
+        accessibilityLabel="Complete onboarding and go to home screen"
+      >
+        <MaterialIcons name="home" size={22} color="#fff" style={{ marginRight: 10 }} />
+        <Text style={styles.primaryBtnText}>Continue to Home</Text>
+        <MaterialIcons name="arrow-forward" size={22} color="#fff" style={{ marginLeft: 7 }} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.skipBtn}
+        onPress={handleComplete}
+        accessibilityLabel="Skip location and category setup"
+      >
+        <Text style={styles.skipBtnText}>{skipText}</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#fff", padding: 22 },
+  scrollContent: { paddingBottom: 30 },
+  center: { alignItems: "center", marginVertical: 10 },
+  logo: { width: 120, height: 120, marginBottom: 10 },
+  logoSmall: { width: 80, height: 80, marginBottom: 10 },
+  logoDesc: { color: "#666", fontSize: 14, marginBottom: 12 },
+  welcome: { fontSize: 22, color: "#222", textAlign: "center", marginBottom: 8, fontWeight: "600" },
+  description: { color: "#555", fontSize: 15, marginBottom: 15, textAlign: "center" },
+  sectionTitle: { fontSize: 16, fontWeight: "600", color: "#007aff", marginVertical: 8, textAlign: "center" },
+  input: {
+    borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 13, fontSize: 16,
+    marginVertical: 10, backgroundColor: "#f5fafd"
+  },
+  outlineBtn: {
+    flexDirection: "row", alignItems: "center", borderColor: "#005191", borderWidth: 2,
+    borderRadius: 8, paddingVertical: 11, paddingHorizontal: 16, marginVertical: 5
+  },
+  outlineBtnText: { color: "#005191", fontWeight: "700", fontSize: 16 },
+  categoriesSection: {
+    flexDirection: "row", flexWrap: "wrap", justifyContent: "center", padding: 4,
+    marginVertical: 10, gap: 7
+  },
+  categoryBtn: {
+    borderRadius: 8, borderWidth: 1, borderColor: "#ccc", padding: 8,
+    margin: 6, backgroundColor: "#f7f7fa", minWidth: 110, minHeight: 40, alignItems: "center",
+    justifyContent: "center"
+  },
+  categoryBtnSelected: { backgroundColor: "#00519122", borderColor: "#005191" },
+  categoryBtnDisabled: { backgroundColor: "#eee", borderColor: "#ddd" },
+  categoryText: { fontSize: 15, color: "#222", fontWeight: "600" },
+  categoryTextSelected: { color: "#005191" },
+  selectedCount: { textAlign: "center", color: "#555", fontSize: 13, marginVertical: 7 },
+  primaryBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    backgroundColor: "#005191", borderColor: "#FFB351", borderWidth: 2,
+    borderRadius: 10, paddingVertical: 15, marginVertical: 11,
+    shadowColor: "#000", shadowOpacity: 0.13, shadowRadius: 8, elevation: 9
+  },
+  primaryBtnText: { color: "#fff", fontSize: 17, fontWeight: "700" },
+  skipBtn: {
+    alignItems: "center", justifyContent: "center", backgroundColor: "#FFB351",
+    borderRadius: 9, paddingVertical: 11, marginVertical: 7,
+    shadowColor: "#000", shadowOpacity: 0.09, shadowRadius: 5, elevation: 6
+  },
+  skipBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+});
+

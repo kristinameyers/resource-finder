@@ -1,13 +1,9 @@
 {
-  "name": "@sb211/hooks",
+  "name": "@sb211/geocalc",
   "version": "1.0.0",
-  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -b"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0"
   }
 }

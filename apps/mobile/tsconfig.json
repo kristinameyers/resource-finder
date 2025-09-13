@@ -5,14 +5,13 @@
     "jsx": "react-native",
     "allowJs": true,
     "strict": true,
-    "baseUrl": ".",                       // root of mobile app
+    "baseUrl": ".",
+    "outDir": "dist",
     "paths": {
       "@sb211/hooks/*": ["../../packages/hooks/src/*"],
       "@sb211/components/*": ["../../packages/components/src/*"],
       "@sb211/shared-schema": ["../../packages/shared-schema/src/index.ts"]
-      // add other package mappings as needed
-    },
-    // …other existing options…
+    }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "../../packages/lib/src/utils.ts", "../../packages/lib/src/session.ts", "../../packages/lib/src/queryClient.ts", "../../packages/lib/src/distanceUtils.ts"]
 }

@@ -21,16 +21,22 @@
         "packages/shared-schema/src/*"
       ],
       "@assets/*": [
-        "apps/client/src/assets/*"
+        "apps/mobile/assets/*"
       ],
       "@sb211/hooks/*": [
         "packages/hooks/src/*"
+      ],
+      "@sb211/lib/*": [
+        "packages/lib/src/*"
       ],
       "@sb211/components/*": [
         "packages/components/src/*"
       ],
       "@sb211/shared-schema": [
         "packages/shared-schema/src/index.ts"
+      ],
+      "@sb211/assets/*": [
+        "apps/mobile/assets/*"
       ]
     },
     "typeRoots": [

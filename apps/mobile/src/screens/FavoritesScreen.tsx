@@ -6,27 +6,60 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslatedText } from '@sb211/components/TranslatedText'; // Adapt import if needed
+import { useQuery } from '@tanstack/react-query';
+import { fetchCategories, fetchSubcategories } from '@sb211/lib/api';
+import { Category, Subcategory } from '@sb211/shared-schema';
 
 interface FavoriteResource {
   id: string;
   name: string;
-  organization: string;
   description: string;
-  address: string;
-  phone: string;
+  categoryId: string;
+  subcategoryId?: string;
+  organization?: string;
+  address?: string;
+  phone?: string;
+  phoneNumbers?: {
+    main?: string;
+    [key: string]: any;
+  };
+  zipCode?: string;
+  distance?: number;
 }
 
+// Optionally typed navigation
 export default function FavoritesScreen({ navigation }: any) {
   const [favorites, setFavorites] = useState<FavoriteResource[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Translations
+  const { text: favoritesText } = useTranslatedText("My Favorites");
+  const { text: noFavoritesText } = useTranslatedText("No favorites yet");
+  const { text: noFavoritesDescText } = useTranslatedText("Start by adding resources to your favorites when browsing.");
+  const { text: removeText } = useTranslatedText("Remove from favorites");
+  const { text: viewDetailsText } = useTranslatedText("View Details");
+  // Add other translation hooks as needed...
+
+  // Fetch categories/subcategories for display
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
+  });
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ['subcategories'],
+    queryFn: () => fetchSubcategories('all'),
+  });
 
   useEffect(() => {
     loadFavorites();
   }, []);
 
+  // Load favorites from AsyncStorage (mobile)
   const loadFavorites = async () => {
     try {
       const storedFavorites = await AsyncStorage.getItem('favorites');
@@ -35,16 +68,32 @@ export default function FavoritesScreen({ navigation }: any) {
       }
     } catch (error) {
       console.error('Error loading favorites:', error);
+      setFavorites([]);
     } finally {
       setLoading(false);
     }
   };
 
   const removeFavorite = async (resourceId: string) => {
-    const updatedFavorites = favorites.filter(f => f.id !== resourceId);
-    setFavorites(updatedFavorites);
-    await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    try {
+      const updatedFavorites = favorites.filter(f => f.id !== resourceId);
+      setFavorites(updatedFavorites);
+      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+    }
   };
+
+  const clearAllFavorites = async () => {
+    setFavorites([]);
+    await AsyncStorage.removeItem('favorites');
+  };
+
+  const getCategoryName = (categoryId: string) =>
+    categories.find((c: Category) => c.id === categoryId)?.name || 'Unknown Category';
+
+  const getSubcategoryName = (subcategoryId?: string) =>
+    subcategories.find((s: Subcategory) => s.id === subcategoryId)?.name || '';
 
   const renderFavorite = ({ item }: { item: FavoriteResource }) => (
     <TouchableOpacity
@@ -53,14 +102,32 @@ export default function FavoritesScreen({ navigation }: any) {
     >
       <View style={styles.favoriteContent}>
         <Text style={styles.favoriteName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.favoriteOrg} numberOfLines={1}>{item.organization}</Text>
+        <View style={styles.categoryRow}>
+          <Text style={styles.categoryTag}>{getCategoryName(item.categoryId)}</Text>
+          {item.subcategoryId && (
+            <Text style={styles.subcategoryTag}> | {getSubcategoryName(item.subcategoryId)}</Text>
+          )}
+          {item.distance !== undefined && (
+            <Text style={styles.distanceTag}> | {item.distance.toFixed(1)} mi</Text>
+          )}
+        </View>
         <Text style={styles.favoriteDescription} numberOfLines={2}>{item.description}</Text>
+        {item.address && (
+          <Text style={styles.favoriteAddress} numberOfLines={1}>
+            <Ionicons name="location-outline" size={14} color="#888" /> {item.address}
+          </Text>
+        )}
+        {item.phone && (
+          <Text style={styles.favoritePhone} numberOfLines={1}>
+            <Ionicons name="call-outline" size={14} color="#888" /> {item.phone}
+          </Text>
+        )}
       </View>
       <TouchableOpacity
         style={styles.removeButton}
         onPress={() => removeFavorite(item.id)}
       >
-        <Ionicons name="heart" size={24} color="#D0021B" />
+        <Ionicons name="heart-dislike" size={24} color="#D0021B" />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -69,10 +136,10 @@ export default function FavoritesScreen({ navigation }: any) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Favorites</Text>
+          <Text style={styles.headerTitle}>{favoritesText}</Text>
         </View>
         <View style={styles.centerContainer}>
-          <Text>Loading...</Text>
+          <ActivityIndicator size="large" color="#005191" />
         </View>
       </SafeAreaView>
     );
@@ -81,31 +148,36 @@ export default function FavoritesScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Favorites</Text>
+        <Text style={styles.headerTitle}>{favoritesText}</Text>
       </View>
-
       {favorites.length === 0 ? (
         <View style={styles.centerContainer}>
           <Ionicons name="heart-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>No favorites yet</Text>
-          <Text style={styles.emptySubtext}>
-            Save resources to access them quickly here
-          </Text>
+          <Text style={styles.emptyText}>{noFavoritesText}</Text>
+          <Text style={styles.emptySubtext}>{noFavoritesDescText}</Text>
         </View>
       ) : (
-        <FlatList
-          data={favorites}
-          renderItem={renderFavorite}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-        />
+        <>
+          <FlatList
+            data={favorites}
+            renderItem={renderFavorite}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+          />
+          <View style={styles.clearAllContainer}>
+            <TouchableOpacity onPress={clearAllFavorites} style={styles.clearAllButton}>
+              <Text style={styles.clearAllButtonText}>Clear All Favorites</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // re-use or adapt your original styles here
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -164,19 +236,64 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 3,
   },
-  favoriteOrg: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 3,
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryTag: {
+    backgroundColor: '#e0e7ef',
+    color: '#005191',
+    paddingHorizontal: 6,
+    borderRadius: 4,
+    fontSize: 12,
+  },
+  subcategoryTag: {
+    backgroundColor: '#e9eef4',
+    color: '#007aff',
+    paddingHorizontal: 6,
+    borderRadius: 4,
+    fontSize: 12,
+  },
+  distanceTag: {
+    fontSize: 12,
+    color: '#222',
+    marginLeft: 4,
   },
   favoriteDescription: {
     fontSize: 13,
     color: '#333',
+    marginVertical: 3,
+  },
+  favoriteAddress: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  favoritePhone: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
   },
   removeButton: {
     padding: 5,
   },
   separator: {
     height: 10,
+  },
+  clearAllContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  clearAllButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#D0021B',
+  },
+  clearAllButtonText: {
+    color: '#D0021B',
+    fontWeight: '600',
   },
 });

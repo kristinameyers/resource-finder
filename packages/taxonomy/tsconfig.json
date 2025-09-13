@@ -10,7 +10,14 @@
     "moduleResolution": "node",
     "jsx": "preserve",
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+  { "path": "../shared-schema" },
+  { "path": "../components" },
+  { "path": "../lib" },
+  { "path": "../hooks" }
+]
 }

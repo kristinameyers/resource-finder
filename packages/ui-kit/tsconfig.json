@@ -4,10 +4,14 @@
     "composite": true,
     "declaration": true,
     "outDir": "dist",
-    "target": "ES2015",
-    "module": "ESNext",
-    "jsx": "react-native",
-    "esModuleInterop": true
+    "rootDir": "src",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../hooks" },
+    { "path": "../components" },
+    { "path": "../lib" },
+    { "path": "../shared-schema" }
+  ]
 }
