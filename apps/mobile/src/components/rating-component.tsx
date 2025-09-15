@@ -1,7 +1,7 @@
 import { ThumbsUp, ThumbsDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useVoting } from "@/hooks/use-voting";
-import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
+import { useVoting } from "../hooks/use-voting";
+import { cn } from "../utils";
 
 interface RatingComponentProps {
   resourceId: string;

@@ -1,4 +1,4 @@
-import { Resource, Category, Subcategory } from "@shared/schema";
+import { Resource, Category, Subcategory } from "@sb211/shared-schema/src";
 import {
   Card,
   CardContent,
@@ -6,14 +6,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "./ui/card";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { ExternalLink, MapPin, Heart, Eye, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../utils";
 import { Link } from "wouter";
 import FavoriteButton from "./favorite-button";
-import { useTranslatedText } from "@/components/TranslatedText";
+import { useTranslatedText } from "./TranslatedText";
 
 // Helper components for translations
 function ResourceDescription({ text }: { text: string }) {

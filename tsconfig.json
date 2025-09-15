@@ -12,11 +12,27 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "@sb211/hooks/*": ["apps/mobile/src/hooks/*"],
-      "@sb211/lib/*": ["packages/lib/src/*"],
-      "@sb211/components/*": ["packages/components/src/*"],
-      "@sb211/shared-schema": ["packages/shared-schema/src/index.ts"],
-      "@sb211/assets/*": ["apps/mobile/assets/*"]
+      "@sb211/hooks/*": [
+        "apps/mobile/src/hooks/*"
+      ],
+      "@sb211/lib/*": [
+        "packages/lib/src/*"
+      ],
+      "@sb211/components/*": [
+        "packages/components/src/*"
+      ],
+      "@sb211/shared-schema": [
+        "packages/shared-schema/src"
+      ],
+      "@sb211/shared-schema/*": [
+        "packages/shared-schema/src/*"
+      ],
+      "@sb211/assets/*": [
+        "apps/mobile/assets/*"
+      ],
+      "@/*": [
+        "apps/mobile/src/*"
+      ]
     },
     "typeRoots": [
       "./node_modules/@types"

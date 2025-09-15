@@ -1,7 +1,8 @@
-import { Category } from "@shared/schema";
-import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "@/components/category-icons";
-import { useTranslatedText } from "@/components/TranslatedText";
-import { useAccessibility } from "@/contexts/AccessibilityContext";
+// Update the import path to the correct location of Category type
+import { Category } from "@sb211/shared-schema/src";
+import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "./category-icons";
+import { useTranslatedText } from "./TranslatedText";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 // Category translation helper component
 function CategoryLabel({ category }: { category: Category }) {

@@ -1,8 +1,8 @@
 import { Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useFavorites } from '@/hooks/use-favorites';
-import { cn } from '@/lib/utils';
-import { useTranslatedText } from '@/components/TranslatedText';
+import { Button } from './ui/button';
+import { useFavorites } from '../hooks/use-favorites';
+import { cn } from '../utils';
+import { useTranslatedText } from './TranslatedText';
 
 interface FavoriteButtonProps {
   resourceId: string;

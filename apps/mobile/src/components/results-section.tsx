@@ -1,10 +1,10 @@
-import { Resource, Category, Subcategory } from "@shared/schema";
+import { Resource, Category, Subcategory } from "@sb211/shared-schema/src";
 import ResourceCard from "./resource-card";
 import ResourceCardSkeleton from "./resource-card-skeleton";
 import SortControl from "./sort-control";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 import { AlertTriangle, Loader2, Clock } from "lucide-react";
-import { useTranslatedText } from "@/components/TranslatedText";
+import { useTranslatedText } from "./TranslatedText";
 
 interface ResultsSectionProps {
   resources: Resource[];

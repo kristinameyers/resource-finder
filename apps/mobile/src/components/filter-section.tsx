@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import { Category, Subcategory, Location } from "@shared/schema";
+import { Category, Subcategory, Location } from "@sb211/shared-schema/src";
 import { 
   Card, 
   CardContent, 
   CardDescription, 
   CardHeader, 
   CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { 
   Select, 
   SelectContent, 
@@ -18,17 +18,17 @@ import {
   SelectLabel, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
+} from "./ui/select";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { LocationState } from "@/hooks/use-location";
+} from "./ui/accordion";
+import { LocationState } from "../hooks/use-location";
 import { Check, Loader2, MapPin } from "lucide-react";
 import * as icons from "lucide-react";
-import { useTranslatedText } from "@/components/TranslatedText";
+import { useTranslatedText } from "./TranslatedText";
 
 // Category translation helper component
 function CategoryName({ category }: { category: Category }) {
