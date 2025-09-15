@@ -1,17 +1,18 @@
 import { apiRequest } from "./queryClient";
-import { 
-  type Resource, 
-  type Category,
-  type Subcategory, 
-  type Location, 
-  type ResourcesResponse,
-  type CategoriesResponse,
-  type SubcategoriesResponse,
-  type LocationsResponse
+import {
+  Resource,
+  Category,
+  Subcategory,
+  Location,
+  User,
+  InsertUser,
+  resourceSchema,
+  users
 } from "@shared/schema";
 
 // Type for the enhanced resources response
-interface EnhancedResourcesResponse extends ResourcesResponse {
+interface EnhancedResources {
+  resources: Resource[];
   total: number;
   source: string;
 }
@@ -80,7 +81,7 @@ export async function fetchResources(
       throw new Error(`RATE_LIMITED: ${errorData.message || 'API rate limit exceeded. Please wait and try again.'}`);
     }
     
-    const data = await response.json() as EnhancedResourcesResponse;
+    const data = await response.json() as EnhancedResources;
     return {
       resources: data.resources,
       total: data.total || data.resources.length,
@@ -115,6 +116,11 @@ export async function fetchResourceById(id: string, useApi: boolean = true): Pro
 }
 
 // Fetch available categories
+// Define the expected response type for categories
+interface CategoriesResponse {
+  categories: Category[];
+}
+
 export async function fetchCategories(): Promise<Category[]> {
   try {
     const response = await apiRequest('GET', '/api/categories');
@@ -124,6 +130,11 @@ export async function fetchCategories(): Promise<Category[]> {
     console.error('Error fetching categories:', error);
     throw error;
   }
+}
+
+// Define the expected response type for subcategories
+interface SubcategoriesResponse {
+  subcategories: Subcategory[];
 }
 
 // Fetch subcategories for a specific category
@@ -136,6 +147,11 @@ export async function fetchSubcategories(categoryId: string): Promise<Subcategor
     console.error('Error fetching subcategories:', error);
     throw error;
   }
+}
+
+// Define the expected response type for locations
+interface LocationsResponse {
+  locations: Location[];
 }
 
 // Fetch available locations

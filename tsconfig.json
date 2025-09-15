@@ -7,38 +7,16 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "incremental": true,
-    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
-    "baseUrl": ".",
-    "moduleResolution": "nodenext",
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
+    "moduleResolution": "node",
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "apps/client/src/*"
-      ],
-      "@shared/*": [
-        "packages/shared-schema/src/*"
-      ],
-      "@assets/*": [
-        "apps/mobile/assets/*"
-      ],
-      "@sb211/hooks/*": [
-        "packages/hooks/src/*"
-      ],
-      "@sb211/lib/*": [
-        "packages/lib/src/*"
-      ],
-      "@sb211/components/*": [
-        "packages/components/src/*"
-      ],
-      "@sb211/shared-schema": [
-        "packages/shared-schema/src/index.ts"
-      ],
-      "@sb211/assets/*": [
-        "apps/mobile/assets/*"
-      ]
+      "@sb211/hooks/*": ["apps/mobile/src/hooks/*"],
+      "@sb211/lib/*": ["packages/lib/src/*"],
+      "@sb211/components/*": ["packages/components/src/*"],
+      "@sb211/shared-schema": ["packages/shared-schema/src/index.ts"],
+      "@sb211/assets/*": ["apps/mobile/assets/*"]
     },
     "typeRoots": [
       "./node_modules/@types"
@@ -54,7 +32,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "client", // if you’ve migrated client into apps/client
+    "client",
     "**/dist",
     "**/.expo",
     "**/.next"

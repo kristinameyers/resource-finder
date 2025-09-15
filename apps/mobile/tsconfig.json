@@ -1,24 +1,31 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
+    "module": "esnext",
     "jsx": "react-native",
     "target": "esnext",
-    "module": "esnext",
     "allowJs": true,
     "strict": true,
     "baseUrl": ".",
     "outDir": "dist",
     "paths": {
       "@sb211/hooks/*": [
-        "../../packages/hooks/src/*"
+        "../../apps/mobile/src/hooks/*"
       ],
       "@sb211/components/*": [
         "../../packages/components/src/*"
       ],
       "@sb211/shared-schema": [
         "../../packages/shared-schema/src/index.ts"
+      ],
+      "@sb211/lib/*": [
+        "../../packages/lib/src/*"
+      ],
+      "@sb211/assets/*": [
+        "../../apps/mobile/assets/*"
       ]
     }
   },
@@ -27,7 +34,7 @@
     "../../packages/lib/src/utils.ts",
     "../../packages/lib/src/session.ts",
     "../../packages/lib/src/queryClient.ts",
-    "../../packages/lib/src/distanceUtils.ts"
-  ],
-  "extends": "expo/tsconfig.base"
+    "../../packages/lib/src/distanceUtils.ts",
+    "../../packages/lib/src/api.ts"
+  ]
 }

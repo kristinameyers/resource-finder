@@ -1,5 +1,3 @@
-// packages/ui-kit/src/Home.tsx
-
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   ScrollView,
@@ -12,7 +10,6 @@ import {
   ImageSourcePropType,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-
 import { useResources } from '@sb211/hooks/use-resources';
 import { useLocation } from '@sb211/hooks/use-location';
 import { useOnboarding } from '@sb211/hooks/use-onboarding';
@@ -27,7 +24,7 @@ export interface HomeProps {
   navigateTo: (route: string, params?: Record<string, any>) => void;
 }
 
-export function Home({ navigateTo }: HomeProps) {
+function Home({ navigateTo }: HomeProps) {
   // Onboarding & translation
   const { preferences } = useOnboarding();
   const { text: loadingText } = useTranslatedText('Loading...');
@@ -106,12 +103,16 @@ export function Home({ navigateTo }: HomeProps) {
   const handleCategorySelect = (id: string) => {
     setSelectedCategoryId(id);
     setSelectedSubcategoryId(null);
+    // Navigate to the "ResourcesList" screen, passing category param
+    navigateTo('ResourcesList', { category: id });
   };
   const handleKeywordSearch = () => {
     if (!keywordQuery.trim()) return;
     setSearchType('keyword');
     setSelectedCategoryId(null);
     setSelectedSubcategoryId(null);
+    // Optionally navigate to ResourcesList based on keyword
+    navigateTo('ResourcesList', { keyword: keywordQuery });
   };
   const handleUseLocation = async () => {
     setIsLocationLoading(true);
@@ -141,7 +142,7 @@ export function Home({ navigateTo }: HomeProps) {
             <TouchableOpacity
               key={cat.id}
               style={styles.item}
-              onPress={() => navigateTo('/resources', { category: cat.id })}
+              onPress={() => handleCategorySelect(cat.id)}
             >
               <Text style={styles.itemText}>{cat.name}</Text>
             </TouchableOpacity>
@@ -170,7 +171,7 @@ export function Home({ navigateTo }: HomeProps) {
             <TouchableOpacity
               key={res.id}
               style={styles.item}
-              onPress={() => navigateTo('/resources/' + res.id)}
+              onPress={() => navigateTo('ResourceDetail', { id: res.id })}
             >
               <Text style={styles.itemText}>{res.name}</Text>
             </TouchableOpacity>
@@ -184,6 +185,7 @@ export function Home({ navigateTo }: HomeProps) {
     </View>
   );
 }
+export default Home;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
