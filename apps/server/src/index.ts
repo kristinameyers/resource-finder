@@ -1,8 +1,23 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "../routes";
 import { setupVite, serveStatic, log } from "../vite";
 
 const app = express();
+
+// Enable CORS for mobile app development
+app.use(cors({
+  origin: [
+    "http://localhost:41915",
+    "http://localhost:3000",
+    "https://*.replit.dev",
+    "https://*.replit.app"
+  ],
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
