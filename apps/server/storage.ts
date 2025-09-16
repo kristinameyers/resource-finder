@@ -1,8 +1,7 @@
 // server/storage.ts
-import { users, type User, type InsertUser, type Resource, type Category, type Subcategory, type Location } from "@shared/schema";
+import { users, type User, type InsertUser, type Resource, type Category, type Subcategory, type Location } from "../../packages/types/src/shared-schema";
 import fetch from "node-fetch";
-import { calculateDistanceFromZipCodes } from "../../packages/taxonomy/src/zipCodes";
-import { getCoordinatesForZip } from "../../packages/geo/src/zipcode-db";
+import { calculateDistanceFromZipCodes, getCoordinatesFromZipCode as getCoordinatesForZip } from "../mobile/src/utils/distanceUtils";
 import {
   MAIN_CATEGORIES,
   getSubcategoriesForCategory,
