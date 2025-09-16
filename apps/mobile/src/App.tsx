@@ -7,7 +7,7 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 
 // Import the Home screen (default export) from the UI kit package
-import { Home } from "@sb211/ui-kit";
+import Home from "./components/ui-kit/Home";
  
 // Import screens with .tsx extension
 import SearchCategory from "./screens/SearchCategoryScreen";
@@ -21,7 +21,7 @@ import Settings from "./screens/SettingsScreen";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { OnboardingFlow } from "./components/onboarding/OnboardingFlow";
-import { SplashScreen } from "./components/SplashScreen";
+import { SplashScreen } from "./screens/SplashScreen";
 import { Toaster } from "./components/ui/toaster";
 import { useOnboarding } from "./hooks/use-onboarding";
 

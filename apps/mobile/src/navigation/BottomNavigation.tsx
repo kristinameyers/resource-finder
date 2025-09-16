@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Linking } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
-import { useTranslatedText } from "./TranslatedText";
+import { useTranslatedText } from "../components/TranslatedText";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 
 function UsersIcon() {

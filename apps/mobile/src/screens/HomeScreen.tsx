@@ -9,7 +9,7 @@ import {
   SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MAIN_CATEGORIES } from '../../../packages/taxonomy/index';
+import { MAIN_CATEGORIES } from '../utils/index';
 
 const categoryIconMap = {
   'housing': { icon: 'home', color: '#4A90E2' },

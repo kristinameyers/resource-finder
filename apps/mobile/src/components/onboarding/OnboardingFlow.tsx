@@ -1,4 +1,4 @@
-// OnboardingFlow.tsx
+// apps/mobile/src/components/onboarding/OnboardingFlow.tsx
 
 import React, { useState } from 'react';
 import {
@@ -14,9 +14,7 @@ import {
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-
-// Use relative or properly aliased imports for modules; adjust as needed.
-import { useTranslatedText } from '../../components/TranslatedText'; // or @sb211/components/TranslatedText if alias is configured
+import { useTranslatedText } from '../../components/TranslatedText';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 
 export interface OnboardingPreferences {
@@ -96,16 +94,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     if (triggerHaptic) triggerHaptic('light');
   };
 
-  // Import the image via static import if possible.
-  // Place your logo at: apps/mobile/assets/new-211-logo.png
-  // Then import like this:
-  import logoSource from '../../assets/new-211-logo.png';
-
   if (currentStep === 1) {
     return (
       <View style={styles.container}>
         <View style={styles.center}>
-          <Image source={logoSource} style={styles.logo} resizeMode="contain" />
+          <Image source={require('../../assets/new-211-logo.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.logoDesc}>Get connected. Get Help.</Text>
         </View>
         <View style={styles.center}>
@@ -129,7 +122,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.center}>
-        <Image source={logoSource} style={styles.logoSmall} resizeMode="contain" />
+        <Image source={require('../../assets/new-211-logo.png')} style={styles.logoSmall} resizeMode="contain" />
         <Text style={styles.logoDesc}>Get connected. Get Help.</Text>
       </View>
       <Text style={styles.sectionTitle}>{findResourcesText}</Text>

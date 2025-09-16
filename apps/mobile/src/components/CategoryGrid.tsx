@@ -1,6 +1,6 @@
 // Update the import path to the correct location of Category type
-import { Category } from "@sb211/shared-schema/src";
-import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "./category-icons";
+import { Category } from "../types/shared-schema";
+import { getCategoryIcon, getCategoryColorClass, getCustomCategoryIcon } from "./CategoryIcons";
 import { useTranslatedText } from "./TranslatedText";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 

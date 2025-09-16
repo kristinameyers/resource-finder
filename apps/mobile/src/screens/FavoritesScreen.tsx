@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslatedText } from '@sb211/components/TranslatedText'; // Adapt import if needed
+import { useTranslatedText } from '../components/TranslatedText'; // Adapt import if needed
 import { useQuery } from '@tanstack/react-query';
-import { fetchCategories, fetchSubcategories } from '@sb211/lib/api';
-import { Category, Subcategory } from '@sb211/shared-schema';
+import { fetchCategories, fetchSubcategories } from 'src/utils/api';
+import { Category, Subcategory } from '../types/shared-schema';
 
 interface FavoriteResource {
   id: string;

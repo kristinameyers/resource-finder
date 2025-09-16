@@ -2,13 +2,21 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet, Keyboard } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useToast } from "@sb211/hooks/use-toast";
-import { getCoordinatesFromZipCode } from "@sb211/lib/distanceUtils";
-import { useTranslatedText } from "@sb211/components/TranslatedText";
+import { getCoordinatesFromZipCode } from "src/utils/distanceUtils";
+import { useTranslatedText } from "../components/TranslatedText";
+
+type RootStackParamList = {
+  Home: undefined;
+  SearchCategory: undefined;
+  SearchKeyword: undefined;
+  // ... add other screens as needed
+};
 
 export default function UpdateLocationScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [zipCode, setZipCode] = useState("");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const { toast } = useToast();

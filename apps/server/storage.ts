@@ -7,7 +7,7 @@ import {
   MAIN_CATEGORIES,
   getSubcategoriesForCategory,
   getCategoryByKeyword
-} from "../../packages/taxonomy/src/officialTaxonomy";
+} from "../mobile/src/data/officialTaxonomy";
 
 // Helper function to calculate distance between coordinates
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {

@@ -1,4 +1,4 @@
-import { type Category, type Location } from "@sb211/shared-schema/src";
+import { type Category, type Location } from "../types/shared-schema";
 
 interface MobileMenuProps {
   isOpen: boolean;

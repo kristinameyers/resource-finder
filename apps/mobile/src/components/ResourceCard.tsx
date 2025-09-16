@@ -1,4 +1,4 @@
-import { Resource, Category, Subcategory } from "@sb211/shared-schema/src";
+import { Resource, Category, Subcategory } from "../types/shared-schema";
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import { Badge } from "./ui/badge";
 import { ExternalLink, MapPin, Heart, Eye, Info } from "lucide-react";
 import { cn } from "../utils";
 import { Link } from "wouter";
-import FavoriteButton from "./favorite-button";
+import FavoriteButton from "./FavoriteButton";
 import { useTranslatedText } from "./TranslatedText";
 
 // Helper components for translations

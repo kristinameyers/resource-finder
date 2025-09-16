@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons'; // Substitute icons as needed
-import { useLanguage, Language } from "@sb211/contexts/LanguageContext";
-import { useAccessibility } from "@sb211/contexts/AccessibilityContext";
+import { useLanguage, Language } from "../contexts/LanguageContext";
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 export default function SettingsScreen() {
   const { currentLanguage, setLanguage, translateBatch, clearTranslationCache } = useLanguage();
@@ -94,7 +94,7 @@ export default function SettingsScreen() {
       {/* Accessibility Settings */}
       <View style={styles.card}>
         <View style={styles.cardHeaderRow}>
-          <Ionicons name="md-accessibility" size={22} color="#005191" />
+          <Ionicons name="accessibility" size={22} color="#005191" />
           <Text style={styles.cardHeaderTitle}>{t('Accessibility')}</Text>
         </View>
         <Text style={styles.cardDesc}>{t('Customize display and interaction settings')}</Text>

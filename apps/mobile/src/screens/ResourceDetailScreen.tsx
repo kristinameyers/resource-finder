@@ -3,9 +3,9 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, Activity
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'; // Add more icons as needed
-import { useTranslatedText } from '@sb211/components/TranslatedText';
-import { fetchResourceById, fetchResourceDetails, fetchCategories, fetchSubcategories } from '@sb211/lib/api';
-import { Category, Subcategory } from '@sb211/shared-schema';
+import { useTranslatedText } from '../components/TranslatedText';
+import { fetchResourceById, fetchResourceDetails, fetchCategories, fetchSubcategories } from 'src/utils/api';
+import { Category, Subcategory } from '../types/shared-schema';
 
 // Replace PhoneDetails type with actual type
 interface Resource {

@@ -31,10 +31,10 @@
   },
   "include": [
     "src/**/*",
-    "../../packages/lib/src/utils.ts",
-    "../../packages/lib/src/session.ts",
-    "../../packages/lib/src/queryClient.ts",
-    "../../packages/lib/src/distanceUtils.ts",
-    "../../packages/lib/src/api.ts"
+    "src/utils/utils.ts",
+    "src/utils/session.ts",
+    "src/utils/queryClient.ts",
+    "src/utils/distanceUtils.ts",
+    "src/utils/api.ts"
   ]
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation as useRouter } from 'wouter';
 import { Menu, ChevronLeft, MapPin, X } from 'lucide-react';
-import { TranslatedText } from './TranslatedText';
+import { TranslatedText } from '../components/TranslatedText';
 import sbLogo from '@/assets/new-211-logo.png';
 
 interface GlobalNavbarProps {

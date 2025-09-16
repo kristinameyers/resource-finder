@@ -1,7 +1,7 @@
-import { Resource, Category, Subcategory } from "@sb211/shared-schema/src";
-import ResourceCard from "./resource-card";
-import ResourceCardSkeleton from "./resource-card-skeleton";
-import SortControl from "./sort-control";
+import { Resource, Category, Subcategory } from "../types/shared-schema";
+import ResourceCard from "./ResourceCard";
+import ResourceCardSkeleton from "./ResourceCardSkeleton";
+import SortControl from "./SortControl";
 import { Button } from "./ui/button";
 import { AlertTriangle, Loader2, Clock } from "lucide-react";
 import { useTranslatedText } from "./TranslatedText";

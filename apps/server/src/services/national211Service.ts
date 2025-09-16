@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { Resource } from '../../shared/schema';
-import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, getMainCategoryTaxonomyCode, MAIN_CATEGORIES } from '../../../../packages/taxonomy/src/officialTaxonomy';
+import { getCategoryByTaxonomyCode, getOfficialSubcategoryTaxonomyCode, getMainCategoryTaxonomyCode, MAIN_CATEGORIES } from '../../../mobile/src/data/officialTaxonomy';
 import { calculateDistanceFromZipCodes } from "../../../../packages/taxonomy/src/zipCodes";
 
 // Define interfaces for the 211 API responses

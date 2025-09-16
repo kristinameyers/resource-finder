@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { MAIN_CATEGORIES } from '../../packages/taxonomy/src/index';
+import { MAIN_CATEGORIES } from '../mobile/src/data/index';
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from "@tanstack/react-query";
-import { filterSantaBarbaraAndSort } from "@sb211/lib/distanceUtils"; // You may need to move this to a package.
+import { filterSantaBarbaraAndSort } from "src/utils/distanceUtils"; // You may need to move this to a package.
 import { useTranslatedText } from "@sb211/components/TranslatedText";
 
 interface Resource {

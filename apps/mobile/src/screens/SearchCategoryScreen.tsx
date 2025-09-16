@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useTranslatedText } from "@sb211/components/TranslatedText";
+import { useTranslatedText } from "../components/TranslatedText";
 
 interface Category {
   id: string;

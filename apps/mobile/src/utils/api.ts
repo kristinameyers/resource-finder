@@ -8,7 +8,7 @@ import {
   InsertUser,
   resourceSchema,
   users
-} from "@shared/schema";
+} from "../types/shared-schema";
 
 // Type for the enhanced resources response
 interface EnhancedResources {

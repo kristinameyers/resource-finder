@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, Linking, StyleSheet } from 'react-native';
-import { Card } from '@sb211/ui-kit';
-import { useTranslatedText } from '../hooks/useTranslatedText';
+import { Card } from '../components/ui/card';
+import { useTranslatedText } from '../components/TranslatedText';
 
 export default function About() {
   const { text: aboutTitleText } = useTranslatedText("About 2-1-1");

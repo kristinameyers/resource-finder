@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Category, Subcategory, Location } from "@sb211/shared-schema/src";
+import { Category, Subcategory, Location } from "../types/shared-schema";
 import { 
   Card, 
   CardContent, 
