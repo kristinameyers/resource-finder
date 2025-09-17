@@ -2,36 +2,54 @@
   "hash": "b1c75045",
   "configHash": "06508f4a",
   "lockfileHash": "caf3c91f",
-  "browserHash": "6be2ccd5",
+  "browserHash": "6d6da698",
   "optimized": {
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "8ad04c9e",
+      "fileHash": "ead6def2",
       "needsInterop": true
     },
     "react-dom": {
       "src": "../../node_modules/react-dom/index.js",
       "file": "react-dom.js",
-      "fileHash": "d73f1541",
+      "fileHash": "17640e08",
       "needsInterop": true
     },
     "react/jsx-dev-runtime": {
       "src": "../../node_modules/react/jsx-dev-runtime.js",
       "file": "react_jsx-dev-runtime.js",
-      "fileHash": "0b979253",
+      "fileHash": "1073b927",
       "needsInterop": true
     },
     "react/jsx-runtime": {
       "src": "../../node_modules/react/jsx-runtime.js",
       "file": "react_jsx-runtime.js",
-      "fileHash": "6d8cd8e7",
+      "fileHash": "c6ba180e",
       "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "bfc4b3a5",
+      "needsInterop": true
+    },
+    "@tanstack/react-query": {
+      "src": "../../node_modules/@tanstack/react-query/build/modern/index.js",
+      "file": "@tanstack_react-query.js",
+      "fileHash": "4357eaaa",
+      "needsInterop": false
     }
   },
   "chunks": {
-    "chunk-PPPDML7B": {
-      "file": "chunk-PPPDML7B.js"
+    "chunk-ZMO67JDM": {
+      "file": "chunk-ZMO67JDM.js"
+    },
+    "chunk-3O5TZM6N": {
+      "file": "chunk-3O5TZM6N.js"
+    },
+    "chunk-3SWVGPSG": {
+      "file": "chunk-3SWVGPSG.js"
     }
   }
 }
