@@ -14,7 +14,7 @@ import { useResources } from '@sb211/hooks/use-resources';
 import { useLocation } from '@sb211/hooks/use-location';
 import { useOnboarding } from '@sb211/hooks/use-onboarding';
 import { useTranslatedText } from '../../components/TranslatedText';
-import { fetchCategories } from '../../utils/api';
+import { fetchCategories } from '../../api/api';
 import { Category, Subcategory } from '../../types/shared-schema';
 import new211LogoPng from '@sb211/assets/new-211-logo.png';
 

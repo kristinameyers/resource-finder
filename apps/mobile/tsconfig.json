@@ -35,6 +35,6 @@
     "src/utils/session.ts",
     "src/utils/queryClient.ts",
     "src/utils/distanceUtils.ts",
-    "src/utils/api.ts"
+    "src/api/api.ts"
   ]
 }

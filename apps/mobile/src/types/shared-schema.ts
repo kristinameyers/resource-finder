@@ -19,7 +19,6 @@ export interface Resource {
   thumbsUp: number;
   thumbsDown: number;
   userVote?: 'up' | 'down' | null;
-  
   // Enhanced 211 API fields
   applicationProcess?: string;
   documents?: string;
@@ -66,11 +65,13 @@ export interface User {
   id: string;
   email?: string;
   name?: string;
+  username?: string; // <--- Added here
 }
 
 export interface InsertUser {
   email?: string;
   name?: string;
+  username?: string; // <--- Added here if needed for creation
 }
 
 // Zod schemas for validation
