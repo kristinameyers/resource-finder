@@ -310,9 +310,13 @@
     
     <div style="margin: 15px auto; max-width: 600px; padding: 10px; background: #f0f8ff; border-radius: 8px;">
       <label style="font-weight: bold; margin-right: 10px;">Your Location:</label>
-      <input type="text" id="userZipCode" value="93101" maxlength="5" 
+      <input type="text" id="userZipCode" value="" placeholder="Enter ZIP" maxlength="5" 
              style="width: 80px; padding: 5px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px;"
-             onchange="updateUserLocation(this.value)" />
+             oninput="handleZipCodeInput(this.value)" />
+      <button id="saveZipButton" onclick="saveZipCode()" 
+              style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px; display: none;">
+        Save
+      </button>
       <button onclick="useCurrentLocation()" 
               style="background: #005191; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
         📍 Use My Current Zip Code
@@ -367,7 +371,8 @@
     let activeCategory = null;
     let activeSubcategory = null;
     let currentCategoryId = null;
-    let userZipCode = '93101'; // Default to Santa Barbara downtown
+    let userZipCode = localStorage.getItem('savedZipCode') || ''; // Load saved zip or start empty
+    let savedZipCode = localStorage.getItem('savedZipCode') || ''; // Track the saved value
     
     // Load categories
     async function loadCategories() {
@@ -444,7 +449,56 @@
         plainText;
     }
     
-    // Update user location
+    // Handle zip code input changes
+    function handleZipCodeInput(zipCode) {
+      const saveButton = document.getElementById('saveZipButton');
+      const normalizedZip = zipCode ? zipCode.replace(/\D/g, '').slice(0, 5) : '';
+      
+      if (normalizedZip.length === 5 && ZIP_CODE_DATA[normalizedZip]) {
+        // Valid 5-digit zip code
+        if (normalizedZip !== savedZipCode) {
+          // Show Save/Update button if different from saved
+          saveButton.style.display = 'inline-block';
+          saveButton.textContent = savedZipCode ? 'Update' : 'Save';
+        } else {
+          // Hide button if same as saved
+          saveButton.style.display = 'none';
+        }
+      } else {
+        // Invalid or incomplete zip
+        saveButton.style.display = 'none';
+      }
+    }
+    
+    // Save the zip code
+    function saveZipCode() {
+      const zipInput = document.getElementById('userZipCode');
+      const zipCode = zipInput.value;
+      const normalizedZip = zipCode ? zipCode.replace(/\D/g, '').slice(0, 5) : '';
+      const saveButton = document.getElementById('saveZipButton');
+      const statusEl = document.getElementById('locationStatus');
+      
+      if (normalizedZip.length === 5 && ZIP_CODE_DATA[normalizedZip]) {
+        // Save to localStorage and update variables
+        localStorage.setItem('savedZipCode', normalizedZip);
+        savedZipCode = normalizedZip;
+        userZipCode = normalizedZip;
+        
+        // Hide save button
+        saveButton.style.display = 'none';
+        
+        // Show success message
+        statusEl.textContent = '✅ ZIP code saved';
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 2000);
+        
+        // Refresh display in all active views
+        refreshDistancesInAllViews();
+      }
+    }
+    
+    // Update user location (called from other functions)
     function updateUserLocation(zipCode) {
       // Normalize zip code to 5 digits (remove non-digits and take first 5)
       const normalizedZip = zipCode ? zipCode.replace(/\D/g, '').slice(0, 5) : null;
@@ -1011,6 +1065,11 @@
     // Initialize
     loadCategories();
     loadResources();
+    
+    // Initialize zip code field from localStorage
+    if (userZipCode) {
+      document.getElementById('userZipCode').value = userZipCode;
+    }
   </script>
 </body>
 </html>
