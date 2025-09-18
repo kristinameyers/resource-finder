@@ -432,6 +432,7 @@
     
     // Called when clicking a main category
     async function searchByCategory(categoryId, categoryName) {
+      console.log('searchByCategory called:', categoryId, categoryName);
       currentCategoryId = categoryId;
       activeCategory = categoryName;
       
@@ -440,9 +441,11 @@
       const categoryData = categories.find(c => c.id === categoryId);
       
       if (!categoryData) {
-        console.error('Category not found');
+        console.error('Category not found:', categoryId);
         return;
       }
+      
+      console.log('Category data:', categoryData);
       
       // Hide categories and show results section
       document.getElementById('categories').classList.add('hidden');
@@ -454,12 +457,15 @@
       try {
         const subResponse = await fetch(`${API_BASE}/subcategories?categoryId=${categoryId}`);
         const subcategories = await subResponse.json();
+        console.log('Subcategories loaded:', subcategories.length);
         populateSubcategoryDropdown(subcategories);
         
         // Search by category keywords
         const keywords = categoryData.keywords ? categoryData.keywords.join(' ') : categoryName;
+        console.log('Searching with keywords:', keywords);
         const response = await fetch(`${API_BASE}/resources?keyword=${encodeURIComponent(keywords)}`);
         const resources = await response.json();
+        console.log('Resources found:', resources.length, resources);
         displaySearchResults(resources);
       } catch (error) {
         console.error('Error searching by category:', error);
