@@ -21,16 +21,20 @@ async function callNational211API(endpoint, params = {}) {
       return resolve({ resources: [] });
     }
 
-    // Build query string with correct parameters - locationMode is required!
+    // Build query string WITHOUT locationMode (it goes in headers!)
     const queryParams = new URLSearchParams({
       keywords: params.keywords || '',
-      distance: '25',
-      size: '10',
-      keywordIsTaxonomyCode: params.keywordIsTaxonomyCode || 'false',
-      location: params.location || 'Santa Barbara County, CA',
-      locationMode: params.locationMode || 'Within' // API requires this!
+      distance: params.distance || '25',
+      location: params.location || '93101' // Default to Santa Barbara zip
     });
     
+    // Only add optional parameters if provided
+    if (params.keywordIsTaxonomyCode) {
+      queryParams.append('keywordIsTaxonomyCode', params.keywordIsTaxonomyCode);
+    }
+    if (params.size) {
+      queryParams.append('size', params.size);
+    }
     if (params.offset) {
       queryParams.append('offset', params.offset.toString());
     }
@@ -38,10 +42,15 @@ async function callNational211API(endpoint, params = {}) {
     const apiUrl = `${NATIONAL_211_API_URL}/${endpoint}?${queryParams}`;
     console.log('Calling 211 API:', apiUrl);
 
+    // Determine locationMode based on location type
+    const isZipOrCoords = /^\d{5}$/.test(params.location) || /^[\d.-]+,[\d.-]+$/.test(params.location);
+    const locationMode = isZipOrCoords ? 'Within' : 'Serving';
+
     https.get(apiUrl, {
       headers: {
         'Api-Key': NATIONAL_211_API_KEY,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'locationMode': locationMode // This goes in HEADERS, not query params!
       }
     }, (res) => {
       let data = '';
@@ -60,6 +69,10 @@ async function callNational211API(endpoint, params = {}) {
             resolve({ results: [] });
           } else {
             console.log(`211 API returned ${parsed.results?.length || 0} results`);
+            // Log first result structure for debugging
+            if (parsed.results && parsed.results.length > 0) {
+              console.log('First result structure:', JSON.stringify(parsed.results[0], null, 2).substring(0, 500));
+            }
             resolve(parsed);
           }
         } catch (error) {
@@ -79,37 +92,66 @@ async function callNational211API(endpoint, params = {}) {
 function transformNational211Resource(apiResource) {
   if (!apiResource) return null;
 
-  // Extract main service info
-  const service = apiResource.service || {};
-  const organization = apiResource.organization || {};
-  const location = apiResource.location || {};
+  // Use the actual field names from the 211 API response
+  const name = apiResource.nameService || 
+               apiResource.nameOrganization || 
+               apiResource.nameServiceAtLocation ||
+               'Unknown Service';
   
-  // Get phone numbers
-  const phones = apiResource.phones || [];
-  const primaryPhone = phones.find(p => p.type === 'voice') || phones[0];
+  const description = apiResource.descriptionService || 
+                     apiResource.descriptionOrganization || 
+                     apiResource.descriptionServiceAtLocation ||
+                     '';
   
-  // Get address
-  const address = location.address || {};
-  const fullAddress = [
-    address.address_1,
-    address.city,
-    address.state_province,
-    address.postal_code
-  ].filter(Boolean).join(', ');
+  // Location information
+  const locationName = apiResource.nameLocation || '';
+  
+  // Address fields
+  const address1 = apiResource.address1Physical || apiResource.address1 || '';
+  const city = apiResource.cityPhysical || apiResource.city || 'Santa Barbara';
+  const state = apiResource.stateProvincePhysical || apiResource.stateProvince || 'CA';
+  const zipCode = apiResource.postalCodePhysical || apiResource.postalCode || '93101';
+  
+  const fullAddress = [address1, city, state, zipCode].filter(Boolean).join(', ') || locationName;
+  
+  // Phone information
+  const phone = apiResource.phoneNumbers?.[0] || 
+               apiResource.phone || 
+               '';
+  
+  // Website
+  const website = apiResource.urlOrganization || 
+                 apiResource.urlService || 
+                 apiResource.website || 
+                 '';
+  
+  // Hours - typically in schedule field
+  const hours = apiResource.scheduleText || 
+               apiResource.hours || 
+               'Call for hours';
+  
+  // Service categories from taxonomies
+  const taxonomies = apiResource.taxonomies || [];
+  const category = taxonomies[0]?.name || 
+                  apiResource.serviceArea || 
+                  'Community Services';
+  
+  const services = taxonomies.map(t => t.name || '').filter(Boolean);
 
   return {
-    id: apiResource.id || `res-${Date.now()}`,
-    name: service.name || organization.name || 'Unknown Service',
-    description: service.description || '',
-    category: service.service_taxonomies?.[0]?.taxonomy_name || 'General',
-    location: fullAddress || 'Santa Barbara, CA',
-    zipCode: address.postal_code || '93101',
-    phone: primaryPhone?.number || '',
-    website: organization.url || '',
-    hours: service.regular_schedule?.[0]?.opens_at ? 
-      `${service.regular_schedule[0].opens_at}-${service.regular_schedule[0].closes_at}` : 
-      'Call for hours',
-    services: service.service_taxonomies?.map(t => t.taxonomy_name) || [],
+    id: apiResource.idServiceAtLocation || 
+        apiResource.idService || 
+        apiResource.id || 
+        `res-${Date.now()}`,
+    name: name,
+    description: description.substring(0, 500), // Limit description length
+    category: category,
+    location: fullAddress,
+    zipCode: zipCode,
+    phone: phone,
+    website: website,
+    hours: hours,
+    services: services,
     isActive: true,
     createdAt: new Date()
   };
