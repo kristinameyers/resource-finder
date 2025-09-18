@@ -68,7 +68,14 @@ async function callNational211API(endpoint, params = {}) {
             console.log(`211 API returned ${parsed.results?.length || 0} results`);
             // Log first result structure for debugging
             if (parsed.results && parsed.results.length > 0) {
-              console.log('First result structure:', JSON.stringify(parsed.results[0], null, 2).substring(0, 500));
+              const firstResult = parsed.results[0];
+              console.log('First result address structure:', {
+                hasAddress: !!firstResult.address,
+                addressType: typeof firstResult.address,
+                postalCode: firstResult.address?.postalCode || 'not found in address',
+                addressCity: firstResult.address?.city || 'not found in address',
+                addressStreet: firstResult.address?.streetAddress || 'not found in address'
+              });
             }
             resolve(parsed);
           }
@@ -103,12 +110,24 @@ function transformNational211Resource(apiResource) {
   // Location information
   const locationName = apiResource.nameLocation || '';
   
-  // Address fields
-  const address1 = apiResource.address1Physical || apiResource.address1 || '';
-  const city = apiResource.cityPhysical || apiResource.city || 'Santa Barbara';
-  const state = apiResource.stateProvincePhysical || apiResource.stateProvince || 'CA';
+  // Address fields - check both top-level and nested address object
+  const address1 = apiResource.address1Physical || 
+                  apiResource.address1 || 
+                  apiResource.address?.streetAddress || 
+                  '';
+  const city = apiResource.cityPhysical || 
+              apiResource.city || 
+              apiResource.address?.city || 
+              'Santa Barbara';
+  const state = apiResource.stateProvincePhysical || 
+               apiResource.stateProvince || 
+               apiResource.address?.stateProvince || 
+               'CA';
   // Normalize ZIP code to 5 digits (remove ZIP+4 and non-digits) - NO DEFAULT
-  const rawZip = apiResource.postalCodePhysical || apiResource.postalCode || '';
+  const rawZip = apiResource.postalCodePhysical || 
+                 apiResource.postalCode || 
+                 apiResource.address?.postalCode || 
+                 '';
   const zipCode = rawZip ? rawZip.replace(/\D/g, '').slice(0, 5) : null;
   
   const fullAddress = [address1, city, state, zipCode].filter(Boolean).join(', ') || locationName;
