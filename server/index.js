@@ -107,9 +107,9 @@ function transformNational211Resource(apiResource) {
   const address1 = apiResource.address1Physical || apiResource.address1 || '';
   const city = apiResource.cityPhysical || apiResource.city || 'Santa Barbara';
   const state = apiResource.stateProvincePhysical || apiResource.stateProvince || 'CA';
-  // Normalize ZIP code to 5 digits (remove ZIP+4 and non-digits)
-  const rawZip = apiResource.postalCodePhysical || apiResource.postalCode || '93101';
-  const zipCode = rawZip.replace(/\D/g, '').slice(0, 5) || '93101';
+  // Normalize ZIP code to 5 digits (remove ZIP+4 and non-digits) - NO DEFAULT
+  const rawZip = apiResource.postalCodePhysical || apiResource.postalCode || '';
+  const zipCode = rawZip ? rawZip.replace(/\D/g, '').slice(0, 5) : null;
   
   const fullAddress = [address1, city, state, zipCode].filter(Boolean).join(', ') || locationName;
   
