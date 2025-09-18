@@ -13,6 +13,7 @@ class MemStorage {
   constructor() {
     this.resources = [];
     this.categories = [];
+    this.subcategories = {};
     this.votes = [];
     this.seedData();
   }
@@ -112,6 +113,131 @@ class MemStorage {
       }
     ];
 
+    // Add subcategories for each main category
+    this.subcategories = {
+      'housing': [
+        { id: 'housing', name: 'Housing', categoryId: 'housing' },
+        { id: 'homeless-shelters', name: 'Homeless Shelters', categoryId: 'housing' },
+        { id: 'low-income-rental', name: 'Low Income Rental Housing', categoryId: 'housing' },
+        { id: 'section-8', name: 'Section 8 Voucher / Housing Authority', categoryId: 'housing' },
+        { id: 'temporary-mailing', name: 'Temporary Mailing Address', categoryId: 'housing' },
+        { id: 'bathing-facilities', name: 'Bathing Facilities', categoryId: 'housing' },
+        { id: 'home-maintenance', name: 'Home Maintenance & Repair', categoryId: 'housing' },
+        { id: 'furniture', name: 'Furniture', categoryId: 'housing' }
+      ],
+      'food': [
+        { id: 'food', name: 'Food', categoryId: 'food' },
+        { id: 'food-pantries', name: 'Food Pantries', categoryId: 'food' },
+        { id: 'hot-meals', name: 'Hot Meals', categoryId: 'food' },
+        { id: 'calfresh', name: 'CalFresh (Food Stamps)', categoryId: 'food' },
+        { id: 'wic', name: 'Women, Infants, & Children (WIC)', categoryId: 'food' },
+        { id: 'senior-nutrition', name: 'Senior Nutrition Programs', categoryId: 'food' },
+        { id: 'school-meals', name: 'School Meal Programs', categoryId: 'food' },
+        { id: 'emergency-food', name: 'Emergency Food Assistance', categoryId: 'food' }
+      ],
+      'healthcare': [
+        { id: 'healthcare', name: 'Health Care', categoryId: 'healthcare' },
+        { id: 'clinics', name: 'Clinics & Urgent Care', categoryId: 'healthcare' },
+        { id: 'hospitals', name: 'Hospitals', categoryId: 'healthcare' },
+        { id: 'medicaid', name: 'Medicaid', categoryId: 'healthcare' },
+        { id: 'medicare', name: 'Medicare', categoryId: 'healthcare' },
+        { id: 'prescription', name: 'Prescription Drug Assistance', categoryId: 'healthcare' },
+        { id: 'immunizations', name: 'Immunizations', categoryId: 'healthcare' },
+        { id: 'reproductive', name: 'Reproductive Health', categoryId: 'healthcare' }
+      ],
+      'mental-wellness': [
+        { id: 'mental-wellness', name: 'Mental Wellness', categoryId: 'mental-wellness' },
+        { id: 'general-counseling', name: 'General Counseling', categoryId: 'mental-wellness' },
+        { id: 'crisis-hotlines', name: 'Crisis Intervention Hotlines', categoryId: 'mental-wellness' },
+        { id: 'bereavement', name: 'Bereavement and Grief Counseling', categoryId: 'mental-wellness' },
+        { id: 'marriage-counseling', name: 'Marriage Counseling', categoryId: 'mental-wellness' },
+        { id: 'suicide-counseling', name: 'Suicide Counseling', categoryId: 'mental-wellness' },
+        { id: 'youth-counseling', name: 'Adolescent/Youth Counseling', categoryId: 'mental-wellness' }
+      ],
+      'substance-use': [
+        { id: 'substance-use', name: 'Substance Use', categoryId: 'substance-use' },
+        { id: 'alcohol-detox', name: 'Alcohol Detoxification', categoryId: 'substance-use' },
+        { id: 'drug-detox', name: 'Drug Detoxification', categoryId: 'substance-use' },
+        { id: 'alcoholism-counseling', name: 'Alcoholism Counseling', categoryId: 'substance-use' },
+        { id: 'drug-counseling', name: 'Drug Abuse Counseling', categoryId: 'substance-use' },
+        { id: 'sober-living', name: 'Sober Living Homes', categoryId: 'substance-use' },
+        { id: 'support-groups', name: 'Support Groups', categoryId: 'substance-use' }
+      ],
+      'children-family': [
+        { id: 'children-family', name: 'Children & Family', categoryId: 'children-family' },
+        { id: 'child-care', name: 'Child Care Provider Referrals', categoryId: 'children-family' },
+        { id: 'head-start', name: 'Head Start', categoryId: 'children-family' },
+        { id: 'child-abuse-prevention', name: 'Child Abuse Prevention', categoryId: 'children-family' },
+        { id: 'child-custody', name: 'Child Custody', categoryId: 'children-family' },
+        { id: 'child-support', name: 'Child Support', categoryId: 'children-family' },
+        { id: 'parent-programs', name: 'Expecting & New Parent Programs', categoryId: 'children-family' },
+        { id: 'recreation', name: 'Recreation', categoryId: 'children-family' }
+      ],
+      'young-adults': [
+        { id: 'young-adults', name: 'Young Adults', categoryId: 'young-adults' },
+        { id: 'dropout-prevention', name: 'Drop Out Prevention', categoryId: 'young-adults' },
+        { id: 'gang-prevention', name: 'Gang Prevention', categoryId: 'young-adults' },
+        { id: 'violence-prevention', name: 'Youth Violence Prevention', categoryId: 'young-adults' },
+        { id: 'mentoring', name: 'Child & Youth Mentoring Programs', categoryId: 'young-adults' },
+        { id: 'youth-development', name: 'Youth Development', categoryId: 'young-adults' },
+        { id: 'recreational-clubs', name: 'Recreational Clubs', categoryId: 'young-adults' }
+      ],
+      'legal-assistance': [
+        { id: 'legal-assistance', name: 'Legal Assistance', categoryId: 'legal-assistance' },
+        { id: 'general-legal', name: 'General Legal Aid', categoryId: 'legal-assistance' },
+        { id: 'immigration-legal', name: 'Immigration Legal Services', categoryId: 'legal-assistance' },
+        { id: 'birth-certificates', name: 'Birth Certificates', categoryId: 'legal-assistance' },
+        { id: 'identification', name: 'Identification Cards', categoryId: 'legal-assistance' },
+        { id: 'voter-registration', name: 'Voter Registration', categoryId: 'legal-assistance' },
+        { id: 'crime-victim', name: 'Crime Victim Assistance', categoryId: 'legal-assistance' },
+        { id: 'restraining-orders', name: 'Restraining Orders', categoryId: 'legal-assistance' }
+      ],
+      'utilities': [
+        { id: 'utilities', name: 'Utilities', categoryId: 'utilities' },
+        { id: 'electric-payment', name: 'Electric Service Payment Assistance', categoryId: 'utilities' },
+        { id: 'gas-payment', name: 'Gas Service Payment Assistance', categoryId: 'utilities' },
+        { id: 'utility-payment', name: 'Utility Payment Assistance', categoryId: 'utilities' },
+        { id: 'internet-provider', name: 'Internet Provider', categoryId: 'utilities' },
+        { id: 'energy-efficient', name: 'Energy Efficient Home Improvement', categoryId: 'utilities' }
+      ],
+      'transportation': [
+        { id: 'transportation', name: 'Transportation', categoryId: 'transportation' },
+        { id: 'bus-services', name: 'Bus Services', categoryId: 'transportation' },
+        { id: 'rail-transportation', name: 'Rail Transportation', categoryId: 'transportation' },
+        { id: 'disability-transport', name: 'Disability Related Transportation', categoryId: 'transportation' },
+        { id: 'medical-transport', name: 'Medical Transportation', categoryId: 'transportation' },
+        { id: 'senior-ride', name: 'Senior Ride Programs', categoryId: 'transportation' },
+        { id: 'paratransit', name: 'Paratransit/Community Ride Programs', categoryId: 'transportation' }
+      ],
+      'hygiene-household': [
+        { id: 'hygiene-household', name: 'Hygiene & Household', categoryId: 'hygiene-household' },
+        { id: 'disaster-supplies', name: 'Disaster Related Supplies', categoryId: 'hygiene-household' },
+        { id: 'grooming-supplies', name: 'Grooming Supplies', categoryId: 'hygiene-household' },
+        { id: 'hazardous-materials', name: 'Household Hazardous Materials Info', categoryId: 'hygiene-household' },
+        { id: 'animal-control', name: 'Animal Control', categoryId: 'hygiene-household' }
+      ],
+      'finance-employment': [
+        { id: 'finance-employment', name: 'Finance & Employment', categoryId: 'finance-employment' },
+        { id: 'job-assistance', name: 'Job Assistance Centers', categoryId: 'finance-employment' },
+        { id: 'vocational-rehab', name: 'Vocational Rehabilitation', categoryId: 'finance-employment' },
+        { id: 'calworks', name: 'CalWorks', categoryId: 'finance-employment' },
+        { id: 'general-relief', name: 'General Relief', categoryId: 'finance-employment' },
+        { id: 'veteran-benefits', name: 'Veteran Benefits Assistance', categoryId: 'finance-employment' },
+        { id: 'credit-counseling', name: 'Credit Counseling', categoryId: 'finance-employment' },
+        { id: 'vita-programs', name: 'VITA Tax Programs', categoryId: 'finance-employment' }
+      ],
+      'education': [
+        { id: 'education', name: 'Education', categoryId: 'education' },
+        { id: 'computer-literacy', name: 'Computer Literacy Training', categoryId: 'education' },
+        { id: 'financial-literacy', name: 'Financial Literacy', categoryId: 'education' },
+        { id: 'esl', name: 'English as a Second Language', categoryId: 'education' },
+        { id: 'technical-schools', name: 'Technical/Trade Schools', categoryId: 'education' },
+        { id: 'school-readiness', name: 'School Readiness Programs', categoryId: 'education' },
+        { id: 'financial-aid', name: 'Student Financial Aid', categoryId: 'education' },
+        { id: 'tutoring', name: 'Tutoring', categoryId: 'education' }
+      ]
+    };
+
     this.resources = [
       {
         id: 'res-1',
@@ -177,6 +303,10 @@ class MemStorage {
 
   async getCategories() {
     return this.categories.filter(c => c.isActive);
+  }
+
+  async getSubcategories(categoryId) {
+    return this.subcategories[categoryId] || [];
   }
 
   async getVotesForResource(resourceId) {
@@ -338,6 +468,16 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/categories' && req.method === 'GET') {
       const categories = await storage.getCategories();
       return sendJSON(res, categories);
+    }
+
+    // Subcategories endpoint
+    if (pathname === '/api/subcategories' && req.method === 'GET') {
+      const { categoryId } = query;
+      if (!categoryId) {
+        return sendError(res, 'categoryId parameter required', 400);
+      }
+      const subcategories = await storage.getSubcategories(categoryId);
+      return sendJSON(res, subcategories);
     }
 
     // Voting endpoints

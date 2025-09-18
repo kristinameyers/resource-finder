@@ -196,6 +196,88 @@
       text-align: center;
       color: #666;
     }
+    
+    .subcategories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+      animation: slideIn 0.3s ease-in-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .subcategories-header {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .subcategories-title {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .back-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s;
+    }
+    
+    .back-button:hover {
+      background: #5468d4;
+    }
+    
+    .subcategory-card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      border: 2px solid transparent;
+    }
+    
+    .subcategory-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border-color: #667eea;
+    }
+    
+    .subcategory-card.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    .subcategory-name {
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -213,6 +295,14 @@
       <div class="loading">Loading categories...</div>
     </div>
     
+    <div id="subcategoriesSection" class="hidden">
+      <div class="subcategories-header">
+        <div class="subcategories-title" id="subcategoriesTitle">Select a Subcategory</div>
+        <button class="back-button" onclick="hideSubcategories()">← Back to Categories</button>
+      </div>
+      <div class="subcategories" id="subcategories"></div>
+    </div>
+    
     <div class="resources" id="resources">
       <div class="loading">Loading resources...</div>
     </div>
@@ -222,6 +312,8 @@
     const API_BASE = '/api';
     let allResources = [];
     let activeCategory = null;
+    let activeSubcategory = null;
+    let currentCategoryId = null;
     
     // Load categories
     async function loadCategories() {
@@ -256,7 +348,7 @@
       };
       
       container.innerHTML = categories.map(cat => `
-        <div class="category-card" data-category="${cat.name}" onclick="filterByCategory('${cat.name}')">
+        <div class="category-card" data-category="${cat.id}" data-category-name="${cat.name}" onclick="showSubcategories('${cat.id}', '${cat.name}')">
           <div class="category-icon">${icons[cat.icon] || icons.default}</div>
           <div class="category-name">${cat.name}</div>
           <div class="category-description">${cat.description || ''}</div>
@@ -329,23 +421,68 @@
       `).join('');
     }
     
-    // Filter by category
-    function filterByCategory(category) {
+    // Show subcategories for a category
+    async function showSubcategories(categoryId, categoryName) {
+      currentCategoryId = categoryId;
+      activeCategory = categoryName;
+      
+      // Hide categories and show subcategories section
+      document.getElementById('categories').classList.add('hidden');
+      document.getElementById('subcategoriesSection').classList.remove('hidden');
+      document.getElementById('subcategoriesTitle').textContent = `${categoryName} - Select a Service`;
+      
+      // Load subcategories
+      try {
+        const response = await fetch(`${API_BASE}/subcategories?categoryId=${categoryId}`);
+        const subcategories = await response.json();
+        displaySubcategories(subcategories);
+        
+        // Load resources for this category
+        loadResources('', categoryName);
+      } catch (error) {
+        console.error('Error loading subcategories:', error);
+        document.getElementById('subcategories').innerHTML = '<div class="error">Failed to load subcategories</div>';
+      }
+    }
+    
+    // Display subcategories
+    function displaySubcategories(subcategories) {
+      const container = document.getElementById('subcategories');
+      
+      if (!subcategories || subcategories.length === 0) {
+        container.innerHTML = '<div class="no-results">No subcategories available</div>';
+        return;
+      }
+      
+      container.innerHTML = subcategories.map(sub => `
+        <div class="subcategory-card" data-subcategory="${sub.id}" onclick="filterBySubcategory('${sub.id}', '${sub.name}')">
+          <div class="subcategory-name">${sub.name}</div>
+        </div>
+      `).join('');
+    }
+    
+    // Filter by subcategory
+    function filterBySubcategory(subcategoryId, subcategoryName) {
       // Update active state
-      document.querySelectorAll('.category-card').forEach(card => {
-        if (card.dataset.category === category) {
-          if (card.classList.contains('active')) {
-            card.classList.remove('active');
-            activeCategory = null;
-            loadResources(document.getElementById('searchInput').value);
-          } else {
-            document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-            activeCategory = category;
-            loadResources('', category);
-          }
-        }
+      document.querySelectorAll('.subcategory-card').forEach(card => {
+        card.classList.remove('active');
       });
+      document.querySelector(`[data-subcategory="${subcategoryId}"]`)?.classList.add('active');
+      
+      activeSubcategory = subcategoryId;
+      
+      // For now, filter by category name (since we don't have subcategory filtering in the backend yet)
+      loadResources('', activeCategory);
+    }
+    
+    // Hide subcategories and go back to categories
+    window.hideSubcategories = function() {
+      document.getElementById('subcategoriesSection').classList.add('hidden');
+      document.getElementById('categories').classList.remove('hidden');
+      activeCategory = null;
+      activeSubcategory = null;
+      currentCategoryId = null;
+      loadResources();
     }
     
     // Search functionality
@@ -353,6 +490,10 @@
     document.getElementById('searchInput').addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
+        // If in subcategory view, go back to main view
+        if (currentCategoryId) {
+          hideSubcategories();
+        }
         // Clear category selection when searching
         document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
         activeCategory = null;
