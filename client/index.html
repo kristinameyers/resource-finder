@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Santa Barbara 211 Resource Finder</title>
+  <script src="zipCodeData.js"></script>
   <style>
     * {
       margin: 0;
@@ -298,6 +299,18 @@
       <p>Find Community Resources Near You</p>
     </header>
     
+    <div style="margin: 15px auto; max-width: 600px; padding: 10px; background: #f0f8ff; border-radius: 8px;">
+      <label style="font-weight: bold; margin-right: 10px;">Your Location:</label>
+      <input type="text" id="userZipCode" value="93101" maxlength="5" 
+             style="width: 80px; padding: 5px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px;"
+             onchange="updateUserLocation(this.value)" />
+      <button onclick="useCurrentLocation()" 
+              style="background: #005191; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+        📍 Use My Current Zip Code
+      </button>
+      <span id="locationStatus" style="margin-left: 10px; color: #666;"></span>
+    </div>
+    
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Search for resources..." />
     </div>
@@ -345,6 +358,7 @@
     let activeCategory = null;
     let activeSubcategory = null;
     let currentCategoryId = null;
+    let userZipCode = '93101'; // Default to Santa Barbara downtown
     
     // Load categories
     async function loadCategories() {
@@ -421,6 +435,107 @@
         plainText;
     }
     
+    // Update user location
+    function updateUserLocation(zipCode) {
+      // Normalize zip code to 5 digits
+      const normalizedZip = normalizeZipCode(zipCode);
+      
+      if (normalizedZip && ZIP_CODE_DATA[normalizedZip]) {
+        userZipCode = normalizedZip;
+        document.getElementById('userZipCode').value = normalizedZip;
+        document.getElementById('locationStatus').textContent = '✓ Location updated';
+        setTimeout(() => {
+          document.getElementById('locationStatus').textContent = '';
+        }, 2000);
+        
+        // Refresh display in all active views
+        refreshDistancesInAllViews();
+      } else {
+        document.getElementById('locationStatus').textContent = '❌ Invalid zip code';
+        setTimeout(() => {
+          document.getElementById('locationStatus').textContent = '';
+        }, 3000);
+      }
+    }
+    
+    // Refresh distances in all active views
+    function refreshDistancesInAllViews() {
+      // Refresh main resource list if visible
+      const resourcesEl = document.getElementById('resources');
+      if (resourcesEl && !document.getElementById('categories').classList.contains('hidden')) {
+        if (allResources.length > 0) {
+          displayResources(allResources);
+        }
+      }
+      
+      // Refresh search results if visible
+      const searchResultsEl = document.getElementById('searchResults');
+      const resultsSection = document.getElementById('resultsSection');
+      if (searchResultsEl && resultsSection && !resultsSection.classList.contains('hidden')) {
+        // Re-display current search results
+        const currentResults = Array.from(searchResultsEl.querySelectorAll('.resource-card')).map(card => {
+          const nameEl = card.querySelector('.resource-name');
+          const idMatch = nameEl?.getAttribute('onclick')?.match(/showResourceDetail\('([^']+)'\)/);
+          return idMatch ? { id: idMatch[1] } : null;
+        }).filter(Boolean);
+        
+        // If we have stored results, refresh them
+        if (window.currentSearchResults) {
+          displaySearchResults(window.currentSearchResults);
+        }
+      }
+      
+      // Refresh detail view if visible
+      const detailSection = document.getElementById('detailSection');
+      if (detailSection && !detailSection.classList.contains('hidden')) {
+        // Re-fetch and display current detail
+        if (window.currentDetailId) {
+          showResourceDetail(window.currentDetailId);
+        }
+      }
+    }
+    
+    // Use current GPS location
+    function useCurrentLocation() {
+      const statusEl = document.getElementById('locationStatus');
+      statusEl.textContent = 'Getting your location...';
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const closestZip = findClosestZipCode(latitude, longitude);
+            if (closestZip) {
+              userZipCode = closestZip;
+              document.getElementById('userZipCode').value = closestZip;
+              statusEl.textContent = `✓ Location set to ${closestZip}`;
+              setTimeout(() => {
+                statusEl.textContent = '';
+              }, 3000);
+              // Refresh display in all views
+              refreshDistancesInAllViews();
+            } else {
+              statusEl.textContent = '❌ Could not determine zip code';
+              setTimeout(() => {
+                statusEl.textContent = '';
+              }, 3000);
+            }
+          },
+          (error) => {
+            statusEl.textContent = '❌ Location access denied';
+            setTimeout(() => {
+              statusEl.textContent = '';
+            }, 3000);
+          }
+        );
+      } else {
+        statusEl.textContent = '❌ Geolocation not supported';
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      }
+    }
+    
     // Display resources
     function displayResources(resources) {
       const container = document.getElementById('resources');
@@ -432,10 +547,12 @@
       
       container.innerHTML = resources.map(resource => {
         const truncatedDescription = stripHtmlAndTruncate(resource.description, 250);
+        const distance = resource.zipCode ? calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
         
         return `
           <div class="resource-card">
             <div class="resource-name" onclick="showResourceDetail('${resource.id}')">${resource.name}</div>
+            ${distance !== null ? `<div style="color: #666; font-size: 0.9em; margin: 5px 0;">📍 ${distance} miles away</div>` : ''}
             ${truncatedDescription ? `<p class="resource-description">${truncatedDescription}</p>` : ''}
           </div>
         `;
@@ -474,6 +591,8 @@
         const data = await response.json();
         // Handle both old array format and new paginated format
         const resources = Array.isArray(data) ? data : (data.resources || []);
+        // Store results for refresh
+        window.currentSearchResults = resources;
         displaySearchResults(resources);
         
         // Set up infinite scroll if there are more results
@@ -539,10 +658,12 @@
       
       container.innerHTML = resources.map(res => {
         const truncatedDescription = stripHtmlAndTruncate(res.description, 250);
+        const distance = res.zipCode ? calculateZipCodeDistance(userZipCode, res.zipCode) : null;
         
         return `
           <div class="resource-card">
             <div class="resource-name" onclick="showResourceDetail('${res.id}')">${res.name}</div>
+            ${distance !== null ? `<div style="color: #666; font-size: 0.9em; margin: 5px 0;">📍 ${distance} miles away</div>` : ''}
             ${truncatedDescription ? `<p class="resource-description">${truncatedDescription}</p>` : ''}
           </div>
         `;
@@ -620,10 +741,12 @@
       const container = document.getElementById('searchResults');
       const newHTML = resources.map(res => {
         const truncatedDescription = stripHtmlAndTruncate(res.description, 250);
+        const distance = res.zipCode ? calculateZipCodeDistance(userZipCode, res.zipCode) : null;
         
         return `
           <div class="resource-card">
             <div class="resource-name" onclick="showResourceDetail('${res.id}')">${res.name}</div>
+            ${distance !== null ? `<div style="color: #666; font-size: 0.9em; margin: 5px 0;">📍 ${distance} miles away</div>` : ''}
             ${truncatedDescription ? `<p class="resource-description">${truncatedDescription}</p>` : ''}
           </div>
         `;
@@ -648,6 +771,9 @@
     
     // Show resource detail
     window.showResourceDetail = async function(resourceId) {
+      // Store current detail ID for refresh
+      window.currentDetailId = resourceId;
+      
       // Hide other sections
       document.getElementById('categories').classList.add('hidden');
       document.getElementById('resources').classList.add('hidden');
@@ -662,12 +788,16 @@
         const response = await fetch(`${API_BASE}/resources/${resourceId}/details`);
         const detail = await response.json();
         
+        // Calculate distance if zip code is available
+        const distance = detail.zipCode ? calculateZipCodeDistance(userZipCode, detail.zipCode) : null;
+        
         // Display detailed information
         detailContainer.innerHTML = `
           <div style="margin-bottom: 30px;">
             <h1 style="font-size: 2em; color: #333; margin-bottom: 10px;">${detail.name}</h1>
             ${detail.organization ? `<h2 style="font-size: 1.2em; color: #666; margin-bottom: 5px;">Organization: ${detail.organization}</h2>` : ''}
             ${detail.siteName ? `<h3 style="font-size: 1em; color: #888;">Site: ${detail.siteName}</h3>` : ''}
+            ${distance !== null ? `<div style="background: #e0f2ff; color: #005191; padding: 8px 15px; border-radius: 5px; margin-top: 10px; display: inline-block; font-weight: bold;">📍 ${distance} miles from your location (${userZipCode})</div>` : ''}
           </div>
           
           ${detail.description ? `
