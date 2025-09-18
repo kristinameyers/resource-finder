@@ -21,21 +21,22 @@ async function callNational211API(endpoint, params = {}) {
       return resolve({ resources: [] });
     }
 
-    // Build query string - ensure specific parameter order for the API
-    const queryParams = new URLSearchParams();
-    queryParams.append('keywords', params.keywords || '');
+    // Build query string manually to ensure proper encoding
+    const queryParts = [];
+    queryParts.push(`keywords=${encodeURIComponent(params.keywords || '')}`);
     if (params.keywordIsTaxonomyCode) {
-      queryParams.append('keywordIsTaxonomyCode', params.keywordIsTaxonomyCode);
+      queryParts.push(`keywordIsTaxonomyCode=${params.keywordIsTaxonomyCode}`);
     }
-    queryParams.append('location', params.location || 'Santa Barbara County, CA');
-    queryParams.append('locationMode', 'Near'); // Required field
-    queryParams.append('distance', params.distance || '25');
-    queryParams.append('size', params.size || '10'); // API caps at 10
+    queryParts.push(`location=${encodeURIComponent(params.location || 'Santa Barbara County, CA')}`);
+    queryParts.push(`locationMode=Near`); // Required field - don't encode
+    queryParts.push(`distance=25`);
+    queryParts.push(`size=10`);
     if (params.offset) {
-      queryParams.append('offset', params.offset);
+      queryParts.push(`offset=${params.offset}`);
     }
 
-    const apiUrl = `${NATIONAL_211_API_URL}/${endpoint}?${queryParams}`;
+    const queryString = queryParts.join('&');
+    const apiUrl = `${NATIONAL_211_API_URL}/${endpoint}?${queryString}`;
     console.log('Calling 211 API:', apiUrl);
 
     https.get(apiUrl, {
@@ -53,13 +54,19 @@ async function callNational211API(endpoint, params = {}) {
       res.on('end', () => {
         try {
           const parsed = JSON.parse(data);
-          console.log('211 API Response:', res.statusCode, data.substring(0, 500));
-          console.log(`211 API returned ${parsed.results?.length || 0} results`);
-          resolve(parsed);
+          console.log('211 API Response Status:', res.statusCode);
+          if (res.statusCode !== 200) {
+            console.log('API Error Response:', data.substring(0, 500));
+            console.log('Note: The National 211 API requires specific authentication. Using fallback data.');
+            resolve({ results: [] });
+          } else {
+            console.log(`211 API returned ${parsed.results?.length || 0} results`);
+            resolve(parsed);
+          }
         } catch (error) {
           console.error('Error parsing 211 API response:', error);
           console.error('Raw response:', data.substring(0, 500));
-          resolve({ resources: [] });
+          resolve({ results: [] });
         }
       });
     }).on('error', (error) => {
