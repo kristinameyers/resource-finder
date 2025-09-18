@@ -295,12 +295,21 @@
       <div class="loading">Loading categories...</div>
     </div>
     
-    <div id="subcategoriesSection" class="hidden">
+    <div id="resultsSection" class="hidden">
       <div class="subcategories-header">
-        <div class="subcategories-title" id="subcategoriesTitle">Select a Subcategory</div>
-        <button class="back-button" onclick="hideSubcategories()">← Back to Categories</button>
+        <div class="subcategories-title" id="resultsTitle">Search Results</div>
+        <button class="back-button" onclick="backToCategories()">← Back to Categories</button>
       </div>
-      <div class="subcategories" id="subcategories"></div>
+      
+      <div style="margin: 20px 0;">
+        <select id="subcategoryDropdown" style="width: 100%; padding: 10px; font-size: 16px; border-radius: 5px; border: 2px solid #667eea;">
+          <option value="">All Subcategories</option>
+        </select>
+      </div>
+      
+      <div class="resources" id="searchResults">
+        <div class="loading">Loading results...</div>
+      </div>
     </div>
     
     <div class="resources" id="resources">
@@ -421,68 +430,121 @@
       `).join('');
     }
     
-    // Show subcategories for a category
-    async function showSubcategories(categoryId, categoryName) {
+    // Called when clicking a main category
+    async function searchByCategory(categoryId, categoryName) {
       currentCategoryId = categoryId;
       activeCategory = categoryName;
       
-      // Hide categories and show subcategories section
-      document.getElementById('categories').classList.add('hidden');
-      document.getElementById('subcategoriesSection').classList.remove('hidden');
-      document.getElementById('subcategoriesTitle').textContent = `${categoryName} - Select a Service`;
+      // Get category data for keyword search
+      const categories = await loadCategoriesData();
+      const categoryData = categories.find(c => c.id === categoryId);
       
-      // Load subcategories
-      try {
-        const response = await fetch(`${API_BASE}/subcategories?categoryId=${categoryId}`);
-        const subcategories = await response.json();
-        displaySubcategories(subcategories);
-        
-        // Load resources for this category
-        loadResources('', categoryName);
-      } catch (error) {
-        console.error('Error loading subcategories:', error);
-        document.getElementById('subcategories').innerHTML = '<div class="error">Failed to load subcategories</div>';
-      }
-    }
-    
-    // Display subcategories
-    function displaySubcategories(subcategories) {
-      const container = document.getElementById('subcategories');
-      
-      if (!subcategories || subcategories.length === 0) {
-        container.innerHTML = '<div class="no-results">No subcategories available</div>';
+      if (!categoryData) {
+        console.error('Category not found');
         return;
       }
       
-      container.innerHTML = subcategories.map(sub => `
-        <div class="subcategory-card" data-subcategory="${sub.id}" onclick="filterBySubcategory('${sub.id}', '${sub.name}')">
-          <div class="subcategory-name">${sub.name}</div>
+      // Hide categories and show results section
+      document.getElementById('categories').classList.add('hidden');
+      document.getElementById('resources').classList.add('hidden'); 
+      document.getElementById('resultsSection').classList.remove('hidden');
+      document.getElementById('resultsTitle').textContent = `${categoryName} Resources`;
+      
+      // Load subcategories for dropdown
+      try {
+        const subResponse = await fetch(`${API_BASE}/subcategories?categoryId=${categoryId}`);
+        const subcategories = await subResponse.json();
+        populateSubcategoryDropdown(subcategories);
+        
+        // Search by category keywords
+        const keywords = categoryData.keywords ? categoryData.keywords.join(' ') : categoryName;
+        const response = await fetch(`${API_BASE}/resources?keyword=${encodeURIComponent(keywords)}`);
+        const resources = await response.json();
+        displaySearchResults(resources);
+      } catch (error) {
+        console.error('Error searching by category:', error);
+        document.getElementById('searchResults').innerHTML = '<div class="error">Failed to load resources</div>';
+      }
+    }
+    
+    // Called by the new showSubcategories wrapper
+    window.showSubcategories = function(categoryId, categoryName) {
+      searchByCategory(categoryId, categoryName);
+    }
+    
+    // Populate subcategory dropdown
+    function populateSubcategoryDropdown(subcategories) {
+      const dropdown = document.getElementById('subcategoryDropdown');
+      dropdown.innerHTML = '<option value="">All Subcategories</option>';
+      
+      if (subcategories && subcategories.length > 0) {
+        subcategories.forEach(sub => {
+          const option = document.createElement('option');
+          option.value = sub.taxonomyCode || sub.id;
+          option.textContent = sub.name;
+          option.dataset.subcategoryId = sub.id;
+          dropdown.appendChild(option);
+        });
+      }
+      
+      // Add change listener
+      dropdown.onchange = async function() {
+        const selectedValue = this.value;
+        if (selectedValue) {
+          // Search by taxonomy code
+          const response = await fetch(`${API_BASE}/resources?taxonomyCode=${encodeURIComponent(selectedValue)}`);
+          const resources = await response.json();
+          displaySearchResults(resources);
+        } else {
+          // Search by category keywords again
+          searchByCategory(currentCategoryId, activeCategory);
+        }
+      };
+    }
+    
+    // Display search results
+    function displaySearchResults(resources) {
+      const container = document.getElementById('searchResults');
+      
+      if (!resources || resources.length === 0) {
+        container.innerHTML = '<div class="no-results">No resources found</div>';
+        return;
+      }
+      
+      container.innerHTML = resources.map(res => `
+        <div class="resource-card">
+          <div class="resource-header">
+            <h3 class="resource-name">${res.name}</h3>
+            <span class="resource-category">${res.category}</span>
+          </div>
+          <p class="resource-description">${res.description}</p>
+          ${res.phone ? `<div class="resource-contact">📞 ${res.phone}</div>` : ''}
+          ${res.address ? `<div class="resource-contact">📍 ${res.address}</div>` : ''}
+          ${res.services ? `<div class="resource-services">Services: ${res.services.join(', ')}</div>` : ''}
         </div>
       `).join('');
     }
     
-    // Filter by subcategory
-    function filterBySubcategory(subcategoryId, subcategoryName) {
-      // Update active state
-      document.querySelectorAll('.subcategory-card').forEach(card => {
-        card.classList.remove('active');
-      });
-      document.querySelector(`[data-subcategory="${subcategoryId}"]`)?.classList.add('active');
-      
-      activeSubcategory = subcategoryId;
-      
-      // For now, filter by category name (since we don't have subcategory filtering in the backend yet)
-      loadResources('', activeCategory);
-    }
-    
-    // Hide subcategories and go back to categories
-    window.hideSubcategories = function() {
-      document.getElementById('subcategoriesSection').classList.add('hidden');
+    // Back to categories
+    window.backToCategories = function() {
+      document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('categories').classList.remove('hidden');
+      document.getElementById('resources').classList.remove('hidden');
       activeCategory = null;
       activeSubcategory = null;
       currentCategoryId = null;
       loadResources();
+    }
+    
+    // Load categories data
+    async function loadCategoriesData() {
+      try {
+        const response = await fetch(`${API_BASE}/categories`);
+        return await response.json();
+      } catch (error) {
+        console.error('Error loading categories data:', error);
+        return [];
+      }
     }
     
     // Search functionality
@@ -490,9 +552,9 @@
     document.getElementById('searchInput').addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
-        // If in subcategory view, go back to main view
+        // If in results view, go back to main view
         if (currentCategoryId) {
-          hideSubcategories();
+          backToCategories();
         }
         // Clear category selection when searching
         document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));

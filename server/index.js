@@ -25,6 +25,8 @@ class MemStorage {
         name: 'Housing',
         description: 'Housing assistance and shelter services',
         icon: 'housing',
+        keywords: ['housing', 'shelter', 'homeless', 'rent assistance', 'temporary housing'],
+        taxonomyCode: 'BH',
         isActive: true,
       },
       {
@@ -32,6 +34,8 @@ class MemStorage {
         name: 'Food',
         description: 'Food assistance and nutrition programs',
         icon: 'food',
+        keywords: ['food', 'meals', 'food pantry', 'food stamps', 'nutrition', 'calfresh', 'wic'],
+        taxonomyCode: 'BD-5000',
         isActive: true,
       },
       {
@@ -39,6 +43,8 @@ class MemStorage {
         name: 'Healthcare',
         description: 'Medical and health services',
         icon: 'healthcare',
+        keywords: ['healthcare', 'medical', 'clinic', 'hospital', 'health insurance', 'medicaid', 'medicare'],
+        taxonomyCode: 'LV',
         isActive: true,
       },
       {
@@ -46,6 +52,8 @@ class MemStorage {
         name: 'Mental Wellness',
         description: 'Mental health and counseling services',
         icon: 'mental-wellness',
+        keywords: ['mental health', 'counseling', 'therapy', 'crisis', 'depression', 'anxiety', 'psychiatric'],
+        taxonomyCode: 'RF',
         isActive: true,
       },
       {
@@ -53,6 +61,8 @@ class MemStorage {
         name: 'Substance Use',
         description: 'Substance abuse treatment and support',
         icon: 'substance-use',
+        keywords: ['substance abuse', 'addiction', 'alcohol', 'drugs', 'detox', 'recovery', 'rehabilitation'],
+        taxonomyCode: 'RX',
         isActive: true,
       },
       {
@@ -60,6 +70,8 @@ class MemStorage {
         name: 'Children & Family',
         description: 'Services for children and families',
         icon: 'children-family',
+        keywords: ['children', 'family', 'childcare', 'parenting', 'child support', 'head start', 'family services'],
+        taxonomyCode: 'PH',
         isActive: true,
       },
       {
@@ -67,6 +79,8 @@ class MemStorage {
         name: 'Young Adults',
         description: 'Programs and resources for young adults',
         icon: 'young-adults',
+        keywords: ['youth', 'young adults', 'teens', 'mentoring', 'youth development', 'gang prevention'],
+        taxonomyCode: 'PS-9800',
         isActive: true,
       },
       {
@@ -74,6 +88,8 @@ class MemStorage {
         name: 'Legal Assistance',
         description: 'Legal aid and court services',
         icon: 'legal-assistance',
+        keywords: ['legal', 'lawyer', 'attorney', 'court', 'immigration', 'civil rights', 'legal aid'],
+        taxonomyCode: 'FT',
         isActive: true,
       },
       {
@@ -81,6 +97,8 @@ class MemStorage {
         name: 'Utilities',
         description: 'Utility assistance programs',
         icon: 'utilities',
+        keywords: ['utilities', 'electric', 'gas', 'water', 'utility assistance', 'energy', 'internet'],
+        taxonomyCode: 'BV',
         isActive: true,
       },
       {
@@ -88,6 +106,8 @@ class MemStorage {
         name: 'Transportation',
         description: 'Transportation services and assistance',
         icon: 'transportation',
+        keywords: ['transportation', 'bus', 'transit', 'medical transport', 'paratransit', 'senior ride'],
+        taxonomyCode: 'BT',
         isActive: true,
       },
       {
@@ -95,6 +115,8 @@ class MemStorage {
         name: 'Hygiene Household',
         description: 'Hygiene and household items assistance',
         icon: 'hygiene-household',
+        keywords: ['hygiene', 'household', 'grooming', 'disaster supplies', 'cleaning supplies'],
+        taxonomyCode: 'BM',
         isActive: true,
       },
       {
@@ -102,6 +124,8 @@ class MemStorage {
         name: 'Finance & Employment',
         description: 'Financial assistance and job resources',
         icon: 'finance-employment',
+        keywords: ['employment', 'jobs', 'finance', 'vocational', 'career', 'credit counseling', 'benefits'],
+        taxonomyCode: 'ND',
         isActive: true,
       },
       {
@@ -109,6 +133,8 @@ class MemStorage {
         name: 'Education',
         description: 'Educational programs and resources',
         icon: 'education',
+        keywords: ['education', 'school', 'tutoring', 'ESL', 'literacy', 'GED', 'technical training'],
+        taxonomyCode: 'HD-1800.8000',
         isActive: true,
       }
     ];
@@ -116,24 +142,24 @@ class MemStorage {
     // Add subcategories for each main category
     this.subcategories = {
       'housing': [
-        { id: 'housing', name: 'Housing', categoryId: 'housing' },
-        { id: 'homeless-shelters', name: 'Homeless Shelters', categoryId: 'housing' },
-        { id: 'low-income-rental', name: 'Low Income Rental Housing', categoryId: 'housing' },
-        { id: 'section-8', name: 'Section 8 Voucher / Housing Authority', categoryId: 'housing' },
-        { id: 'temporary-mailing', name: 'Temporary Mailing Address', categoryId: 'housing' },
-        { id: 'bathing-facilities', name: 'Bathing Facilities', categoryId: 'housing' },
-        { id: 'home-maintenance', name: 'Home Maintenance & Repair', categoryId: 'housing' },
-        { id: 'furniture', name: 'Furniture', categoryId: 'housing' }
+        { id: 'housing', name: 'Housing', categoryId: 'housing', taxonomyCode: 'BH' },
+        { id: 'homeless-shelters', name: 'Homeless Shelters', categoryId: 'housing', taxonomyCode: 'BH-1800.8500' },
+        { id: 'low-income-rental', name: 'Low Income Rental Housing', categoryId: 'housing', taxonomyCode: 'BH-1800.8500-450' },
+        { id: 'section-8', name: 'Section 8 Voucher / Housing Authority', categoryId: 'housing', taxonomyCode: 'BH-8500.8000-780' },
+        { id: 'temporary-mailing', name: 'Temporary Mailing Address', categoryId: 'housing', taxonomyCode: 'TI-3800.8500' },
+        { id: 'bathing-facilities', name: 'Bathing Facilities', categoryId: 'housing', taxonomyCode: 'PH-1900.0500' },
+        { id: 'home-maintenance', name: 'Home Maintenance & Repair', categoryId: 'housing', taxonomyCode: 'BH-3800' },
+        { id: 'furniture', name: 'Furniture', categoryId: 'housing', taxonomyCode: 'BM-3000.2500' }
       ],
       'food': [
-        { id: 'food', name: 'Food', categoryId: 'food' },
-        { id: 'food-pantries', name: 'Food Pantries', categoryId: 'food' },
-        { id: 'hot-meals', name: 'Hot Meals', categoryId: 'food' },
-        { id: 'calfresh', name: 'CalFresh (Food Stamps)', categoryId: 'food' },
-        { id: 'wic', name: 'Women, Infants, & Children (WIC)', categoryId: 'food' },
-        { id: 'senior-nutrition', name: 'Senior Nutrition Programs', categoryId: 'food' },
-        { id: 'school-meals', name: 'School Meal Programs', categoryId: 'food' },
-        { id: 'emergency-food', name: 'Emergency Food Assistance', categoryId: 'food' }
+        { id: 'food', name: 'Food', categoryId: 'food', taxonomyCode: 'BD-5000' },
+        { id: 'food-pantries', name: 'Food Pantries', categoryId: 'food', taxonomyCode: 'BD-1800.2000' },
+        { id: 'hot-meals', name: 'Hot Meals', categoryId: 'food', taxonomyCode: 'BD-5000' },
+        { id: 'calfresh', name: 'CalFresh (Food Stamps)', categoryId: 'food', taxonomyCode: 'NL-6000.2000' },
+        { id: 'wic', name: 'Women, Infants, & Children (WIC)', categoryId: 'food', taxonomyCode: 'NL-6000.9500' },
+        { id: 'senior-nutrition', name: 'Senior Nutrition Programs', categoryId: 'food', taxonomyCode: 'BD-5000.8000' },
+        { id: 'school-meals', name: 'School Meal Programs', categoryId: 'food', taxonomyCode: 'BD-1800.7500' },
+        { id: 'emergency-food', name: 'Emergency Food Assistance', categoryId: 'food', taxonomyCode: 'BD-1800.2000' }
       ],
       'healthcare': [
         { id: 'healthcare', name: 'Health Care', categoryId: 'healthcare' },
@@ -424,15 +450,39 @@ const server = http.createServer(async (req, res) => {
 
     // Resources endpoints
     if (pathname === '/api/resources' && req.method === 'GET') {
-      const { search, category } = query;
-      let resources;
+      const { search, category, keyword, taxonomyCode } = query;
+      let resources = await storage.getResources();
 
+      // Apply keyword search (from category click)
+      if (keyword) {
+        const keywordLower = keyword.toLowerCase();
+        resources = resources.filter(r => 
+          r.name.toLowerCase().includes(keywordLower) ||
+          r.description.toLowerCase().includes(keywordLower) ||
+          r.category.toLowerCase().includes(keywordLower) ||
+          (r.services && r.services.some(s => s.toLowerCase().includes(keywordLower)))
+        );
+      }
+
+      // Apply taxonomy code filter (from subcategory)
+      if (taxonomyCode) {
+        const categories = await storage.getCategories();
+        resources = resources.filter(r => {
+          const categoryData = categories.find(c => c.name === r.category);
+          return categoryData && categoryData.taxonomyCode && 
+                 (categoryData.taxonomyCode === taxonomyCode || 
+                  taxonomyCode.startsWith(categoryData.taxonomyCode));
+        });
+      }
+
+      // Apply regular search
       if (search) {
         resources = await storage.searchResources(search);
-      } else if (category) {
-        resources = await storage.getResourcesByCategory(category);
-      } else {
-        resources = await storage.getResources();
+      }
+
+      // Apply category filter
+      if (category) {
+        resources = resources.filter(r => r.category === category);
       }
 
       return sendJSON(res, resources);
