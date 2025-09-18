@@ -275,6 +275,7 @@ class MemStorage {
         phone: '(805) 555-0123',
         website: 'https://example.com',
         hours: 'Monday-Friday 9AM-5PM',
+        services: ['food pantry', 'emergency food', 'nutrition assistance'],
         isActive: true,
         createdAt: new Date(),
       },
@@ -288,6 +289,85 @@ class MemStorage {
         phone: '(805) 555-0456',
         website: 'https://example.org',
         hours: '24/7',
+        services: ['emergency shelter', 'transitional housing', 'case management'],
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 'res-3',
+        name: 'Meals on Wheels',
+        description: 'Home-delivered meals for seniors and disabled individuals',
+        category: 'Food',
+        location: '789 State St, Santa Barbara, CA',
+        zipCode: '93101',
+        phone: '(805) 555-0789',
+        hours: 'Monday-Friday 8AM-4PM',
+        services: ['meal delivery', 'senior nutrition', 'special diet meals'],
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 'res-4',
+        name: 'Section 8 Housing Authority',
+        description: 'Housing vouchers and rental assistance programs',
+        category: 'Housing',
+        location: '321 Garden St, Santa Barbara, CA',
+        zipCode: '93101',
+        phone: '(805) 555-0321',
+        hours: 'Monday-Friday 8:30AM-5PM',
+        services: ['section 8 vouchers', 'rental assistance', 'housing placement'],
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 'res-5',
+        name: 'Legal Aid Foundation',
+        description: 'Free legal services for low-income individuals',
+        category: 'Legal',
+        location: '567 Chapala St, Santa Barbara, CA',
+        zipCode: '93101',
+        phone: '(805) 555-0567',
+        hours: 'Monday-Friday 9AM-5PM',
+        services: ['legal advice', 'court representation', 'immigration services'],
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 'res-6',
+        name: 'Youth Employment Center',
+        description: 'Job training and placement services for young adults',
+        category: 'Young Adults',
+        location: '890 Milpas St, Santa Barbara, CA',
+        zipCode: '93103',
+        phone: '(805) 555-0890',
+        hours: 'Monday-Friday 9AM-6PM',
+        services: ['job training', 'career counseling', 'youth mentoring'],
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 'res-7',
+        name: 'CalFresh Enrollment Center',
+        description: 'Food stamps and CalFresh application assistance',
+        category: 'Food',
+        location: '234 Carrillo St, Santa Barbara, CA',
+        zipCode: '93101',
+        phone: '(805) 555-0234',
+        hours: 'Monday-Friday 8AM-5PM',
+        services: ['CalFresh enrollment', 'food stamps', 'WIC services'],
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        id: 'res-8',
+        name: 'Mental Health Crisis Line',
+        description: '24/7 crisis counseling and mental health support',
+        category: 'Mental Wellness',
+        location: '456 Anacapa St, Santa Barbara, CA',
+        zipCode: '93101',
+        phone: '(805) 555-HELP',
+        hours: '24/7',
+        services: ['crisis counseling', 'suicide prevention', 'mental health referrals'],
         isActive: true,
         createdAt: new Date(),
       },
@@ -455,13 +535,12 @@ const server = http.createServer(async (req, res) => {
 
       // Apply keyword search (from category click)
       if (keyword) {
-        const keywordLower = keyword.toLowerCase();
-        resources = resources.filter(r => 
-          r.name.toLowerCase().includes(keywordLower) ||
-          r.description.toLowerCase().includes(keywordLower) ||
-          r.category.toLowerCase().includes(keywordLower) ||
-          (r.services && r.services.some(s => s.toLowerCase().includes(keywordLower)))
-        );
+        const keywords = keyword.toLowerCase().split(' ').filter(k => k.length > 0);
+        resources = resources.filter(r => {
+          const resourceText = `${r.name} ${r.description} ${r.category} ${r.services ? r.services.join(' ') : ''}`.toLowerCase();
+          // Check if ANY keyword matches
+          return keywords.some(kw => resourceText.includes(kw));
+        });
       }
 
       // Apply taxonomy code filter (from subcategory)
