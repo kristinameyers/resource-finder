@@ -548,10 +548,37 @@
         return;
       }
       
-      container.innerHTML = resources.map(resource => {
+      // Sort resources based on whether we have a user zip code
+      let sortedResources = [...resources];
+      if (userZipCode && window.calculateZipCodeDistance) {
+        // Calculate distances for each resource
+        sortedResources = sortedResources.map(resource => {
+          const distance = resource.zipCode ? 
+            window.calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
+          return { ...resource, calculatedDistance: distance };
+        });
+        
+        // Sort by distance (nulls at the end)
+        sortedResources.sort((a, b) => {
+          if (a.calculatedDistance === null) return 1;
+          if (b.calculatedDistance === null) return -1;
+          return a.calculatedDistance - b.calculatedDistance;
+        });
+      } else {
+        // Sort alphabetically by name if no user zip code
+        sortedResources.sort((a, b) => {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB);
+        });
+      }
+      
+      container.innerHTML = sortedResources.map(resource => {
         const truncatedDescription = stripHtmlAndTruncate(resource.description, 250);
-        const distance = resource.zipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
-          window.calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
+        const distance = resource.calculatedDistance !== undefined ? 
+          resource.calculatedDistance : 
+          (resource.zipCode && userZipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
+            window.calculateZipCodeDistance(userZipCode, resource.zipCode) : null);
         
         return `
           <div class="resource-card">
@@ -660,10 +687,37 @@
         return;
       }
       
-      container.innerHTML = resources.map(res => {
+      // Sort resources based on whether we have a user zip code
+      let sortedResources = [...resources];
+      if (userZipCode && window.calculateZipCodeDistance) {
+        // Calculate distances for each resource
+        sortedResources = sortedResources.map(resource => {
+          const distance = resource.zipCode ? 
+            window.calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
+          return { ...resource, calculatedDistance: distance };
+        });
+        
+        // Sort by distance (nulls at the end)
+        sortedResources.sort((a, b) => {
+          if (a.calculatedDistance === null) return 1;
+          if (b.calculatedDistance === null) return -1;
+          return a.calculatedDistance - b.calculatedDistance;
+        });
+      } else {
+        // Sort alphabetically by name if no user zip code
+        sortedResources.sort((a, b) => {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB);
+        });
+      }
+      
+      container.innerHTML = sortedResources.map(res => {
         const truncatedDescription = stripHtmlAndTruncate(res.description, 250);
-        const distance = res.zipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
-          window.calculateZipCodeDistance(userZipCode, res.zipCode) : null;
+        const distance = res.calculatedDistance !== undefined ? 
+          res.calculatedDistance : 
+          (res.zipCode && userZipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
+            window.calculateZipCodeDistance(userZipCode, res.zipCode) : null);
         
         return `
           <div class="resource-card">

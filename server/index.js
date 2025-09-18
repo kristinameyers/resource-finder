@@ -22,10 +22,10 @@ async function callNational211API(endpoint, params = {}) {
     }
 
     // Build query string WITHOUT locationMode (it goes in headers!)
+    // ALWAYS use Santa Barbara County, CA as location with locationMode: Serving
     const queryParams = new URLSearchParams({
       keywords: params.keywords || '',
-      distance: params.distance || '25',
-      location: params.location || '93101', // Default to Santa Barbara zip
+      location: 'Santa Barbara County, CA', // ALWAYS use county, never zip
       size: params.size || '50' // Increase size to 50 (API max)
     });
     
@@ -40,15 +40,14 @@ async function callNational211API(endpoint, params = {}) {
     const apiUrl = `${NATIONAL_211_API_URL}/${endpoint}?${queryParams}`;
     console.log('Calling 211 API:', apiUrl);
 
-    // Determine locationMode based on location type
-    const isZipOrCoords = /^\d{5}$/.test(params.location) || /^[\d.-]+,[\d.-]+$/.test(params.location);
-    const locationMode = isZipOrCoords ? 'Within' : 'Serving';
+    // ALWAYS use locationMode: Serving to get all resources that serve Santa Barbara County
+    const locationMode = 'Serving';
 
     https.get(apiUrl, {
       headers: {
         'Api-Key': NATIONAL_211_API_KEY,
         'Accept': 'application/json',
-        'locationMode': locationMode // This goes in HEADERS, not query params!
+        'locationMode': 'Serving' // ALWAYS use Serving for Santa Barbara County
       }
     }, (res) => {
       let data = '';
