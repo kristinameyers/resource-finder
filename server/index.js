@@ -20,26 +20,96 @@ class MemStorage {
   seedData() {
     this.categories = [
       {
-        id: 'cat-1',
+        id: 'housing',
         name: 'Housing',
         description: 'Housing assistance and shelter services',
         icon: 'housing',
         isActive: true,
       },
       {
-        id: 'cat-2',
+        id: 'food',
         name: 'Food',
         description: 'Food assistance and nutrition programs',
         icon: 'food',
         isActive: true,
       },
       {
-        id: 'cat-3',
+        id: 'healthcare',
         name: 'Healthcare',
         description: 'Medical and health services',
         icon: 'healthcare',
         isActive: true,
       },
+      {
+        id: 'mental-wellness',
+        name: 'Mental Wellness',
+        description: 'Mental health and counseling services',
+        icon: 'mental-wellness',
+        isActive: true,
+      },
+      {
+        id: 'substance-use',
+        name: 'Substance Use',
+        description: 'Substance abuse treatment and support',
+        icon: 'substance-use',
+        isActive: true,
+      },
+      {
+        id: 'children-family',
+        name: 'Children & Family',
+        description: 'Services for children and families',
+        icon: 'children-family',
+        isActive: true,
+      },
+      {
+        id: 'young-adults',
+        name: 'Young Adults',
+        description: 'Programs and resources for young adults',
+        icon: 'young-adults',
+        isActive: true,
+      },
+      {
+        id: 'legal-assistance',
+        name: 'Legal Assistance',
+        description: 'Legal aid and court services',
+        icon: 'legal-assistance',
+        isActive: true,
+      },
+      {
+        id: 'utilities',
+        name: 'Utilities',
+        description: 'Utility assistance programs',
+        icon: 'utilities',
+        isActive: true,
+      },
+      {
+        id: 'transportation',
+        name: 'Transportation',
+        description: 'Transportation services and assistance',
+        icon: 'transportation',
+        isActive: true,
+      },
+      {
+        id: 'hygiene-household',
+        name: 'Hygiene Household',
+        description: 'Hygiene and household items assistance',
+        icon: 'hygiene-household',
+        isActive: true,
+      },
+      {
+        id: 'finance-employment',
+        name: 'Finance & Employment',
+        description: 'Financial assistance and job resources',
+        icon: 'finance-employment',
+        isActive: true,
+      },
+      {
+        id: 'education',
+        name: 'Education',
+        description: 'Educational programs and resources',
+        icon: 'education',
+        isActive: true,
+      }
     ];
 
     this.resources = [
