@@ -375,7 +375,9 @@
         if (params.toString()) url += '?' + params.toString();
         
         const response = await fetch(url);
-        const resources = await response.json();
+        const data = await response.json();
+        // Handle both old array format and new paginated format
+        const resources = Array.isArray(data) ? data : (data.resources || []);
         allResources = resources;
         displayResources(resources);
       } catch (error) {
@@ -458,9 +460,16 @@
         
         // Search by category keywords
         const keywords = categoryData.keywords ? categoryData.keywords.join(' ') : categoryName;
-        const response = await fetch(`${API_BASE}/resources?keyword=${encodeURIComponent(keywords)}`);
-        const resources = await response.json();
+        const response = await fetch(`${API_BASE}/resources?keyword=${encodeURIComponent(keywords)}&limit=50`);
+        const data = await response.json();
+        // Handle both old array format and new paginated format
+        const resources = Array.isArray(data) ? data : (data.resources || []);
         displaySearchResults(resources);
+        
+        // Set up infinite scroll if there are more results
+        if (data.hasMore) {
+          setupInfiniteScroll(keywords, null, data.offset + resources.length);
+        }
       } catch (error) {
         console.error('Error searching by category:', error);
         document.getElementById('searchResults').innerHTML = '<div class="error">Failed to load resources</div>';
@@ -492,9 +501,16 @@
         const selectedValue = this.value;
         if (selectedValue) {
           // Search by taxonomy code
-          const response = await fetch(`${API_BASE}/resources?taxonomyCode=${encodeURIComponent(selectedValue)}`);
-          const resources = await response.json();
+          const response = await fetch(`${API_BASE}/resources?taxonomyCode=${encodeURIComponent(selectedValue)}&keywordIsTaxonomyCode=true&limit=50`);
+          const data = await response.json();
+          // Handle both old array format and new paginated format
+          const resources = Array.isArray(data) ? data : (data.resources || []);
           displaySearchResults(resources);
+          
+          // Set up infinite scroll if there are more results
+          if (data.hasMore) {
+            setupInfiniteScroll(null, selectedValue, data.offset + resources.length);
+          }
         } else {
           // Search by category keywords again
           searchByCategory(currentCategoryId, activeCategory);
@@ -517,12 +533,97 @@
             <h3 class="resource-name">${res.name}</h3>
             <span class="resource-category">${res.category}</span>
           </div>
-          <p class="resource-description">${res.description}</p>
+          <p class="resource-description">${res.description || ''}</p>
           ${res.phone ? `<div class="resource-contact">📞 ${res.phone}</div>` : ''}
-          ${res.address ? `<div class="resource-contact">📍 ${res.address}</div>` : ''}
-          ${res.services ? `<div class="resource-services">Services: ${res.services.join(', ')}</div>` : ''}
+          ${res.location ? `<div class="resource-contact">📍 ${res.location}</div>` : ''}
+          ${res.services && res.services.length ? `<div class="resource-services">Services: ${res.services.join(', ')}</div>` : ''}
         </div>
       `).join('');
+    }
+    
+    // Infinite scroll state
+    let isLoadingMore = false;
+    let currentOffset = 0;
+    let currentKeyword = null;
+    let currentTaxonomy = null;
+    
+    // Setup infinite scroll
+    function setupInfiniteScroll(keyword = null, taxonomyCode = null, offset = 0) {
+      currentKeyword = keyword;
+      currentTaxonomy = taxonomyCode;
+      currentOffset = offset;
+      
+      // Remove existing listener if any
+      window.removeEventListener('scroll', handleScroll);
+      
+      // Add new scroll listener
+      window.addEventListener('scroll', handleScroll);
+    }
+    
+    // Handle scroll event for infinite loading
+    async function handleScroll() {
+      if (isLoadingMore) return;
+      
+      // Check if user scrolled to bottom
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+        isLoadingMore = true;
+        
+        // Show loading indicator
+        const container = document.getElementById('searchResults');
+        container.insertAdjacentHTML('beforeend', '<div id="loadingMore" class="loading">Loading more resources...</div>');
+        
+        try {
+          let url = `${API_BASE}/resources?offset=${currentOffset}&limit=50`;
+          
+          if (currentKeyword) {
+            url += `&keyword=${encodeURIComponent(currentKeyword)}`;
+          } else if (currentTaxonomy) {
+            url += `&taxonomyCode=${encodeURIComponent(currentTaxonomy)}&keywordIsTaxonomyCode=true`;
+          }
+          
+          const response = await fetch(url);
+          const data = await response.json();
+          const resources = data.resources || [];
+          
+          // Remove loading indicator
+          document.getElementById('loadingMore')?.remove();
+          
+          if (resources.length > 0) {
+            // Append new resources
+            appendSearchResults(resources);
+            currentOffset += resources.length;
+            
+            // Continue listening if more results available
+            if (!data.hasMore) {
+              window.removeEventListener('scroll', handleScroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading more resources:', error);
+          document.getElementById('loadingMore')?.remove();
+        }
+        
+        isLoadingMore = false;
+      }
+    }
+    
+    // Append more results (for infinite scroll)
+    function appendSearchResults(resources) {
+      const container = document.getElementById('searchResults');
+      const newHTML = resources.map(res => `
+        <div class="resource-card">
+          <div class="resource-header">
+            <h3 class="resource-name">${res.name}</h3>
+            <span class="resource-category">${res.category}</span>
+          </div>
+          <p class="resource-description">${res.description || ''}</p>
+          ${res.phone ? `<div class="resource-contact">📞 ${res.phone}</div>` : ''}
+          ${res.location ? `<div class="resource-contact">📍 ${res.location}</div>` : ''}
+          ${res.services && res.services.length ? `<div class="resource-services">Services: ${res.services.join(', ')}</div>` : ''}
+        </div>
+      `).join('');
+      
+      container.insertAdjacentHTML('beforeend', newHTML);
     }
     
     // Back to categories
@@ -533,6 +634,8 @@
       activeCategory = null;
       activeSubcategory = null;
       currentCategoryId = null;
+      // Remove infinite scroll listener
+      window.removeEventListener('scroll', handleScroll);
       loadResources();
     }
     

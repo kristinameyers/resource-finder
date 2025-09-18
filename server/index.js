@@ -25,15 +25,13 @@ async function callNational211API(endpoint, params = {}) {
     const queryParams = new URLSearchParams({
       keywords: params.keywords || '',
       distance: params.distance || '25',
-      location: params.location || '93101' // Default to Santa Barbara zip
+      location: params.location || '93101', // Default to Santa Barbara zip
+      size: params.size || '50' // Increase size to 50 (API max)
     });
     
     // Only add optional parameters if provided
     if (params.keywordIsTaxonomyCode) {
       queryParams.append('keywordIsTaxonomyCode', params.keywordIsTaxonomyCode);
-    }
-    if (params.size) {
-      queryParams.append('size', params.size);
     }
     if (params.offset) {
       queryParams.append('offset', params.offset.toString());
@@ -679,12 +677,15 @@ const server = http.createServer(async (req, res) => {
 
     // Resources endpoints
     if (pathname === '/api/resources' && req.method === 'GET') {
-      const { search, category, keyword, taxonomyCode } = query;
+      const { search, category, keyword, taxonomyCode, offset, limit } = query;
       
       // Try to use real 211 API if available
       if (NATIONAL_211_API_KEY && (keyword || taxonomyCode || search)) {
         try {
-          let apiParams = {};
+          let apiParams = {
+            offset: offset || '0',
+            size: limit || '50' // Max 50 per request from API
+          };
           
           // Handle different search types
           if (taxonomyCode) {
@@ -692,8 +693,9 @@ const server = http.createServer(async (req, res) => {
             apiParams.keywords = taxonomyCode;
             apiParams.keywordIsTaxonomyCode = 'true';
           } else if (keyword) {
-            // Keyword search (from category)
-            apiParams.keywords = keyword;
+            // Keyword search - limit to first 3 keywords to avoid 404 errors
+            const keywords = keyword.split(' ').slice(0, 3).join(' ');
+            apiParams.keywords = keywords;
             apiParams.keywordIsTaxonomyCode = 'false';
           } else if (search) {
             // Regular search
@@ -708,14 +710,21 @@ const server = http.createServer(async (req, res) => {
             const transformedResources = apiResponse.results
               .map(transformNational211Resource)
               .filter(Boolean);
-            return sendJSON(res, transformedResources);
+            
+            // Return with pagination info for infinite scroll
+            return sendJSON(res, {
+              resources: transformedResources,
+              total: apiResponse.totalResults || transformedResources.length,
+              offset: parseInt(offset || '0'),
+              hasMore: apiResponse.totalResults > (parseInt(offset || '0') + transformedResources.length)
+            });
           }
         } catch (error) {
           console.error('Error calling 211 API, falling back to mock data:', error);
         }
       }
       
-      // Fallback to mock data
+      // Fallback to mock data with same pagination format
       let resources = await storage.getResources();
 
       // Apply keyword search (from category click)
@@ -749,7 +758,18 @@ const server = http.createServer(async (req, res) => {
         resources = resources.filter(r => r.category === category);
       }
 
-      return sendJSON(res, resources);
+      // Apply pagination
+      const startIndex = parseInt(offset || '0');
+      const pageSize = parseInt(limit || '50');
+      const paginatedResources = resources.slice(startIndex, startIndex + pageSize);
+
+      // Return with pagination info for consistency
+      return sendJSON(res, {
+        resources: paginatedResources,
+        total: resources.length,
+        offset: startIndex,
+        hasMore: resources.length > (startIndex + paginatedResources.length)
+      });
     }
 
     if (pathname.startsWith('/api/resources/') && req.method === 'GET') {
