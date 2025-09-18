@@ -21,22 +21,20 @@ async function callNational211API(endpoint, params = {}) {
       return resolve({ resources: [] });
     }
 
-    // Build query string manually to ensure proper encoding
-    const queryParts = [];
-    queryParts.push(`keywords=${encodeURIComponent(params.keywords || '')}`);
-    if (params.keywordIsTaxonomyCode) {
-      queryParts.push(`keywordIsTaxonomyCode=${params.keywordIsTaxonomyCode}`);
-    }
-    queryParts.push(`location=${encodeURIComponent(params.location || 'Santa Barbara County, CA')}`);
-    queryParts.push(`locationMode=Near`); // Required field - don't encode
-    queryParts.push(`distance=25`);
-    queryParts.push(`size=10`);
+    // Build query string with correct parameters - no locationMode needed!
+    const queryParams = new URLSearchParams({
+      keywords: params.keywords || '',
+      distance: '25',
+      size: '10',
+      keywordIsTaxonomyCode: params.keywordIsTaxonomyCode || 'false',
+      location: params.location || 'Santa Barbara County, CA'
+    });
+    
     if (params.offset) {
-      queryParts.push(`offset=${params.offset}`);
+      queryParams.append('offset', params.offset.toString());
     }
 
-    const queryString = queryParts.join('&');
-    const apiUrl = `${NATIONAL_211_API_URL}/${endpoint}?${queryString}`;
+    const apiUrl = `${NATIONAL_211_API_URL}/${endpoint}?${queryParams}`;
     console.log('Calling 211 API:', apiUrl);
 
     https.get(apiUrl, {
