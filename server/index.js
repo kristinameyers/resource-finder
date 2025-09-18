@@ -822,78 +822,66 @@ const server = http.createServer(async (req, res) => {
           }
           
           const detailData = await response.json();
-          console.log('Detail API response structure:', {
-            hasNameService: !!detailData.nameService,
-            hasNameOrganization: !!detailData.nameOrganization,
-            languagesType: typeof detailData.languagesOffered,
-            languagesIsArray: Array.isArray(detailData.languagesOffered)
-          });
+          console.log('Full Detail API Response - fields:', Object.keys(detailData));
           
           // Transform the detailed API response into our format
           const transformedDetail = {
             id: resourceId,
-            name: detailData.nameService || detailData.nameOrganization || 'Unknown Service',
-            organization: detailData.nameOrganization || '',
-            siteName: detailData.nameSite || '',
-            description: detailData.serviceDescription || detailData.descriptionService || '',
+            // Names and descriptions
+            name: detailData.serviceName || detailData.serviceAtLocationName || 'Unknown Service',
+            organization: detailData.organizationName || '',
+            siteName: detailData.locationName || '',
+            description: detailData.serviceDescription || detailData.organizationDescription || '',
             
             // Full address information
             address: {
-              street: detailData.locationAddress1 || detailData.physicalAddress1 || '',
-              street2: detailData.locationAddress2 || detailData.physicalAddress2 || '',
-              city: detailData.locationCity || detailData.physicalCity || '',
-              state: detailData.locationStateProvince || detailData.physicalStateProvince || '',
-              postalCode: detailData.locationPostalCode || detailData.physicalPostalCode || '',
+              street: detailData.address?.street || '',
+              street2: '',
+              city: detailData.address?.city || '',
+              state: detailData.address?.county || '',
+              postalCode: detailData.address?.postalCode || '',
               full: [
-                detailData.locationAddress1 || detailData.physicalAddress1,
-                detailData.locationAddress2 || detailData.physicalAddress2,
-                detailData.locationCity || detailData.physicalCity,
-                detailData.locationStateProvince || detailData.physicalStateProvince,
-                detailData.locationPostalCode || detailData.physicalPostalCode
+                detailData.address?.street,
+                detailData.address?.city,
+                detailData.address?.county,
+                detailData.address?.postalCode
               ].filter(Boolean).join(', ')
             },
             
             // Contact information
             contact: {
-              phone: detailData.phoneNumber || detailData.phoneNumberHotline || '',
-              tty: detailData.phoneNumberTTY || '',
-              crisis: detailData.phoneNumberCrisis || '',
-              fax: detailData.phoneNumberFax || '',
-              website: detailData.websiteResource || detailData.websiteOrganization || '',
-              email: detailData.emailService || detailData.emailOrganization || ''
+              phone: detailData.servicePhones?.[0]?.number || detailData.locationPhones?.[0]?.number || '',
+              tty: detailData.servicePhones?.find(p => p.type === 'TTY')?.number || '',
+              crisis: detailData.servicePhones?.find(p => p.type === 'Crisis')?.number || '',
+              fax: detailData.servicePhones?.find(p => p.type === 'Fax')?.number || '',
+              website: detailData.website || '',
+              email: detailData.serviceContacts?.[0]?.email || detailData.locationContacts?.[0]?.email || ''
             },
             
             // Service details
-            category: detailData.taxonomyName || '',
-            subcategory: detailData.serviceAreaDescription || '',
-            taxonomyCode: detailData.taxonomyCode || '',
+            category: detailData.taxonomy?.[0]?.taxonomyTermLevel1 || '',
+            subcategory: detailData.taxonomy?.[0]?.taxonomyTermLevel2 || '',
+            taxonomyCode: detailData.taxonomy?.[0]?.taxonomyCode || '',
             
             // Hours of operation
-            hours: detailData.hoursOfOperation || detailData.operatingHours || detailData.regularScheduleOpeningHours || '',
+            hours: detailData.serviceHoursText || detailData.locationHoursText || '',
             
             // Languages and accessibility
-            languages: (function() {
-              if (!detailData.languagesOffered) return [];
-              if (Array.isArray(detailData.languagesOffered)) return detailData.languagesOffered;
-              if (typeof detailData.languagesOffered === 'string') {
-                return detailData.languagesOffered.split(',').map(l => l.trim());
-              }
-              return [];
-            })(),
-            accessibility: detailData.accessibilityDetails || detailData.accessibilityForDisabilities || '',
+            languages: detailData.languagesOffered || [],
+            accessibility: detailData.disabilitiesAccess || '',
             
             // Eligibility and requirements
-            eligibility: detailData.eligibility || detailData.eligibilityDescription || '',
-            documentsRequired: detailData.documentsRequired || detailData.requiredDocuments || '',
-            applicationProcess: detailData.applicationProcess || detailData.applicationProcedure || '',
+            eligibility: detailData.eligibility || '',
+            documentsRequired: detailData.documentsRequired || '',
+            applicationProcess: detailData.applicationProcess || '',
             
             // Fees and service area
-            fees: detailData.feeStructure || detailData.fees || (detailData.isFeeRequired === false ? 'Free' : ''),
-            serviceArea: detailData.serviceArea || detailData.geographicAreaServed || '',
+            fees: detailData.fees || '',
+            serviceArea: detailData.serviceAreas?.map(area => `${area.value} ${area.type}`).join(', ') || '',
             
             // Additional details
-            lastUpdated: detailData.lastUpdatedDate || detailData.dateLastVerified || '',
-            notes: detailData.publicComments || detailData.additionalInformation || ''
+            lastUpdated: detailData.lastUpdated || '',
+            notes: detailData.notes || ''
           };
           
           return sendJSON(res, transformedDetail);
