@@ -408,6 +408,19 @@
       }
     }
     
+    // Helper function to strip HTML and truncate text
+    function stripHtmlAndTruncate(text, maxLength = 250) {
+      if (!text) return '';
+      // Remove HTML tags and decode HTML entities
+      const temp = document.createElement('div');
+      temp.innerHTML = text;
+      const plainText = temp.textContent || temp.innerText || '';
+      // Truncate if needed
+      return plainText.length > maxLength ? 
+        plainText.substring(0, maxLength).trim() + '...' : 
+        plainText;
+    }
+    
     // Display resources
     function displayResources(resources) {
       const container = document.getElementById('resources');
@@ -418,16 +431,12 @@
       }
       
       container.innerHTML = resources.map(resource => {
-        const truncatedDescription = resource.description ? 
-          (resource.description.length > 250 ? 
-            resource.description.substring(0, 250) + '...' : 
-            resource.description) : 
-          '';
+        const truncatedDescription = stripHtmlAndTruncate(resource.description, 250);
         
         return `
           <div class="resource-card">
             <div class="resource-name" onclick="showResourceDetail('${resource.id}')">${resource.name}</div>
-            ${truncatedDescription ? `<div class="resource-description">${truncatedDescription}</div>` : ''}
+            ${truncatedDescription ? `<p class="resource-description">${truncatedDescription}</p>` : ''}
           </div>
         `;
       }).join('');
@@ -529,15 +538,11 @@
       }
       
       container.innerHTML = resources.map(res => {
-        const truncatedDescription = res.description ? 
-          (res.description.length > 250 ? 
-            res.description.substring(0, 250) + '...' : 
-            res.description) : 
-          '';
+        const truncatedDescription = stripHtmlAndTruncate(res.description, 250);
         
         return `
           <div class="resource-card">
-            <h3 class="resource-name" onclick="showResourceDetail('${res.id}')">${res.name}</h3>
+            <div class="resource-name" onclick="showResourceDetail('${res.id}')">${res.name}</div>
             ${truncatedDescription ? `<p class="resource-description">${truncatedDescription}</p>` : ''}
           </div>
         `;
@@ -614,15 +619,11 @@
     function appendSearchResults(resources) {
       const container = document.getElementById('searchResults');
       const newHTML = resources.map(res => {
-        const truncatedDescription = res.description ? 
-          (res.description.length > 250 ? 
-            res.description.substring(0, 250) + '...' : 
-            res.description) : 
-          '';
+        const truncatedDescription = stripHtmlAndTruncate(res.description, 250);
         
         return `
           <div class="resource-card">
-            <h3 class="resource-name" onclick="showResourceDetail('${res.id}')">${res.name}</h3>
+            <div class="resource-name" onclick="showResourceDetail('${res.id}')">${res.name}</div>
             ${truncatedDescription ? `<p class="resource-description">${truncatedDescription}</p>` : ''}
           </div>
         `;
