@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Santa Barbara 211 Resource Finder</title>
   <script src="zipCodeData.js"></script>
+  <script>
+    // Ensure functions from zipCodeData.js are available globally
+    if (typeof window.calculateZipCodeDistance === 'undefined' && typeof calculateZipCodeDistance !== 'undefined') {
+      window.calculateZipCodeDistance = calculateZipCodeDistance;
+    }
+    if (typeof window.normalizeZipCode === 'undefined' && typeof normalizeZipCode !== 'undefined') {
+      window.normalizeZipCode = normalizeZipCode;
+    }
+  </script>
   <style>
     * {
       margin: 0;
@@ -417,8 +426,8 @@
         allResources = resources;
         displayResources(resources);
       } catch (error) {
-        console.error('Error loading resources:', error);
-        document.getElementById('resources').innerHTML = '<div class="error">Failed to load resources</div>';
+        console.error('Error loading resources:', error, error.stack);
+        document.getElementById('resources').innerHTML = `<div class="error">Failed to load resources: ${error.message}</div>`;
       }
     }
     
@@ -437,10 +446,10 @@
     
     // Update user location
     function updateUserLocation(zipCode) {
-      // Normalize zip code to 5 digits
-      const normalizedZip = normalizeZipCode(zipCode);
+      // Normalize zip code to 5 digits (remove non-digits and take first 5)
+      const normalizedZip = zipCode ? zipCode.replace(/\D/g, '').slice(0, 5) : null;
       
-      if (normalizedZip && ZIP_CODE_DATA[normalizedZip]) {
+      if (normalizedZip && normalizedZip.length === 5 && ZIP_CODE_DATA[normalizedZip]) {
         userZipCode = normalizedZip;
         document.getElementById('userZipCode').value = normalizedZip;
         document.getElementById('locationStatus').textContent = '✓ Location updated';
@@ -547,7 +556,8 @@
       
       container.innerHTML = resources.map(resource => {
         const truncatedDescription = stripHtmlAndTruncate(resource.description, 250);
-        const distance = resource.zipCode ? calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
+        const distance = resource.zipCode && typeof calculateZipCodeDistance !== 'undefined' ? 
+          calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
         
         return `
           <div class="resource-card">
