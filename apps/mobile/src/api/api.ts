@@ -1,238 +1,148 @@
-import { apiRequest } from "../utils/queryClient";
-import {
-  Resource,
-  Category,
-  Subcategory,
-  Location,
-  User,
-  InsertUser,
-  resourceSchema,
-  users
-} from "../types/shared-schema";
+import { Resource, Category, Subcategory, Location } from "../types/shared-schema";
 
-// Type for the enhanced resources response
-interface EnhancedResources {
-  resources: Resource[];
-  total: number;
-  source: string;
+// Expo/React Native: Use environment variable (see .env setup)
+const NATIONAL_211_API_URL = process.env.EXPO_PUBLIC_NATIONAL_211_API_URL || "";
+const NATIONAL_211_API_KEY = process.env.EXPO_PUBLIC_NATIONAL_211_API_KEY || "";
+
+// Helper to add API key header when calling National 211 API
+async function apiRequest(
+  method: string,
+  url: string,
+  data?: unknown
+): Promise<Response> {
+  const isNationalApi = url.startsWith(NATIONAL_211_API_URL);
+  const headers: Record<string, string> = 
+    isNationalApi
+      ? {
+          "Content-Type": "application/json",
+          "Api-Key": NATIONAL_211_API_KEY || "",
+          Accept: "application/json"
+        }
+      : { "Content-Type": "application/json" };
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include"
+  });
+
+  if (!response.ok && response.status !== 404) {
+    const text = (await response.text()) || response.statusText;
+    throw new Error(`${response.status}: ${text}`);
+  }
+  return response;
 }
 
-// Interface for resource details response
-interface ResourceDetailResponse {
-  resource: Resource;
-  source: string;
-}
-
-// Fetch resources with optional filtering
+// Fetch resources: always uses National 211 API unless instructed otherwise
 export async function fetchResources(
   categoryId?: string,
   subcategoryId?: string,
   zipCode?: string,
   coordinates?: { latitude: number; longitude: number },
-  useApi: boolean = true,
+  useNationalApi: boolean = true,
   sortBy: 'relevance' | 'distance' | 'name' = 'relevance',
   keyword?: string,
   skip: number = 0,
   take: number = 20
-): Promise<{resources: Resource[], total: number, source: string}> {
+): Promise<{ resources: Resource[]; total: number; source: string }> {
   const queryParams = new URLSearchParams();
-  
-  // Add filter parameters if they exist
-  if (categoryId) {
-    queryParams.append('categoryId', categoryId);
-  }
-  
-  if (subcategoryId) {
-    queryParams.append('subcategoryId', subcategoryId);
-  }
-  
-  if (zipCode) {
-    queryParams.append('zipCode', zipCode);
-  }
-  
+  if (categoryId) queryParams.append('categoryId', categoryId);
+  if (subcategoryId) queryParams.append('subcategoryId', subcategoryId);
+  if (zipCode) queryParams.append('zipCode', zipCode);
   if (coordinates) {
     queryParams.append('latitude', coordinates.latitude.toString());
     queryParams.append('longitude', coordinates.longitude.toString());
   }
-  
-  // Add parameter to use National 211 API
-  queryParams.append('use211Api', useApi.toString());
-  
-  // Add sort parameter
+  if (keyword) queryParams.append('keyword', keyword);
   queryParams.append('sortBy', sortBy);
-  
-  // Add keyword parameter for keyword search
-  if (keyword) {
-    queryParams.append('keyword', keyword);
+  queryParams.append('skip', String(skip));
+  queryParams.append('take', String(take));
+
+  let url: string;
+  if (useNationalApi && NATIONAL_211_API_URL) {
+    url = `${NATIONAL_211_API_URL}/search?${queryParams.toString()}`;
+  } else {
+    url = `/api/resources${queryParams.toString() ? `?${queryParams}` : ""}`;
   }
-  
-  // Add pagination parameters
-  queryParams.append('skip', skip.toString());
-  queryParams.append('take', take.toString());
-  
-  const url = `/api/resources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;  
-  
-  try {
-    const response = await apiRequest('GET', url);
-    
-    // Handle rate limiting
-    if (response.status === 429) {
-      const errorData = await response.json();
-      throw new Error(`RATE_LIMITED: ${errorData.message || 'API rate limit exceeded. Please wait and try again.'}`);
-    }
-    
-    const data = await response.json() as EnhancedResources;
-    return {
-      resources: data.resources,
-      total: data.total || data.resources.length,
-      source: data.source || 'local'
-    };
-  } catch (error) {
-    console.error('Error fetching resources:', error);
-    throw error;
-  }
+
+  const response = await apiRequest("GET", url);
+  const data = await response.json();
+  return {
+    resources: data.resources || [],
+    total: data.total || (data.resources ? data.resources.length : 0),
+    source: data.source || (useNationalApi ? "211_API" : "local")
+  };
 }
 
-// Fetch a specific resource by ID
-export async function fetchResourceById(id: string, useApi: boolean = true): Promise<Resource> {
-  const queryParams = new URLSearchParams();
-  if (useApi) {
-    queryParams.append('useApi', 'true');
+// Fetch a resource by ID
+export async function fetchResourceById(id: string, useNationalApi = true): Promise<Resource> {
+  let url: string;
+  if (useNationalApi && NATIONAL_211_API_URL) {
+    url = `${NATIONAL_211_API_URL}/resource/${id}`;
+  } else {
+    url = `/api/resources/${id}`;
   }
-  
-  const url = `/api/resources/${id}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-  
-  try {
-    const response = await apiRequest('GET', url);
-    if (response.status === 404) {
-      throw new Error('Resource not found');
-    }
-    const data = await response.json() as ResourceDetailResponse;
-    return data.resource;
-  } catch (error) {
-    console.error('Error fetching resource by ID:', error);
-    throw error;
-  }
+  const response = await apiRequest("GET", url);
+  if (response.status === 404) throw new Error('Resource not found');
+  const data = await response.json();
+  return data.resource || data;
 }
 
-// Fetch available categories
-// Define the expected response type for categories
-interface CategoriesResponse {
-  categories: Category[];
-}
-
+// Fetch categories
 export async function fetchCategories(): Promise<Category[]> {
-  try {
-    const response = await apiRequest('GET', '/api/categories');
-    const data = await response.json() as CategoriesResponse;
-    return data.categories;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    throw error;
+  if (NATIONAL_211_API_URL) {
+    const response = await apiRequest("GET", `${NATIONAL_211_API_URL}/categories`);
+    const data = await response.json();
+    return data.categories || [];
+  } else {
+    const response = await apiRequest("GET", "/api/categories");
+    const data = await response.json();
+    return data.categories || [];
   }
 }
 
-// Define the expected response type for subcategories
-interface SubcategoriesResponse {
-  subcategories: Subcategory[];
-}
-
-// Fetch subcategories for a specific category
+// Fetch subcategories
 export async function fetchSubcategories(categoryId: string): Promise<Subcategory[]> {
-  try {
-    const response = await apiRequest('GET', `/api/subcategories?categoryId=${categoryId}`);
-    const data = await response.json() as SubcategoriesResponse;
-    return data.subcategories;
-  } catch (error) {
-    console.error('Error fetching subcategories:', error);
-    throw error;
+  if (NATIONAL_211_API_URL) {
+    const response = await apiRequest("GET", `${NATIONAL_211_API_URL}/subcategories?categoryId=${categoryId}`);
+    const data = await response.json();
+    return data.subcategories || [];
+  } else {
+    const response = await apiRequest("GET", `/api/subcategories?categoryId=${categoryId}`);
+    const data = await response.json();
+    return data.subcategories || [];
   }
 }
 
-// Define the expected response type for locations
-interface LocationsResponse {
-  locations: Location[];
-}
-
-// Fetch available locations
+// Fetch locations
 export async function fetchLocations(): Promise<Location[]> {
-  try {
-    const response = await apiRequest('GET', '/api/locations');
-    const data = await response.json() as LocationsResponse;
-    return data.locations;
-  } catch (error) {
-    console.error('Error fetching locations:', error);
-    throw error;
-  }
+  const response = await apiRequest("GET", "/api/locations");
+  const data = await response.json();
+  return data.locations || [];
 }
 
 // Fetch location by zip code
 export async function fetchLocationByZipCode(zipCode: string): Promise<Location | null> {
-  try {
-    const response = await apiRequest('GET', `/api/location/zipcode/${zipCode}`);
-    if (response.status === 404) {
-      return null;
-    }
-    const location = await response.json() as Location;
-    return location;
-  } catch (error) {
-    console.error('Error fetching location by zip code:', error);
-    throw error;
-  }
+  const response = await apiRequest("GET", `/api/location/zipcode/${zipCode}`);
+  if (response.status === 404) return null;
+  return await response.json();
 }
 
 // Fetch location by coordinates
 export async function fetchLocationByCoordinates(latitude: number, longitude: number): Promise<Location | null> {
-  try {
-    const response = await apiRequest(
-      'GET', 
-      `/api/location/coordinates?latitude=${latitude}&longitude=${longitude}`
-    );
-    if (response.status === 404) {
-      return null;
-    }
-    const location = await response.json() as Location;
-    return location;
-  } catch (error) {
-    console.error('Error fetching location by coordinates:', error);
-    throw error;
-  }
+  const response = await apiRequest(
+    "GET",
+    `/api/location/coordinates?latitude=${latitude}&longitude=${longitude}`
+  );
+  if (response.status === 404) return null;
+  return await response.json();
 }
 
-// Get user's current location using browser's Geolocation API
-export function getCurrentLocation(): Promise<{ latitude: number; longitude: number }> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by your browser'));
-      return;
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        });
-      },
-      (error) => {
-        reject(error);
-      }
-    );
-  });
-}
-
-// Fetch detailed resource information using Service At Location Details endpoint
 export async function fetchResourceDetails(id: string, serviceId?: string): Promise<any> {
-  try {
-    const queryParams = serviceId ? `?serviceId=${serviceId}` : '';
-    const response = await apiRequest('GET', `/api/resources/${id}/details${queryParams}`);
-    if (response.status === 404) {
-      return null; // No detailed information available
-    }
-    const data = await response.json();
-    return data.details;
-  } catch (error) {
-    console.error('Error fetching resource details:', error);
-    return null; // Return null instead of throwing to allow graceful degradation
-  }
+  const queryParams = serviceId ? `?serviceId=${serviceId}` : "";
+  const response = await apiRequest("GET", `/api/resources/${id}/details${queryParams}`);
+  if (response.status === 404) return null;
+  const data = await response.json();
+  return data.details;
 }

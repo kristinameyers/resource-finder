@@ -1,6 +1,6 @@
-import { Subcategory } from "@shared/schema";
+import { Subcategory } from "../types/shared-schema";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSubcategories } from "@/lib/api";
+import { fetchSubcategories } from "../api";
 
 export function useSubcategories(categoryId: string | null) {
   // Query key that depends on the selected category

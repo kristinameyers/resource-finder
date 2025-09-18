@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getSessionId } from '@/lib/session';
+import { getSessionId } from '../utils/session';
 
 interface VoteResponse {
   thumbsUp: number;

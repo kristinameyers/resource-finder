@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Location } from "@shared/schema";
-import { getCurrentLocation, fetchLocationByZipCode, fetchLocationByCoordinates } from "@/lib/api";
+import { Location } from "../types/shared-schema";
+import { getCurrentLocation, fetchLocationByZipCode, fetchLocationByCoordinates } from "../api";
 
 export type LocationState = 
   | { type: 'none' }

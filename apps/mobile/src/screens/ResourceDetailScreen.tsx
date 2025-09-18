@@ -129,34 +129,41 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
 
       {/* Contact, Website, Address */}
       <View style={styles.section}>
-        {resource.phone && (
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => Linking.openURL(`tel:${resource.phone.replace(/[^\d]/g, '')}`)}
-          >
-            <Ionicons name="call-outline" size={20} color="#005191" />
-            <Text style={styles.actionLabel}>{callText}: {resource.phone}</Text>
-          </TouchableOpacity>
-        )}
-        {resource.url && (
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => Linking.openURL(resource.url)}
-          >
-            <Ionicons name="globe-outline" size={20} color="#005191" />
-            <Text style={styles.actionLabel}>{websiteText}</Text>
-          </TouchableOpacity>
-        )}
-        {resource.address && (
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(resource.address)}`)}
-          >
-            <Ionicons name="location-outline" size={20} color="#005191" />
-            <Text style={styles.actionLabel}>{addressText}: {resource.address}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+  {resource.phone && (
+    <TouchableOpacity
+      style={styles.actionRow}
+      onPress={() =>
+        Linking.openURL(`tel:${(resource.phone ?? '').replace(/[^\d]/g, '')}`)
+      }
+    >
+      <Ionicons name="call-outline" size={20} color="#005191" />
+      <Text style={styles.actionLabel}>{callText}: {resource.phone}</Text>
+    </TouchableOpacity>
+  )}
+  {resource.url && (
+    <TouchableOpacity
+      style={styles.actionRow}
+      onPress={() => Linking.openURL(resource.url ?? "")}
+    >
+      <Ionicons name="globe-outline" size={20} color="#005191" />
+      <Text style={styles.actionLabel}>{websiteText}</Text>
+    </TouchableOpacity>
+  )}
+  {resource.address && (
+    <TouchableOpacity
+      style={styles.actionRow}
+      onPress={() =>
+        Linking.openURL(
+          `https://maps.apple.com/?q=${encodeURIComponent(resource.address ?? '')}`
+        )
+      }
+    >
+      <Ionicons name="location-outline" size={20} color="#005191" />
+      <Text style={styles.actionLabel}>{addressText}: {resource.address}</Text>
+    </TouchableOpacity>
+  )}
+</View>
+
 
       {/* Extra Info */}
       <View style={styles.section}>

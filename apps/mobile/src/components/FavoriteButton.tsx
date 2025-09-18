@@ -1,19 +1,20 @@
-import { Heart } from 'lucide-react';
-import { Button } from './ui/button';
-import { useFavorites } from '../hooks/use-favorites';
-import { cn } from '../utils';
-import { useTranslatedText } from './TranslatedText';
+import React from "react";
+import { View, Text, StyleSheet, ViewStyle } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Button } from "./ui/Button";
+import { useFavorites } from "../hooks/use-favorites";
+import { useTranslatedText } from "./TranslatedText";
 
 interface FavoriteButtonProps {
   resourceId: string;
-  className?: string;
+  style?: ViewStyle;
   showText?: boolean;
 }
 
-export default function FavoriteButton({ 
-  resourceId, 
-  className,
-  showText = true 
+export default function FavoriteButton({
+  resourceId,
+  style,
+  showText = true,
 }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(resourceId);
@@ -26,26 +27,48 @@ export default function FavoriteButton({
 
   return (
     <Button
+      onPress={handleToggle}
       variant={favorite ? "default" : "outline"}
-      size="sm"
-      onClick={handleToggle}
-      className={cn(
-        "flex items-center gap-2 transition-colors",
-        favorite && "bg-red-500 hover:bg-red-600 text-white !text-white",
-        className
-      )}
+      style={[
+        styles.button,
+        ...(favorite ? [styles.favorite] : []),
+        ...(style ? [style] : []),
+      ]}
     >
-      <Heart 
-        className={cn(
-          "h-4 w-4 transition-all", 
-          favorite ? "fill-current" : "fill-none"
-        )} 
+      <Ionicons
+        name={favorite ? "heart" : "heart-outline"}
+        size={18}
+        color={favorite ? "#fff" : "#d33"}
+        style={{ marginRight: showText ? 8 : 0 }}
       />
       {showText && (
-        <span className={favorite ? "text-white" : ""}>
+        <Text style={[styles.text, favorite && styles.textActive]}>
           {favorite ? removeFromFavoritesText : addToFavoritesText}
-        </span>
+        </Text>
       )}
     </Button>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  favorite: {
+    backgroundColor: "#d33",
+    borderWidth: 0,
+  },
+  text: {
+    color: "#d33",
+    fontWeight: "500",
+    fontSize: 15,
+  },
+  textActive: {
+    color: "#fff",
+  },
+});

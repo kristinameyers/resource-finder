@@ -9,9 +9,15 @@ import {
   SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MAIN_CATEGORIES } from '../utils/index';
+import { MAIN_CATEGORIES } from '../api/officialTaxonomy'; // <-- Correct import!
+import type { NavigationProp } from '@react-navigation/native';
 
-const categoryIconMap = {
+interface CategoryIconConfig {
+  icon: string;
+  color: string;
+}
+
+const categoryIconMap: Record<string, CategoryIconConfig> = {
   'housing': { icon: 'home', color: '#4A90E2' },
   'food': { icon: 'restaurant', color: '#F5A623' },
   'healthcare': { icon: 'medkit', color: '#BD10E0' },
@@ -27,17 +33,40 @@ const categoryIconMap = {
   'education': { icon: 'book', color: '#002766' }
 };
 
-const categories = Object.entries(MAIN_CATEGORIES).map(([id, category]) => ({
-  id,
-  name: category.name,
-  ...categoryIconMap[id]
-}));
+// Use WeaklyTyped MainCategory for mapping on dynamic keys
+type MainCategory = {
+  name: string;
+  taxonomyCode?: string;
+  keywords?: string[];
+};
 
-export default function HomeScreen({ navigation }) {
+const categories: {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}[] = Object.keys(MAIN_CATEGORIES).map((id) => {
+  const cat = MAIN_CATEGORIES[id as keyof typeof MAIN_CATEGORIES] as MainCategory;
+  const iconConf = categoryIconMap[id] || { icon: 'help', color: '#888' };
+  return {
+    id,
+    name: cat.name,
+    icon: iconConf.icon,
+    color: iconConf.color,
+  };
+});
+
+// Navigation prop type
+type HomeScreenNavProp = {
+  navigation: NavigationProp<any>;
+};
+
+export default function HomeScreen({ navigation }: HomeScreenNavProp) {
   const [searchQuery, setSearchQuery] = useState('');
   const [zipCode, setZipCode] = useState('');
 
-  const handleCategoryPress = (categoryId, categoryName) => {
+  // All params should be typed
+  const handleCategoryPress = (categoryId: string, categoryName: string) => {
     navigation.navigate('ResourceList', {
       categoryId,
       categoryName,
@@ -97,7 +126,7 @@ export default function HomeScreen({ navigation }) {
                 onPress={() => handleCategoryPress(category.id, category.name)}
               >
                 <Ionicons
-                  name={category.icon}
+                  name={category.icon as any}
                   size={32}
                   color={category.color}
                 />

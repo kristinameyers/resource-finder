@@ -1,108 +1,123 @@
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons, Feather } from "@expo/vector-icons";
 import { Resource, Category, Subcategory } from "../types/shared-schema";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { ExternalLink, MapPin, Heart, Eye, Info } from "lucide-react";
-import { cn } from "../utils";
-import { Link } from "wouter";
+import { Card } from "./ui/Card";
+import { Badge } from "./ui/Badge";
 import FavoriteButton from "./FavoriteButton";
 import { useTranslatedText } from "./TranslatedText";
+import { useNavigation } from "@react-navigation/native";
+import type { StackNavigationProp } from "@react-navigation/stack";
 
-// Helper components for translations
-function ResourceDescription({ text }: { text: string }) {
-  const { text: translatedText } = useTranslatedText(text);
-  return <>{translatedText}</>;
-}
+// You must define RootStackParamList somewhere in your app:
+type RootStackParamList = {
+  ResourceDetail: { resourceId: string };
+  // ...other screens
+};
 
-function LocationName({ text }: { text: string }) {
-  const { text: translatedText } = useTranslatedText(text);
-  return <>{translatedText}</>;
-}
-
-function CategoryName({ name }: { name: string }) {
-  const { text } = useTranslatedText(name);
-  return <>{text}</>;
+function Clamp({ children, lines = 2 }: { children: React.ReactNode; lines?: number }) {
+  return (
+    <Text numberOfLines={lines} ellipsizeMode="tail" style={{ flex: 1 }}>
+      {children}
+    </Text>
+  );
 }
 
 interface ResourceCardProps {
   resource: Resource;
   category?: Category;
   subcategory?: Subcategory;
-  onFavoriteToggle?: () => void; // If supporting in parent
-  isFavorited?: boolean;
 }
 
-// Helper for text truncation with ellipsis
-function Clamp({ children, lines = 2 }: { children: React.ReactNode; lines?: number }) {
-  return <span className={`block truncate line-clamp-${lines}`}>{children}</span>;
-}
-
-export default function ResourceCard({ resource, category, subcategory }: ResourceCardProps) {
+export default function ResourceCard({
+  resource,
+  category,
+  subcategory,
+}: ResourceCardProps) {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { text: viewDetailsText } = useTranslatedText("View Details");
-  const { text: addToFavoritesText } = useTranslatedText("Add to Favorites");
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-6 py-5 mb-6 flex flex-col">
-      {/* Category/Subcategory badges row */}
-      <div className="flex flex-wrap gap-2 mb-2">
-        {category &&
-          <Badge className="bg-blue-50 text-blue-800 border-blue-200 font-medium text-xs px-3 py-1 rounded-full">
-            {category.name}
-          </Badge>
-        }
-        {subcategory &&
-          <Badge className="bg-sky-50 text-sky-700 border-sky-200 font-medium text-xs px-3 py-1 rounded-full">
-            {subcategory.name}
-          </Badge>
-        }
-      </div>
-      {/* Main row: Title and distance that floats right */}
-      <div className="flex justify-between items-start mb-1">
-        <h3 className="font-bold text-lg leading-snug text-gray-900 max-w-[70%]">
-          <Clamp>{resource.name}</Clamp>
-        </h3>
-        {/* Distance as pill */}
+    <Card style={styles.card}>
+      <View style={styles.badgesRow}>
+        {category && <Badge text={category.name} color="#4287f5" />}
+        {subcategory && <Badge text={subcategory.name} color="#0ea5e9" />}
+      </View>
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>
+            <Clamp>{resource.name}</Clamp>
+          </Text>
+        </View>
         {resource.distanceMiles !== undefined && (
-          <span className="ml-2 bg-blue-600 text-white text-xs rounded-full px-3 py-1 font-semibold">{resource.distanceMiles.toFixed(2)} mi</span>
+          <View style={styles.distance}>
+            <Text style={styles.distanceText}>{resource.distanceMiles.toFixed(2)} mi</Text>
+          </View>
         )}
-      </div>
-      {/* Description */}
-      <p className="text-gray-700 text-sm mb-2 line-clamp-2">
-        {resource.description}
-      </p>
-      {/* Location */}
-      {resource.location && (
-        <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
-          <MapPin className="h-4 w-4 mr-1 opacity-70" />
-          <span>{resource.location}</span>
-        </div>
+      </View>
+      {!!resource.description && (
+        <Text style={styles.desc} numberOfLines={2}>
+          {resource.description}
+        </Text>
       )}
-      {/* Footer with actions */}
-      <div className="flex gap-2 mt-auto">
-        <FavoriteButton 
-    resourceId={resource.id}
-    className="flex-1 flex items-center justify-center rounded-full" 
-    // Add any props for styling!
-  />
-  <Button
-    variant="default"
-    size="sm"
-    className="flex-1 flex items-center justify-center rounded-full"
-    asChild
-  >
-    <Link href={`/resources/${resource.id}`}>
-      <Eye className="h-4 w-4 mr-2" />
-      {viewDetailsText}
-    </Link>
-  </Button>
-</div>
-    </div>
+      {resource.location && (
+        <View style={styles.locationRow}>
+          <Ionicons name="location" size={14} color="#005191" style={{ marginRight: 4 }} />
+          <Text style={styles.location}>{resource.location}</Text>
+        </View>
+      )}
+      <View style={styles.actions}>
+        <FavoriteButton
+          resourceId={resource.id}
+          style={styles.flexBtn}
+        />
+        <TouchableOpacity
+          style={[styles.flexBtn, styles.detailsBtn]}
+          onPress={() => navigation.navigate("ResourceDetail", { resourceId: resource.id })}
+        >
+          <Feather name="eye" size={18} color="#005191" style={{ marginRight: 7 }} />
+          <Text style={styles.detailsText}>{viewDetailsText}</Text>
+        </TouchableOpacity>
+      </View>
+    </Card>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    marginBottom: 18,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  badgesRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 6 },
+  headerRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 2 },
+  title: { fontWeight: "700", fontSize: 17, color: "#1b1b1b", flexShrink: 1, marginRight: 12 },
+  distance: {
+    backgroundColor: "#4287f5",
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: "flex-start",
+  },
+  distanceText: { color: "#fff", fontSize: 12, fontWeight: "bold" },
+  desc: { color: "#444", fontSize: 14, marginBottom: 6 },
+  locationRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  location: { color: "#777", fontSize: 13 },
+  actions: { flexDirection: "row", gap: 10, marginTop: "auto" },
+  flexBtn: { flex: 1 },
+  detailsBtn: {
+    backgroundColor: "#E6F1FA",
+    borderRadius: 999,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+  },
+  detailsText: { color: "#005191", fontWeight: "600", fontSize: 15 },
+});

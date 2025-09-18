@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from "react-native";
-import { Picker } from '@react-native-picker/picker';
-import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons'; // Substitute icons as needed
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Modal, Pressable } from "react-native";
+import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { useLanguage, Language } from "../contexts/LanguageContext";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 
@@ -12,6 +11,8 @@ export default function SettingsScreen() {
     triggerHaptic, theme } = useAccessibility();
 
   const [translatedTexts, setTranslatedTexts] = useState<Record<string, string>>({});
+  const [pickerVisible, setPickerVisible] = useState(false);
+
   // Language support
   const languages: { code: Language, name: string, nativeName: string }[] = [
     { code: 'en', name: 'English', nativeName: 'English' },
@@ -80,18 +81,47 @@ export default function SettingsScreen() {
           <Text style={styles.currentLanguageMain}>{languages.find(l => l.code === currentLanguage)?.nativeName}</Text>
           <Text style={styles.currentLanguageSub}>({languages.find(l => l.code === currentLanguage)?.name})</Text>
         </View>
-        {/* Language Picker */}
-        <Picker
-          selectedValue={currentLanguage}
-          onValueChange={val => { setLanguage(val as Language); triggerHaptic('light'); }}
+        {/* Language Picker - replaced native-base Picker with custom modal */}
+        <TouchableOpacity
+          style={styles.languagePickerBtn}
+          onPress={() => setPickerVisible(true)}
         >
-          {languages.map(lang => (
-            <Picker.Item key={lang.code} label={lang.nativeName} value={lang.code} />
-          ))}
-        </Picker>
+          <Text style={styles.languagePickerBtnText}>
+            {t('Choose your preferred language')}
+          </Text>
+        </TouchableOpacity>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={pickerVisible}
+          onRequestClose={() => setPickerVisible(false)}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setPickerVisible(false)}>
+            <View style={styles.modalContent}>
+              {languages.map(lang => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={styles.modalOption}
+                  onPress={() => {
+                    setLanguage(lang.code);
+                    triggerHaptic('light');
+                    setPickerVisible(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.modalOptionText,
+                    currentLanguage === lang.code && styles.modalOptionTextSelected
+                  ]}>
+                    {lang.nativeName} ({lang.name})
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
       </View>
 
-      {/* Accessibility Settings */}
+      {/* Accessibility Settings (unchanged) */}
       <View style={styles.card}>
         <View style={styles.cardHeaderRow}>
           <Ionicons name="accessibility" size={22} color="#005191" />
@@ -110,7 +140,7 @@ export default function SettingsScreen() {
               <Text style={[
                 styles.fontSizeLabel,
                 size === 'large' ? styles.fontSizeLarge :
-                size === 'small' ? styles.fontSizeSmall : styles.fontSizeMedium
+                  size === 'small' ? styles.fontSizeSmall : styles.fontSizeMedium
               ]}>
                 Aa
               </Text>
@@ -118,7 +148,6 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
         {/* Display Mode */}
         <Text style={styles.label}>{t('Display Mode')}</Text>
         <View style={styles.displayModeRow}>
@@ -133,7 +162,6 @@ export default function SettingsScreen() {
             <Text style={styles.displayModeOptionText}>{t('High Contrast')}</Text>
           </TouchableOpacity>
         </View>
-
         {/* Reduce Motion */}
         <View style={styles.switchRow}>
           <MaterialIcons name="waves" size={18} color="#888" />
@@ -153,7 +181,6 @@ export default function SettingsScreen() {
           <Switch value={hapticFeedback} onValueChange={setHapticFeedback} />
         </View>
       </View>
-
       {/* Info Card */}
       <View style={styles.card}>
         <Text style={styles.infoText}>
@@ -214,4 +241,11 @@ const styles = StyleSheet.create({
   devLabel: { fontSize: 15, color: "#444" },
   clearCacheBtn: { padding: 7, backgroundColor: "#eee", borderRadius: 5, marginLeft: 8 },
   clearCacheText: { color: "#222", fontWeight: "700" },
+  languagePickerBtn: { marginTop: 10, padding: 10, backgroundColor: "#e8eaf6", borderRadius: 6, alignSelf: 'flex-start' },
+  languagePickerBtnText: { color: "#005191", fontWeight: "bold", fontSize: 15 },
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: "rgba(0,0,0,0.24)" },
+  modalContent: { backgroundColor: "#fff", borderRadius: 10, padding: 20, minWidth: 260 },
+  modalOption: { padding: 11 },
+  modalOptionText: { fontSize: 17, color: "#005191" },
+  modalOptionTextSelected: { fontWeight: "bold", color: "#007aff" }
 });

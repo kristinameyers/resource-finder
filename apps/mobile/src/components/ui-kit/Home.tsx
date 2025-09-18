@@ -7,18 +7,16 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ImageSourcePropType,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { useResources } from '@sb211/hooks/use-resources';
-import { useLocation } from '@sb211/hooks/use-location';
-import { useOnboarding } from '@sb211/hooks/use-onboarding';
+import { useResources } from '../../hooks/use-resources';
+import { useLocation } from '../../hooks/use-location';
+import { useOnboarding } from '../../hooks/use-onboarding';
 import { useTranslatedText } from '../../components/TranslatedText';
 import { fetchCategories } from '../../api/api';
 import { Category, Subcategory } from '../../types/shared-schema';
-import new211LogoPng from '@sb211/assets/new-211-logo.png';
 
-const new211Logo = new211LogoPng as ImageSourcePropType;
+const new211Logo = require('../../../assets/new-211-logo.png');
 
 export interface HomeProps {
   navigateTo: (route: string, params?: Record<string, any>) => void;
@@ -185,6 +183,7 @@ function Home({ navigateTo }: HomeProps) {
     </View>
   );
 }
+
 export default Home;
 
 const styles = StyleSheet.create({

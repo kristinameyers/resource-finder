@@ -1,9 +1,12 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslatedText } from "../components/TranslatedText";
+
+// Use API base URL from Env
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "";
 
 interface Category {
   id: string;
@@ -12,25 +15,31 @@ interface Category {
   taxonomyCode: string;
 }
 
+type RootStackParamList = {
+  ResourcesList: { categoryId: string; useApi: boolean };
+  SearchKeyword: undefined;
+};
+
 export default function SearchCategoryScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { text: searchCategoryText } = useTranslatedText("Search Category");
   const { text: searchKeywordText } = useTranslatedText("Search Keyword");
   const { text: searchByCategoryText } = useTranslatedText("Search by Category");
   const { text: loadingCategoriesText } = useTranslatedText("Loading categories...");
 
-  // Fetch categories
-  const { data: categoriesResponse, isLoading } = useQuery({
+  // Fetch categories using .env API base
+  const { data: categoriesResponse, isLoading } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
-      const response = await fetch("https://api.example.com/categories");
+      const url = `${API_BASE_URL}/categories`;
+      const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch categories");
-      return response.json();
+      const json = await response.json();
+      return json.categories ?? [];
     },
   });
-  const categories = categoriesResponse?.categories || [];
+  const categories = categoriesResponse || [];
 
-  // Navigation handlers
   const handleCategorySelect = (categoryId: string) => {
     navigation.navigate("ResourcesList", { categoryId, useApi: true });
   };
@@ -40,7 +49,6 @@ export default function SearchCategoryScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Search Type Toggle */}
       <View style={styles.toggleRow}>
         <TouchableOpacity style={[styles.toggleBtn, styles.toggleActive]}>
           <Text style={styles.toggleText}>{searchCategoryText}</Text>
@@ -50,7 +58,6 @@ export default function SearchCategoryScreen() {
         </TouchableOpacity>
       </View>
       <Text style={styles.title}>{searchByCategoryText}</Text>
-      {/* Category Grid */}
       <View style={styles.grid}>
         {isLoading ? (
           <View style={styles.fullRow}>
@@ -63,10 +70,9 @@ export default function SearchCategoryScreen() {
               style={styles.categoryBtn}
               onPress={() => handleCategorySelect(category.id)}
             >
-              {/* Use actual icons if mapping icons by name, else use MaterialIcons or a placeholder */}
               <View style={styles.iconCircle}>
-                {/* Example: <MaterialIcons name={category.icon || "category"} size={26} color="#257" /> */}
-                <MaterialIcons name="category" size={26} color="#257" />
+                <MaterialIcons name={category.icon as keyof typeof MaterialIcons.glyphMap} size={26} color="#257" />
+
               </View>
               <Text style={styles.categoryText}>{category.name}</Text>
             </TouchableOpacity>

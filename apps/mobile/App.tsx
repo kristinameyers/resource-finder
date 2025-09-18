@@ -7,23 +7,23 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 
 // Import the Home screen (default export) from the UI kit package
-import Home from "./components/ui-kit/Home";
+import Home from "./src/components/ui-kit/Home";
  
 // Import screens with .tsx extension
-import SearchCategory from "./screens/SearchCategoryScreen";
-import SearchKeyword from "./screens/SearchKeywordScreen";
-import UpdateLocation from "./screens/UpdateLocationScreen";
-import ResourcesList from "./screens/ResourceListScreen";
-import ResourceDetail from "./screens/ResourceDetailScreen";
-import Favorites from "./screens/FavoritesScreen";
-import About from "./screens/AboutScreen";
-import Settings from "./screens/SettingsScreen";
-import { LanguageProvider } from "./contexts/LanguageContext";
-import { AccessibilityProvider } from "./contexts/AccessibilityContext";
-import { OnboardingFlow } from "./components/onboarding/OnboardingFlow";
-import { SplashScreen } from "./screens/SplashScreen";
-import { Toaster } from "./components/ui/toaster";
-import { useOnboarding } from "./hooks/use-onboarding";
+import SearchCategory from "./src/screens/SearchCategoryScreen";
+import SearchKeyword from "./src/screens/SearchKeywordScreen";
+import UpdateLocation from "./src/screens/UpdateLocationScreen";
+import ResourcesList from "./src/screens/ResourceListScreen";
+import ResourceDetail from "./src/screens/ResourceDetailScreen";
+import Favorites from "./src/screens/FavoritesScreen";
+import About from "./src/screens/AboutScreen";
+import Settings from "./src/screens/SettingsScreen";
+import { LanguageProvider } from "./src/contexts/LanguageContext";
+import { AccessibilityProvider } from "./src/contexts/AccessibilityContext";
+import { OnboardingFlow } from "./src/components/onboarding/OnboardingFlow";
+import { SplashScreen } from "./src/screens/SplashScreen";
+import Toaster from "./src/components/ui/Toaster";
+import { useOnboarding } from "./src/hooks/use-onboarding";
 
 type DrawerParamList = {
   Home: undefined;

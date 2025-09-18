@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from "@tanstack/react-query";
-import { filterSantaBarbaraAndSort } from "src/utils/distanceUtils"; // You may need to move this to a package.
-import { useTranslatedText } from "@sb211/components/TranslatedText";
+import { filterSantaBarbaraAndSort } from "../utils/distance";
+import { useTranslatedText } from "../components/TranslatedText";
 
+// API base from .env (.env must define EXPO_PUBLIC_NATIONAL_211_API_URL)
+const API_BASE_URL = process.env.EXPO_PUBLIC_NATIONAL_211_API_URL || "";
+
+// --- Types ---
 interface Resource {
   id: string;
   name: string;
@@ -19,36 +23,25 @@ interface Resource {
   serviceAreas?: string;
   distanceMiles?: number;
 }
-
 interface Category { id: string; name: string; }
 interface Subcategory { id: string; name: string; categoryId: string; }
 
-function getFavorites() {
-  return AsyncStorage.getItem("favorites").then(data => {
-    try {
-      return data ? JSON.parse(data) as string[] : [];
-    } catch {
-      return [];
-    }
-  });
-}
-
-function saveFavorites(favs: string[]) {
-  AsyncStorage.setItem("favorites", JSON.stringify(favs));
-}
+type RootStackParamList = {
+  ResourcesList: { categoryId?: string; keyword?: string };
+  UpdateLocation: undefined;
+  ResourceDetail: { id: string };
+};
 
 export default function ResourcesListScreen() {
-  const navigation = useNavigation();
-  // Route params to get category/keyword, or use Context/provider for search state.
-  const route = useRoute();
-  const categoryId = route.params?.categoryId || null;
-  const keyword = route.params?.keyword || null;
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "ResourcesList">>();
+  const { categoryId = null, keyword = null } = route.params || {};
 
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [userLocation, setUserLocation] = useState<string>("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<"relevance" | "distance">("relevance");
-  const [filtersActive, setFiltersActive] = useState(false);
+  const [sortedResources, setSortedResources] = useState<Resource[]>([]);
 
   // Translations
   const { text: sb211Text } = useTranslatedText("Santa Barbara 211");
@@ -63,75 +56,94 @@ export default function ResourcesListScreen() {
   const { text: resourcesInText } = useTranslatedText("Resources in");
   const { text: searchResultsText } = useTranslatedText("Search Results");
 
+  // Load user zip and favorites
   useEffect(() => {
-    // Get user zip code from AsyncStorage
     AsyncStorage.getItem('userZipCode').then(zipCode => {
       if (zipCode) setUserLocation(zipCode);
     });
-    getFavorites().then(setFavorites);
+    AsyncStorage.getItem("favorites").then(data => {
+      setFavorites(data ? JSON.parse(data) : []);
+    });
   }, []);
 
   useEffect(() => {
-    saveFavorites(favorites);
+    AsyncStorage.setItem("favorites", JSON.stringify(favorites));
   }, [favorites]);
 
-  // Fetch categories
+  // Categories
   const { data: categoriesResponse } = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
-      const response = await fetch('https://api.example.com/categories');
+      const response = await fetch(`${API_BASE_URL}/categories`);
       if (!response.ok) throw new Error('Failed to fetch categories');
       return response.json();
     },
+    enabled: !!API_BASE_URL
   });
   const categories = categoriesResponse || [];
 
-  // Fetch subcategories
+  // Subcategories
   const { data: subcategoriesResponse } = useQuery<Subcategory[]>({
     queryKey: ["subcategories", categoryId],
     queryFn: async () => {
       if (!categoryId) throw new Error('Category ID required');
-      const response = await fetch(`https://api.example.com/subcategories?categoryId=${categoryId}`);
+      const response = await fetch(`${API_BASE_URL}/subcategories?categoryId=${categoryId}`);
       if (!response.ok) throw new Error('Failed to fetch subcategories');
       return response.json();
     },
-    enabled: !!categoryId,
+    enabled: !!(categoryId && API_BASE_URL),
   });
   const subcategories = subcategoriesResponse || [];
 
-  // Build query string for resources
+  // Compose query params for fetching resources
   let queryParams: string[] = [];
   if (categoryId) queryParams.push(`categoryId=${categoryId}`);
   if (selectedSubcategory && selectedSubcategory !== 'all') queryParams.push(`subcategoryId=${selectedSubcategory}`);
   if (keyword) queryParams.push(`keyword=${keyword}`);
   if (userLocation) queryParams.push(`zipCode=${userLocation}`);
-  const queryStr = queryParams.join('&');
+  const queryStr = queryParams.length > 0 ? `?${queryParams.join('&')}` : "";
 
-  // Fetch resources
+  // Resources fetch
   const { data: resourcesData, isLoading } = useQuery<Resource[]>({
-    queryKey: ["resources", queryStr],
+    queryKey: ["resources", categoryId, selectedSubcategory, keyword, userLocation],
     queryFn: async () => {
-      const response = await fetch(`https://api.example.com/resources?${queryStr}`);
+      const response = await fetch(`${API_BASE_URL}/resources${queryStr}`);
       if (!response.ok) throw new Error('Failed to fetch resources');
       const result = await response.json();
-      // Save resources for detail screen
       await AsyncStorage.setItem('recentResources', JSON.stringify(result.resources));
       return result.resources || [];
     },
-    enabled: !!(categoryId || keyword),
+    enabled: !!(API_BASE_URL && (categoryId || keyword)),
   });
 
-  let processedResources: Resource[] = resourcesData || [];
-  const currentCategory = categories.find((cat: Category) => cat.id === categoryId);
+  // Subcategory filtering in memory (optional if API returns filtered)
   const filteredSubcategories = subcategories.filter((sub: Subcategory) => sub.categoryId === categoryId);
 
-  // Distance sorting if requested
-  if (sortBy === "distance" && !!userLocation) {
-    processedResources = filterSantaBarbaraAndSort(processedResources, userLocation);
-  }
+  // Handle distance sorting
+  useEffect(() => {
+    let isMounted = true;
+    async function doSort() {
+      if (!resourcesData) {
+        if (isMounted) setSortedResources([]);
+        return;
+      }
+      if (sortBy === "distance" && userLocation) {
+        const sorted: Resource[] = await filterSantaBarbaraAndSort(
+          userLocation, resourcesData
+        );
+        if (isMounted) setSortedResources(sorted);
+      } else {
+        setSortedResources(resourcesData);
+      }
+    }
+    doSort();
+    return () => { isMounted = false; };
+  }, [resourcesData, sortBy, userLocation]);
 
-  // Handle favorites using AsyncStorage
-  const handleToggleFavorite = async (resource: Resource) => {
+  const currentCategory = categories.find((cat) => cat.id === categoryId);
+
+  // Favorites logic
+  const handleToggleFavorite = (resource: Resource) => {
     let next: string[];
     if (favorites.includes(resource.id)) {
       next = favorites.filter(id => id !== resource.id);
@@ -139,30 +151,33 @@ export default function ResourcesListScreen() {
       next = [...favorites, resource.id];
     }
     setFavorites(next);
-    saveFavorites(next);
+    AsyncStorage.setItem("favorites", JSON.stringify(next));
   };
 
-  // Navigation actions
+  // Navigation
   const handleBack = () => navigation.goBack();
   const handleLocationClick = () => navigation.navigate('UpdateLocation');
   const handleResourceClick = (resourceId: string) => navigation.navigate('ResourceDetail', { id: resourceId });
   const handleSortChange = (value: "relevance" | "distance") => setSortBy(value);
   const handleClearFilters = () => setSelectedSubcategory("all");
 
-  // Dropdown for subcategory selection
   const SubcategoryPicker = () => (
     filteredSubcategories.length > 0 ?
-    <View style={styles.pickerContainer}>
-      <TouchableOpacity
-        style={styles.picker}
-        onPress={() => {/* Show picker modal/dialog */}}
-      >
-        <Text style={styles.pickerText}>{selectedSubcategory === "all" ? allSubcategoriesText : filteredSubcategories.find(s => s.id === selectedSubcategory)?.name || allSubcategoriesText}</Text>
-        <Ionicons name="chevron-down" size={16} color="#333" />
-      </TouchableOpacity>
-      {/* Implement picker modal/dialog here as needed */}
-    </View>
-    : null
+      <View style={styles.pickerContainer}>
+        <TouchableOpacity
+          style={styles.picker}
+          onPress={() => {/* Picker modal can be implemented here if needed */ }}
+        >
+          <Text style={styles.pickerText}>
+            {selectedSubcategory === "all"
+              ? allSubcategoriesText
+              : filteredSubcategories.find(s => s.id === selectedSubcategory)?.name || allSubcategoriesText}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color="#333" />
+        </TouchableOpacity>
+        {/* Picker modal/dialog could go here */}
+      </View>
+      : null
   );
 
   return (
@@ -172,26 +187,23 @@ export default function ResourcesListScreen() {
         <TouchableOpacity style={styles.iconBtn} onPress={handleBack}>
           <Ionicons name="chevron-back" size={24} color="#222" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => {/* TODO: Hamburger menu */}}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => {/* Optional: Hamburger menu */ }}>
           <Ionicons name="menu" size={24} color="#222" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconBtn} onPress={handleLocationClick}>
           <Ionicons name="location" size={24} color="#222" />
         </TouchableOpacity>
       </View>
-
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>{sb211Text}</Text>
       </View>
-
-      {/* Filters and Controls */}
+      {/* Filters */}
       <View style={styles.filters}>
         <SubcategoryPicker />
         <TouchableOpacity style={styles.locationBtn} onPress={handleLocationClick}>
           <Text style={styles.locationBtnText}>{updateLocationText}</Text>
         </TouchableOpacity>
-        {/* Sort options: simple segment control */}
         <View style={styles.sortRow}>
           <TouchableOpacity onPress={() => handleSortChange("relevance")} style={[styles.sortOption, sortBy === "relevance" && styles.sortActive]}>
             <Text style={sortBy === "relevance" ? styles.sortActiveText : styles.sortText}>Relevance</Text>
@@ -205,18 +217,17 @@ export default function ResourcesListScreen() {
         </TouchableOpacity>
         <Text style={styles.resultsLabel}>
           {isLoading ? loadingText :
-            `${processedResources.length} ${resourcesInText} ${(currentCategory?.name || keyword || searchResultsText)}`}
+            `${sortedResources.length} ${resourcesInText} ${(currentCategory?.name || keyword || searchResultsText)}`}
         </Text>
       </View>
-
       {/* Resources List */}
       <ScrollView contentContainerStyle={styles.listContainer}>
         {isLoading ? (
           <View style={styles.centerContainer}><Text>{loadingText}</Text></View>
-        ) : processedResources.length === 0 ? (
+        ) : sortedResources.length === 0 ? (
           <View style={styles.centerContainer}><Text>{noResourcesText}</Text></View>
         ) : (
-          processedResources.map((resource: Resource) => (
+          sortedResources.map((resource: Resource) => (
             <TouchableOpacity
               key={resource.id}
               style={styles.resourceCard}
@@ -255,7 +266,6 @@ export default function ResourcesListScreen() {
           ))
         )}
       </ScrollView>
-      {/* Add your GlobalNavbar here if you migrate it to mobile */}
     </View>
   );
 }
@@ -288,7 +298,7 @@ const styles = StyleSheet.create({
   distanceBadge: { fontSize: 14, color: "#007aff", fontWeight: "600" },
   resourceDesc: { color: "#555", fontSize: 14, marginVertical: 4 },
   locationRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-  locationText: { color: "#666",fontSize: 14, marginLeft: 4 },
+  locationText: { color: "#666", fontSize: 14, marginLeft: 4 },
   cardActions: { flexDirection: "row", marginTop: 8 },
   favoriteBtn: { flexDirection: "row", alignItems: "center", marginRight: 18 },
   detailsBtn: { flexDirection: "row", alignItems: "center" },

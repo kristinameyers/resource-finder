@@ -4,8 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
-import { useToast } from "@sb211/hooks/use-toast";
-import { getCoordinatesFromZipCode } from "src/utils/distanceUtils";
+import { useToast } from "../hooks/use-toast";
+import { getCoordinatesForZip } from '../utils/distance';
 import { useTranslatedText } from "../components/TranslatedText";
 
 type RootStackParamList = {
@@ -19,7 +19,7 @@ export default function UpdateLocationScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [zipCode, setZipCode] = useState("");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const { toast } = useToast();
+  const { show } = useToast();
   const { text: sb211Text } = useTranslatedText("Santa Barbara 211");
   const { text: searchCategoryText } = useTranslatedText("Search Category");
   const { text: searchKeywordText } = useTranslatedText("Search Keyword");
@@ -30,7 +30,6 @@ export default function UpdateLocationScreen() {
   const { text: saveText } = useTranslatedText("Save");
 
   useEffect(() => {
-    // Load saved zip code from AsyncStorage
     AsyncStorage.getItem("userZipCode").then(savedZipCode => {
       if (savedZipCode) setZipCode(savedZipCode);
     });
@@ -45,28 +44,17 @@ export default function UpdateLocationScreen() {
           await AsyncStorage.setItem("userLatitude", latitude.toString());
           await AsyncStorage.setItem("userLongitude", longitude.toString());
           await AsyncStorage.removeItem("userZipCode");
-          toast({
-            title: "Location Updated",
-            description: "Using your current GPS location for distance calculations.",
-          });
+          show("Location Updated: Using your current GPS location for distance calculations.");
           navigation.navigate("Home");
         },
         error => {
-          toast({
-            title: "Location Error",
-            description: "Could not get your current location. Please enter your zip code.",
-            variant: "destructive",
-          });
+          show("Location Error: Could not get your current location. Please enter your zip code.");
           setIsGettingLocation(false);
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
       );
     } catch (error) {
-      toast({
-        title: "Location Error",
-        description: "Could not get your current location. Please enter your zip code.",
-        variant: "destructive",
-      });
+      show("Location Error: Could not get your current location. Please enter your zip code.");
       setIsGettingLocation(false);
     }
   };
@@ -75,41 +63,28 @@ export default function UpdateLocationScreen() {
     if (zipCode.trim()) {
       const zipRegex = /^\d{5}$/;
       if (!zipRegex.test(zipCode.trim())) {
-        toast({
-          title: "Invalid Zip Code",
-          description: "Please enter a valid 5-digit zip code.",
-          variant: "destructive",
-        });
+        show("Invalid Zip Code: Please enter a valid 5-digit zip code.");
         return;
       }
       try {
-        const coords = await getCoordinatesFromZipCode(zipCode.trim());
+        const coords = await getCoordinatesForZip(zipCode.trim());
         if (coords) {
           await AsyncStorage.setItem("userLatitude", coords.lat.toString());
           await AsyncStorage.setItem("userLongitude", coords.lng.toString());
           await AsyncStorage.setItem("userZipCode", zipCode.trim());
-          toast({
-            title: "Location Updated",
-            description: `Zip code ${zipCode.trim()} converted to coordinates for precise distance calculations.`,
-          });
+          show(`Location Updated: Zip code ${zipCode.trim()} converted to coordinates for precise distance calculations.`);
         } else {
           await AsyncStorage.setItem("userZipCode", zipCode.trim());
           await AsyncStorage.removeItem("userLatitude");
           await AsyncStorage.removeItem("userLongitude");
-          toast({
-            title: "Location Updated",
-            description: `Zip code ${zipCode.trim()} saved (coordinate lookup unavailable).`,
-          });
+          show(`Location Updated: Zip code ${zipCode.trim()} saved (coordinate lookup unavailable).`);
         }
         navigation.navigate("Home");
       } catch (error) {
         await AsyncStorage.setItem("userZipCode", zipCode.trim());
         await AsyncStorage.removeItem("userLatitude");
         await AsyncStorage.removeItem("userLongitude");
-        toast({
-          title: "Location Updated",
-          description: `Zip code ${zipCode.trim()} saved (coordinate lookup failed).`,
-        });
+        show(`Location Updated: Zip code ${zipCode.trim()} saved (coordinate lookup failed).`);
         navigation.navigate("Home");
       }
     }
@@ -208,8 +183,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fbbf24", paddingVertical: 12, paddingHorizontal: 22, borderRadius: 8,
     alignItems: "center", justifyContent: "center"
   },
-  saveBtnDisabled: {
-    backgroundColor: "#ffe9b5",
-  },
+  saveBtnDisabled: { backgroundColor: "#ffe9b5" },
   saveBtnText: { fontWeight: "700", color: "#222", fontSize: 16 }
 });

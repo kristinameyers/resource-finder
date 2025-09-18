@@ -1,71 +1,70 @@
-import { 
-  Home, 
-  Utensils, 
-  BookOpen, 
-  Briefcase, 
-  Heart,
-  Scale,
-  Bus,
-  Brain,
-  Pill,
-  Users2,
-  Droplets,
-  User
-} from "lucide-react";
-import { LucideIcon } from "lucide-react";
+import React from "react";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { ImageSourcePropType } from "react-native";
 
 // Import custom PNG icons
-import childrenFamilyIcon from "@assets/Children and Family_1754356261782.png";
-import foodIcon from "@assets/food_1754356284244.png";
-import educationIcon from "@assets/education_1754356313451.png";
+import childrenFamilyIcon from "../assets/Children and Family_1754356261782.png";
+import foodIcon from "../assets/food_1754356284244.png";
+import educationIcon from "../assets/education_1754356313451.png";
 
-export const CategoryIcons: Record<string, LucideIcon> = {
-  "children-family": Users2,     // Will be replaced with custom PNG
-  food: Utensils,               // Will be replaced with custom PNG
-  education: BookOpen,          // Will be replaced with custom PNG
-  housing: Home,
-  "finance-employment": Briefcase,
-  healthcare: Heart,
-  "legal-assistance": Scale,
-  transportation: Bus,
-  "mental-wellness": Brain,
-  "substance-use": Pill,
-  "hygiene-household": Droplets,
-  "young-adults": User,
-  utilities: Briefcase
+// Emoji or Icon codes for category fallback (could be any RN icon set)
+export const CategoryIcons: Record<string, { iconSet: "Ionicons" | "MaterialCommunityIcons"; name: string }> = {
+  "children-family": { iconSet: "Ionicons", name: "people" },     // Will be replaced with custom PNG
+  food: { iconSet: "MaterialCommunityIcons", name: "food" },      // Will be replaced with custom PNG
+  education: { iconSet: "MaterialCommunityIcons", name: "school" },  // Will be replaced with custom PNG
+  housing: { iconSet: "Ionicons", name: "home" },
+  "finance-employment": { iconSet: "Ionicons", name: "cash" },
+  healthcare: { iconSet: "Ionicons", name: "medkit" },
+  "legal-assistance": { iconSet: "Ionicons", name: "briefcase" },
+  transportation: { iconSet: "Ionicons", name: "car" },
+  "mental-wellness": { iconSet: "Ionicons", name: "heart" },
+  "substance-use": { iconSet: "MaterialCommunityIcons", name: "pill" },
+  "hygiene-household": { iconSet: "MaterialCommunityIcons", name: "water" },
+  "young-adults": { iconSet: "Ionicons", name: "school" },
+  utilities: { iconSet: "Ionicons", name: "bulb" },
 };
 
 // Custom PNG icons for specific categories
-export const CustomCategoryIcons: Record<string, string> = {
-  "children-family": childrenFamilyIcon,
-  food: foodIcon,
-  education: educationIcon
+export const CustomCategoryIcons: Record<string, ImageSourcePropType> = {
+  "children-family": require("../assets/Children and Family_1754356261782.png"),
+  food: require("../assets/food_1754356284244.png"),
+  education: require("../assets/education_1754356313451.png"),
 };
 
-export const getCategoryIcon = (categoryId: string): LucideIcon => {
-  return CategoryIcons[categoryId] || Home;
+/**
+ * Get icon config for a category.
+ */
+export const getCategoryIcon = (categoryId: string) => {
+  return CategoryIcons[categoryId] || { iconSet: "Ionicons", name: "home" };
 };
 
-export const getCustomCategoryIcon = (categoryId: string): string | null => {
+/**
+ * Get custom PNG icon for a category, or null.
+ */
+export const getCustomCategoryIcon = (
+  categoryId: string
+): ImageSourcePropType | null => {
   return CustomCategoryIcons[categoryId] || null;
 };
 
-export const getCategoryColorClass = (categoryId: string): string => {
+/**
+ * Get color for a category (use with style prop).
+ */
+export const getCategoryColor = (categoryId: string): string => {
   const colorMap: Record<string, string> = {
-    housing: "category-housing",
-    food: "category-food", 
-    healthcare: "category-healthcare",
-    education: "category-education",
-    "finance-employment": "category-finance-employment",
-    "legal-assistance": "category-legal-assistance",
-    transportation: "category-transportation",
-    "mental-wellness": "category-mental-wellness",
-    "substance-use": "category-substance-use",
-    "children-family": "category-children-family",
-    "hygiene-household": "category-hygiene-household",
-    "young-adults": "category-young-adults",
-    utilities: "category-utilities"
+    housing: "#4A90E2",
+    food: "#F5A623",
+    healthcare: "#BD10E0",
+    education: "#002766",
+    "finance-employment": "#F5A623",
+    "legal-assistance": "#417505",
+    transportation: "#D0021B",
+    "mental-wellness": "#7ED321",
+    "substance-use": "#9013FE",
+    "children-family": "#50E3C2",
+    "hygiene-household": "#4A4A4A",
+    "young-adults": "#B8E986",
+    utilities: "#F8E71C"
   };
-  
-  return colorMap[categoryId] || "category-housing";
+  return colorMap[categoryId] || "#4A90E2";
 };

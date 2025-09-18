@@ -1,38 +1,56 @@
-import { Skeleton } from "./ui/skeleton";
-import { Card, CardContent, CardHeader } from "./ui/card";
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import { Skeleton } from "./ui/Skeleton";
+import { Card } from "./ui/Card";
 
 export default function FilterSectionSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-4 w-64" />
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <Card style={{ marginBottom: 18 }}>
+      {/* Card Header Skeleton */}
+      <View style={styles.header}>
+        <Skeleton style={styles.headerTitle} />
+        <Skeleton style={styles.headerDesc} />
+      </View>
+      {/* Card Content Skeleton */}
+      <View style={styles.content}>
         {/* Category Filter Skeleton */}
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        
+        <View style={styles.filterSection}>
+          <Skeleton style={styles.label} />
+          <Skeleton style={styles.input} />
+        </View>
         {/* Subcategory Filter Skeleton */}
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        
+        <View style={styles.filterSection}>
+          <Skeleton style={styles.labelWide} />
+          <Skeleton style={styles.input} />
+        </View>
         {/* Location Section Skeleton */}
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-16" />
-          <div className="space-y-3">
-            <Skeleton className="h-9 w-32" />
-            <div className="flex gap-2">
-              <Skeleton className="h-10 flex-1" />
-              <Skeleton className="h-10 w-20" />
-            </div>
-          </div>
-        </div>
-      </CardContent>
+        <View style={styles.filterSection}>
+          <Skeleton style={styles.labelShort} />
+          <View style={{ gap: 12 }}>
+            <Skeleton style={styles.button} />
+            <View style={styles.row}>
+              <Skeleton style={styles.input} />
+              <Skeleton style={styles.buttonSmall} />
+            </View>
+          </View>
+        </View>
+      </View>
     </Card>
   );
 }
+
+const styles = StyleSheet.create({
+  header: { marginBottom: 18, gap: 8 },
+  headerTitle: { height: 24, width: 128, borderRadius: 6, marginBottom: 6 },
+  headerDesc: { height: 14, width: 190, borderRadius: 6 },
+
+  content: { gap: 16 },
+  filterSection: { gap: 10, marginBottom: 16 },
+  label: { height: 14, width: 80, borderRadius: 4 },
+  input: { height: 40, width: "100%", borderRadius: 8 },
+  labelWide: { height: 14, width: 110, borderRadius: 4 },
+  labelShort: { height: 14, width: 60, borderRadius: 4 },
+  button: { height: 36, width: 120, borderRadius: 8, marginBottom: 8 },
+  row: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4 },
+  buttonSmall: { height: 36, width: 56, borderRadius: 8 },
+});

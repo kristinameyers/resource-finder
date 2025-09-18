@@ -11,30 +11,6 @@
     "strict": true,
     "baseUrl": ".",
     "outDir": "dist",
-    "paths": {
-      "@sb211/hooks/*": [
-        "../../apps/mobile/src/hooks/*"
-      ],
-      "@sb211/components/*": [
-        "../../packages/components/src/*"
-      ],
-      "@sb211/shared-schema": [
-        "../../packages/shared-schema/src/index.ts"
-      ],
-      "@sb211/lib/*": [
-        "../../packages/lib/src/*"
-      ],
-      "@sb211/assets/*": [
-        "../../apps/mobile/assets/*"
-      ]
-    }
   },
-  "include": [
-    "src/**/*",
-    "src/utils/utils.ts",
-    "src/utils/session.ts",
-    "src/utils/queryClient.ts",
-    "src/utils/distanceUtils.ts",
-    "src/api/api.ts"
-  ]
+  "include": ["src/**/*"]
 }

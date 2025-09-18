@@ -1,16 +1,24 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import type { NavigationProp } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useTranslatedText } from "@sb211/components/TranslatedText";
+import { useTranslatedText } from "../components/TranslatedText";
+
+// Type for your navigator stack
+type RootStackParamList = {
+  ResourcesList: { keyword: string; useApi: boolean };
+  SearchCategory: undefined;
+};
 
 export default function SearchKeywordScreen() {
-  const navigation = useNavigation();
-  const [keyword, setKeyword] = useState("");
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [keyword, setKeyword] = useState<string>("");
   const { text: searchCategoryText } = useTranslatedText("Search Category");
   const { text: searchKeywordText } = useTranslatedText("Search Keyword");
   const { text: searchWithKeywordText } = useTranslatedText("Search with Keyword");
 
+    // Actions
   const handleSearch = () => {
     if (keyword.trim()) {
       navigation.navigate("ResourcesList", {
@@ -27,7 +35,6 @@ export default function SearchKeywordScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Search Type Toggle */}
       <View style={styles.toggleRow}>
         <TouchableOpacity style={styles.toggleBtn} onPress={handleSearchCategory}>
           <Text style={styles.toggleText}>{searchCategoryText}</Text>
@@ -38,7 +45,6 @@ export default function SearchKeywordScreen() {
       </View>
       <Text style={styles.title}>{searchWithKeywordText}</Text>
 
-      {/* Search Input */}
       <View style={styles.searchRow}>
         <TextInput
           style={styles.searchInput}

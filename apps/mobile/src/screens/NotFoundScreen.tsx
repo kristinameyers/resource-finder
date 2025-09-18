@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useTranslatedText } from "@sb211/components/TranslatedText";
+import { useTranslatedText } from "../components/TranslatedText";
 
 export default function NotFoundScreen() {
   const { text: pageNotFoundText } = useTranslatedText("404 Page Not Found");

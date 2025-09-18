@@ -98,7 +98,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     return (
       <View style={styles.container}>
         <View style={styles.center}>
-          <Image source={require('../../assets/new-211-logo.png')} style={styles.logo} resizeMode="contain" />
+          <Image source={require('../../../assets/new-211-logo.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.logoDesc}>Get connected. Get Help.</Text>
         </View>
         <View style={styles.center}>
@@ -122,7 +122,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.center}>
-        <Image source={require('../../assets/new-211-logo.png')} style={styles.logoSmall} resizeMode="contain" />
+        <Image source={require('../../../assets/new-211-logo.png')} style={styles.logoSmall} resizeMode="contain" />
         <Text style={styles.logoDesc}>Get connected. Get Help.</Text>
       </View>
       <Text style={styles.sectionTitle}>{findResourcesText}</Text>
