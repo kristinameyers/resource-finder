@@ -822,6 +822,12 @@ const server = http.createServer(async (req, res) => {
           }
           
           const detailData = await response.json();
+          console.log('Detail API response structure:', {
+            hasNameService: !!detailData.nameService,
+            hasNameOrganization: !!detailData.nameOrganization,
+            languagesType: typeof detailData.languagesOffered,
+            languagesIsArray: Array.isArray(detailData.languagesOffered)
+          });
           
           // Transform the detailed API response into our format
           const transformedDetail = {
@@ -866,7 +872,14 @@ const server = http.createServer(async (req, res) => {
             hours: detailData.hoursOfOperation || detailData.operatingHours || detailData.regularScheduleOpeningHours || '',
             
             // Languages and accessibility
-            languages: detailData.languagesOffered ? detailData.languagesOffered.split(',').map(l => l.trim()) : [],
+            languages: (function() {
+              if (!detailData.languagesOffered) return [];
+              if (Array.isArray(detailData.languagesOffered)) return detailData.languagesOffered;
+              if (typeof detailData.languagesOffered === 'string') {
+                return detailData.languagesOffered.split(',').map(l => l.trim());
+              }
+              return [];
+            })(),
             accessibility: detailData.accessibilityDetails || detailData.accessibilityForDisabilities || '',
             
             // Eligibility and requirements
