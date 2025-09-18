@@ -1,6 +1,12 @@
 import http from 'http';
 import url from 'url';
 import querystring from 'querystring';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Simple storage implementation
 class MemStorage {
@@ -181,32 +187,43 @@ const server = http.createServer(async (req, res) => {
   }
 
   const parsedUrl = url.parse(req.url, true);
-  const path = parsedUrl.pathname;
+  const pathname = parsedUrl.pathname;
   const query = parsedUrl.query;
 
   try {
-    // Root endpoint
-    if (path === '/' && req.method === 'GET') {
-      return sendJSON(res, {
-        message: 'Resource Finder API',
-        version: '1.0.0',
-        environment: 'development',
-        endpoints: {
-          resources: '/api/resources',
-          categories: '/api/categories',
-          votes: '/api/votes',
-          health: '/api/health',
-        },
-      });
+    // Root endpoint - serve HTML
+    if (pathname === '/' && req.method === 'GET') {
+      const htmlPath = path.join(__dirname, '..', 'client', 'index.html');
+      try {
+        const html = fs.readFileSync(htmlPath, 'utf-8');
+        res.writeHead(200, {
+          'Content-Type': 'text/html',
+          'Access-Control-Allow-Origin': '*',
+        });
+        return res.end(html);
+      } catch (error) {
+        // Fallback to API info if HTML not found
+        return sendJSON(res, {
+          message: 'Resource Finder API',
+          version: '1.0.0',
+          environment: 'development',
+          endpoints: {
+            resources: '/api/resources',
+            categories: '/api/categories',
+            votes: '/api/votes',
+            health: '/api/health',
+          },
+        });
+      }
     }
 
     // Health check
-    if (path === '/api/health' && req.method === 'GET') {
+    if (pathname === '/api/health' && req.method === 'GET') {
       return sendJSON(res, { status: 'ok', timestamp: new Date().toISOString() });
     }
 
     // Resources endpoints
-    if (path === '/api/resources' && req.method === 'GET') {
+    if (pathname === '/api/resources' && req.method === 'GET') {
       const { search, category } = query;
       let resources;
 
@@ -221,10 +238,10 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, resources);
     }
 
-    if (path.startsWith('/api/resources/') && req.method === 'GET') {
-      const id = path.split('/')[3];
-      if (path.endsWith('/votes')) {
-        const resourceId = path.split('/')[3];
+    if (pathname.startsWith('/api/resources/') && req.method === 'GET') {
+      const id = pathname.split('/')[3];
+      if (pathname.endsWith('/votes')) {
+        const resourceId = pathname.split('/')[3];
         const votes = await storage.getVotesForResource(resourceId);
         const summary = {
           helpful: votes.filter(v => v.vote > 0).length,
@@ -241,20 +258,20 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    if (path === '/api/resources' && req.method === 'POST') {
+    if (pathname === '/api/resources' && req.method === 'POST') {
       const body = await parseRequestBody(req);
       const resource = await storage.createResource(body);
       return sendJSON(res, resource, 201);
     }
 
     // Categories endpoints
-    if (path === '/api/categories' && req.method === 'GET') {
+    if (pathname === '/api/categories' && req.method === 'GET') {
       const categories = await storage.getCategories();
       return sendJSON(res, categories);
     }
 
     // Voting endpoints
-    if (path === '/api/votes' && req.method === 'POST') {
+    if (pathname === '/api/votes' && req.method === 'POST') {
       const body = await parseRequestBody(req);
       const { resourceId, vote } = body;
       const sessionId = req.connection.remoteAddress || 'anonymous';
