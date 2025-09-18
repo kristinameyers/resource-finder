@@ -1,6 +1,6 @@
 // Zip code data for Santa Barbara County and surrounding areas
 // Format: { zipCode: { lat: latitude, lng: longitude } }
-const ZIP_CODE_DATA = {
+window.ZIP_CODE_DATA = {
   // Santa Barbara city
   "93101": { lat: 34.4208, lng: -119.6982 },
   "93102": { lat: 34.4285, lng: -119.7145 },
@@ -59,13 +59,13 @@ const ZIP_CODE_DATA = {
 };
 
 // Haversine formula to calculate distance between two points
-function calculateDistance(lat1, lng1, lat2, lng2) {
+window.calculateDistance = function(lat1, lng1, lat2, lng2) {
   const R = 3959; // Earth's radius in miles
-  const dLat = toRadians(lat2 - lat1);
-  const dLng = toRadians(lng2 - lng1);
+  const dLat = window.toRadians(lat2 - lat1);
+  const dLng = window.toRadians(lng2 - lng1);
   
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.cos(window.toRadians(lat1)) * Math.cos(window.toRadians(lat2)) *
     Math.sin(dLng / 2) * Math.sin(dLng / 2);
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -74,17 +74,17 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
   return Math.round(distance * 10) / 10; // Round to 1 decimal place
 }
 
-function toRadians(degrees) {
+window.toRadians = function(degrees) {
   return degrees * (Math.PI / 180);
 }
 
 // Find the closest zip code to given coordinates
-function findClosestZipCode(lat, lng) {
+window.findClosestZipCode = function(lat, lng) {
   let closestZip = null;
   let minDistance = Infinity;
   
-  for (const [zipCode, coords] of Object.entries(ZIP_CODE_DATA)) {
-    const distance = calculateDistance(lat, lng, coords.lat, coords.lng);
+  for (const [zipCode, coords] of Object.entries(window.ZIP_CODE_DATA)) {
+    const distance = window.calculateDistance(lat, lng, coords.lat, coords.lng);
     if (distance < minDistance) {
       minDistance = distance;
       closestZip = zipCode;
@@ -95,12 +95,12 @@ function findClosestZipCode(lat, lng) {
 }
 
 // Get coordinates for a zip code
-function getZipCodeCoordinates(zipCode) {
-  return ZIP_CODE_DATA[zipCode] || null;
+window.getZipCodeCoordinates = function(zipCode) {
+  return window.ZIP_CODE_DATA[zipCode] || null;
 }
 
 // Normalize ZIP code to 5 digits
-function normalizeZipCode(zip) {
+window.normalizeZipCode = function(zip) {
   if (!zip) return null;
   // Remove all non-digits and take first 5 digits
   const cleaned = String(zip).replace(/\D/g, '').slice(0, 5);
@@ -108,21 +108,21 @@ function normalizeZipCode(zip) {
 }
 
 // Calculate distance between two zip codes
-function calculateZipCodeDistance(zip1, zip2) {
+window.calculateZipCodeDistance = function(zip1, zip2) {
   // Normalize both zip codes to 5 digits
-  const normalizedZip1 = normalizeZipCode(zip1);
-  const normalizedZip2 = normalizeZipCode(zip2);
+  const normalizedZip1 = window.normalizeZipCode(zip1);
+  const normalizedZip2 = window.normalizeZipCode(zip2);
   
   if (!normalizedZip1 || !normalizedZip2) {
     return null;
   }
   
-  const coords1 = getZipCodeCoordinates(normalizedZip1);
-  const coords2 = getZipCodeCoordinates(normalizedZip2);
+  const coords1 = window.getZipCodeCoordinates(normalizedZip1);
+  const coords2 = window.getZipCodeCoordinates(normalizedZip2);
   
   if (!coords1 || !coords2) {
     return null;
   }
   
-  return calculateDistance(coords1.lat, coords1.lng, coords2.lat, coords2.lng);
+  return window.calculateDistance(coords1.lat, coords1.lng, coords2.lat, coords2.lng);
 }

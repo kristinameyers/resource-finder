@@ -513,7 +513,7 @@
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            const closestZip = findClosestZipCode(latitude, longitude);
+            const closestZip = window.findClosestZipCode(latitude, longitude);
             if (closestZip) {
               userZipCode = closestZip;
               document.getElementById('userZipCode').value = closestZip;
@@ -556,8 +556,8 @@
       
       container.innerHTML = resources.map(resource => {
         const truncatedDescription = stripHtmlAndTruncate(resource.description, 250);
-        const distance = resource.zipCode && typeof calculateZipCodeDistance !== 'undefined' ? 
-          calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
+        const distance = resource.zipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
+          window.calculateZipCodeDistance(userZipCode, resource.zipCode) : null;
         
         return `
           <div class="resource-card">
@@ -610,8 +610,8 @@
           setupInfiniteScroll(keywords, null, data.offset + resources.length);
         }
       } catch (error) {
-        console.error('Error searching by category:', error);
-        document.getElementById('searchResults').innerHTML = '<div class="error">Failed to load resources</div>';
+        console.error('Error searching by category:', error, error.stack);
+        document.getElementById('searchResults').innerHTML = `<div class="error">Failed to load resources: ${error.message}</div>`;
       }
     }
     
@@ -668,7 +668,8 @@
       
       container.innerHTML = resources.map(res => {
         const truncatedDescription = stripHtmlAndTruncate(res.description, 250);
-        const distance = res.zipCode ? calculateZipCodeDistance(userZipCode, res.zipCode) : null;
+        const distance = res.zipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
+          window.calculateZipCodeDistance(userZipCode, res.zipCode) : null;
         
         return `
           <div class="resource-card">
@@ -751,7 +752,8 @@
       const container = document.getElementById('searchResults');
       const newHTML = resources.map(res => {
         const truncatedDescription = stripHtmlAndTruncate(res.description, 250);
-        const distance = res.zipCode ? calculateZipCodeDistance(userZipCode, res.zipCode) : null;
+        const distance = res.zipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
+          window.calculateZipCodeDistance(userZipCode, res.zipCode) : null;
         
         return `
           <div class="resource-card">
@@ -799,7 +801,8 @@
         const detail = await response.json();
         
         // Calculate distance if zip code is available
-        const distance = detail.zipCode ? calculateZipCodeDistance(userZipCode, detail.zipCode) : null;
+        const distance = detail.zipCode && typeof window.calculateZipCodeDistance !== 'undefined' ? 
+          window.calculateZipCodeDistance(userZipCode, detail.zipCode) : null;
         
         // Display detailed information
         detailContainer.innerHTML = `
