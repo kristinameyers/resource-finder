@@ -469,9 +469,10 @@
     
     // Refresh distances in all active views
     function refreshDistancesInAllViews() {
-      // Refresh main resource list if visible
+      // Refresh main resource list if visible (categories are HIDDEN when resources are shown)
       const resourcesEl = document.getElementById('resources');
-      if (resourcesEl && !document.getElementById('categories').classList.contains('hidden')) {
+      const categoriesEl = document.getElementById('categories');
+      if (resourcesEl && categoriesEl && categoriesEl.classList.contains('hidden')) {
         if (allResources.length > 0) {
           displayResources(allResources);
         }
@@ -481,13 +482,6 @@
       const searchResultsEl = document.getElementById('searchResults');
       const resultsSection = document.getElementById('resultsSection');
       if (searchResultsEl && resultsSection && !resultsSection.classList.contains('hidden')) {
-        // Re-display current search results
-        const currentResults = Array.from(searchResultsEl.querySelectorAll('.resource-card')).map(card => {
-          const nameEl = card.querySelector('.resource-name');
-          const idMatch = nameEl?.getAttribute('onclick')?.match(/showResourceDetail\('([^']+)'\)/);
-          return idMatch ? { id: idMatch[1] } : null;
-        }).filter(Boolean);
-        
         // If we have stored results, refresh them
         if (window.currentSearchResults) {
           displaySearchResults(window.currentSearchResults);
