@@ -672,6 +672,22 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // Serve zipCodeData.js file
+    if (pathname === '/zipCodeData.js' && req.method === 'GET') {
+      const jsPath = path.join(__dirname, '..', 'client', 'zipCodeData.js');
+      try {
+        const jsContent = fs.readFileSync(jsPath, 'utf-8');
+        res.writeHead(200, {
+          'Content-Type': 'application/javascript',
+          'Access-Control-Allow-Origin': '*',
+        });
+        return res.end(jsContent);
+      } catch (error) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'File not found' }));
+      }
+    }
+
     // Health check
     if (pathname === '/api/health' && req.method === 'GET') {
       return sendJSON(res, { status: 'ok', timestamp: new Date().toISOString() });
