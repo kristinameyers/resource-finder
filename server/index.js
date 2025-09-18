@@ -783,6 +783,116 @@ const server = http.createServer(async (req, res) => {
           total: votes.length,
         };
         return sendJSON(res, summary);
+      } else if (pathname.endsWith('/details')) {
+        // Fetch detailed information from National 211 API
+        const resourceId = pathname.split('/')[3];
+        
+        try {
+          // Make request to National 211 API for detailed information
+          const API_KEY = process.env.NATIONAL_211_API_KEY;
+          if (!API_KEY) {
+            console.error('National 211 API key not configured');
+            // Fallback to local resource if API key not available
+            const resource = await storage.getResource(resourceId);
+            if (!resource) {
+              return sendError(res, 'Resource not found', 404);
+            }
+            return sendJSON(res, resource);
+          }
+          
+          const detailUrl = `https://api.211.org/resources/v2/query/service-at-location-details/${resourceId}`;
+          console.log('Fetching detailed resource info from:', detailUrl);
+          
+          const response = await fetch(detailUrl, {
+            headers: {
+              'Api-Key': API_KEY,
+              'Accept': 'application/json',
+              'locationMode': 'manual'  // Required header for the API
+            }
+          });
+          
+          if (!response.ok) {
+            console.error('211 API detail error:', response.status, response.statusText);
+            // Try fallback to local resource
+            const resource = await storage.getResource(resourceId);
+            if (!resource) {
+              return sendError(res, 'Resource not found', 404);
+            }
+            return sendJSON(res, resource);
+          }
+          
+          const detailData = await response.json();
+          
+          // Transform the detailed API response into our format
+          const transformedDetail = {
+            id: resourceId,
+            name: detailData.nameService || detailData.nameOrganization || 'Unknown Service',
+            organization: detailData.nameOrganization || '',
+            siteName: detailData.nameSite || '',
+            description: detailData.serviceDescription || detailData.descriptionService || '',
+            
+            // Full address information
+            address: {
+              street: detailData.locationAddress1 || detailData.physicalAddress1 || '',
+              street2: detailData.locationAddress2 || detailData.physicalAddress2 || '',
+              city: detailData.locationCity || detailData.physicalCity || '',
+              state: detailData.locationStateProvince || detailData.physicalStateProvince || '',
+              postalCode: detailData.locationPostalCode || detailData.physicalPostalCode || '',
+              full: [
+                detailData.locationAddress1 || detailData.physicalAddress1,
+                detailData.locationAddress2 || detailData.physicalAddress2,
+                detailData.locationCity || detailData.physicalCity,
+                detailData.locationStateProvince || detailData.physicalStateProvince,
+                detailData.locationPostalCode || detailData.physicalPostalCode
+              ].filter(Boolean).join(', ')
+            },
+            
+            // Contact information
+            contact: {
+              phone: detailData.phoneNumber || detailData.phoneNumberHotline || '',
+              tty: detailData.phoneNumberTTY || '',
+              crisis: detailData.phoneNumberCrisis || '',
+              fax: detailData.phoneNumberFax || '',
+              website: detailData.websiteResource || detailData.websiteOrganization || '',
+              email: detailData.emailService || detailData.emailOrganization || ''
+            },
+            
+            // Service details
+            category: detailData.taxonomyName || '',
+            subcategory: detailData.serviceAreaDescription || '',
+            taxonomyCode: detailData.taxonomyCode || '',
+            
+            // Hours of operation
+            hours: detailData.hoursOfOperation || detailData.operatingHours || detailData.regularScheduleOpeningHours || '',
+            
+            // Languages and accessibility
+            languages: detailData.languagesOffered ? detailData.languagesOffered.split(',').map(l => l.trim()) : [],
+            accessibility: detailData.accessibilityDetails || detailData.accessibilityForDisabilities || '',
+            
+            // Eligibility and requirements
+            eligibility: detailData.eligibility || detailData.eligibilityDescription || '',
+            documentsRequired: detailData.documentsRequired || detailData.requiredDocuments || '',
+            applicationProcess: detailData.applicationProcess || detailData.applicationProcedure || '',
+            
+            // Fees and service area
+            fees: detailData.feeStructure || detailData.fees || (detailData.isFeeRequired === false ? 'Free' : ''),
+            serviceArea: detailData.serviceArea || detailData.geographicAreaServed || '',
+            
+            // Additional details
+            lastUpdated: detailData.lastUpdatedDate || detailData.dateLastVerified || '',
+            notes: detailData.publicComments || detailData.additionalInformation || ''
+          };
+          
+          return sendJSON(res, transformedDetail);
+        } catch (error) {
+          console.error('Error fetching detailed resource:', error);
+          // Fallback to local resource
+          const resource = await storage.getResource(resourceId);
+          if (!resource) {
+            return sendError(res, 'Resource not found', 404);
+          }
+          return sendJSON(res, resource);
+        }
       } else {
         const resource = await storage.getResource(id);
         if (!resource) {
