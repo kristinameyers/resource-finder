@@ -1,4 +1,5 @@
 import http from 'http';
+import https from 'https';
 import url from 'url';
 import querystring from 'querystring';
 import fs from 'fs';
@@ -7,6 +8,106 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// National 211 API Configuration
+const NATIONAL_211_API_KEY = process.env.NATIONAL_211_API_KEY;
+const NATIONAL_211_API_URL = 'https://api.211.org/resources/v2/search';
+
+// Helper function to call National 211 API
+async function callNational211API(endpoint, params = {}) {
+  return new Promise((resolve, reject) => {
+    if (!NATIONAL_211_API_KEY) {
+      console.error('National 211 API key not configured');
+      return resolve({ resources: [] });
+    }
+
+    // Build query string - ensure specific parameter order for the API
+    const queryParams = new URLSearchParams();
+    queryParams.append('keywords', params.keywords || '');
+    if (params.keywordIsTaxonomyCode) {
+      queryParams.append('keywordIsTaxonomyCode', params.keywordIsTaxonomyCode);
+    }
+    queryParams.append('location', params.location || 'Santa Barbara County, CA');
+    queryParams.append('locationMode', 'Near'); // Required field
+    queryParams.append('distance', params.distance || '25');
+    queryParams.append('size', params.size || '10'); // API caps at 10
+    if (params.offset) {
+      queryParams.append('offset', params.offset);
+    }
+
+    const apiUrl = `${NATIONAL_211_API_URL}/${endpoint}?${queryParams}`;
+    console.log('Calling 211 API:', apiUrl);
+
+    https.get(apiUrl, {
+      headers: {
+        'Api-Key': NATIONAL_211_API_KEY,
+        'Accept': 'application/json'
+      }
+    }, (res) => {
+      let data = '';
+
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          console.log('211 API Response:', res.statusCode, data.substring(0, 500));
+          console.log(`211 API returned ${parsed.results?.length || 0} results`);
+          resolve(parsed);
+        } catch (error) {
+          console.error('Error parsing 211 API response:', error);
+          console.error('Raw response:', data.substring(0, 500));
+          resolve({ resources: [] });
+        }
+      });
+    }).on('error', (error) => {
+      console.error('Error calling 211 API:', error);
+      resolve({ resources: [] });
+    });
+  });
+}
+
+// Transform 211 API response to our format
+function transformNational211Resource(apiResource) {
+  if (!apiResource) return null;
+
+  // Extract main service info
+  const service = apiResource.service || {};
+  const organization = apiResource.organization || {};
+  const location = apiResource.location || {};
+  
+  // Get phone numbers
+  const phones = apiResource.phones || [];
+  const primaryPhone = phones.find(p => p.type === 'voice') || phones[0];
+  
+  // Get address
+  const address = location.address || {};
+  const fullAddress = [
+    address.address_1,
+    address.city,
+    address.state_province,
+    address.postal_code
+  ].filter(Boolean).join(', ');
+
+  return {
+    id: apiResource.id || `res-${Date.now()}`,
+    name: service.name || organization.name || 'Unknown Service',
+    description: service.description || '',
+    category: service.service_taxonomies?.[0]?.taxonomy_name || 'General',
+    location: fullAddress || 'Santa Barbara, CA',
+    zipCode: address.postal_code || '93101',
+    phone: primaryPhone?.number || '',
+    website: organization.url || '',
+    hours: service.regular_schedule?.[0]?.opens_at ? 
+      `${service.regular_schedule[0].opens_at}-${service.regular_schedule[0].closes_at}` : 
+      'Call for hours',
+    services: service.service_taxonomies?.map(t => t.taxonomy_name) || [],
+    isActive: true,
+    createdAt: new Date()
+  };
+}
 
 // Simple storage implementation
 class MemStorage {
@@ -531,6 +632,42 @@ const server = http.createServer(async (req, res) => {
     // Resources endpoints
     if (pathname === '/api/resources' && req.method === 'GET') {
       const { search, category, keyword, taxonomyCode } = query;
+      
+      // Try to use real 211 API if available
+      if (NATIONAL_211_API_KEY && (keyword || taxonomyCode || search)) {
+        try {
+          let apiParams = {};
+          
+          // Handle different search types
+          if (taxonomyCode) {
+            // Taxonomy code search
+            apiParams.keywords = taxonomyCode;
+            apiParams.keywordIsTaxonomyCode = 'true';
+          } else if (keyword) {
+            // Keyword search (from category)
+            apiParams.keywords = keyword;
+            apiParams.keywordIsTaxonomyCode = 'false';
+          } else if (search) {
+            // Regular search
+            apiParams.keywords = search;
+            apiParams.keywordIsTaxonomyCode = 'false';
+          }
+          
+          // Call the real 211 API
+          const apiResponse = await callNational211API('keyword', apiParams);
+          
+          if (apiResponse.results && apiResponse.results.length > 0) {
+            const transformedResources = apiResponse.results
+              .map(transformNational211Resource)
+              .filter(Boolean);
+            return sendJSON(res, transformedResources);
+          }
+        } catch (error) {
+          console.error('Error calling 211 API, falling back to mock data:', error);
+        }
+      }
+      
+      // Fallback to mock data
       let resources = await storage.getResources();
 
       // Apply keyword search (from category click)
