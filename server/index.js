@@ -21,13 +21,14 @@ async function callNational211API(endpoint, params = {}) {
       return resolve({ resources: [] });
     }
 
-    // Build query string with correct parameters - no locationMode needed!
+    // Build query string with correct parameters - locationMode is required!
     const queryParams = new URLSearchParams({
       keywords: params.keywords || '',
       distance: '25',
       size: '10',
       keywordIsTaxonomyCode: params.keywordIsTaxonomyCode || 'false',
-      location: params.location || 'Santa Barbara County, CA'
+      location: params.location || 'Santa Barbara County, CA',
+      locationMode: params.locationMode || 'Within' // API requires this!
     });
     
     if (params.offset) {
