@@ -26,11 +26,195 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       padding: 20px;
+      padding-top: 80px; /* Space for fixed header */
     }
     
     .container {
       max-width: 1200px;
       margin: 0 auto;
+    }
+    
+    /* Splash Screen */
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+    
+    .splash-screen.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .splash-logo {
+      width: 200px;
+      height: auto;
+      animation: fadeIn 1s ease;
+    }
+    
+    .splash-dots {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    
+    .splash-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: white;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    .splash-dot:nth-child(2) { animation-delay: 0.3s; }
+    .splash-dot:nth-child(3) { animation-delay: 0.6s; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.3; }
+      40% { opacity: 1; }
+    }
+    
+    /* Navigation Header */
+    .nav-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #005191;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .nav-logo {
+      height: 40px;
+      width: auto;
+    }
+    
+    .hamburger-menu {
+      position: absolute;
+      left: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+    
+    .hamburger-menu span {
+      display: block;
+      width: 25px;
+      height: 3px;
+      background: white;
+      margin: 5px 0;
+      transition: 0.3s;
+      border-radius: 2px;
+    }
+    
+    /* Slide-out Navbar */
+    .slide-navbar {
+      position: fixed;
+      left: -300px;
+      top: 60px;
+      width: 280px;
+      height: calc(100% - 60px);
+      background: white;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      transition: left 0.3s ease;
+      z-index: 999;
+      overflow-y: auto;
+    }
+    
+    .slide-navbar.open {
+      left: 0;
+    }
+    
+    .nav-overlay {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      z-index: 998;
+    }
+    
+    .nav-overlay.show {
+      display: block;
+    }
+    
+    .nav-menu {
+      list-style: none;
+      padding: 20px 0;
+    }
+    
+    .nav-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .nav-item:hover {
+      background: #f5f5f5;
+    }
+    
+    .nav-item-icon {
+      margin-right: 15px;
+      font-size: 20px;
+    }
+    
+    /* Skeleton Loaders */
+    .skeleton {
+      animation: shimmer 1.5s infinite;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      border-radius: 8px;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .skeleton-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .skeleton-title {
+      height: 24px;
+      width: 60%;
+      margin-bottom: 15px;
+    }
+    
+    .skeleton-text {
+      height: 16px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    .skeleton-text:last-child {
+      width: 80%;
     }
     
     header {
@@ -77,6 +261,9 @@
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 15px;
       margin-bottom: 30px;
+      background: #005191;
+      padding: 20px;
+      border-radius: 10px;
     }
     
     .category-card {
@@ -302,6 +489,52 @@
   </style>
 </head>
 <body>
+  <!-- Splash Screen -->
+  <div class="splash-screen" id="splashScreen">
+    <img src="211-logo.png" alt="Santa Barbara 211" class="splash-logo">
+    <div class="splash-dots">
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+    </div>
+  </div>
+  
+  <!-- Navigation Header -->
+  <div class="nav-header">
+    <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleNavMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <img src="211-logo.png" alt="Santa Barbara 211" class="nav-logo">
+  </div>
+  
+  <!-- Slide-out Navbar -->
+  <nav class="slide-navbar" id="slideNavbar">
+    <ul class="nav-menu">
+      <li class="nav-item" onclick="navigateToSection('home')">
+        <span class="nav-item-icon">🏠</span> Home
+      </li>
+      <li class="nav-item" onclick="navigateToSection('categories')">
+        <span class="nav-item-icon">📋</span> Categories
+      </li>
+      <li class="nav-item" onclick="navigateToSection('search')">
+        <span class="nav-item-icon">🔍</span> Search Resources
+      </li>
+      <li class="nav-item" onclick="navigateToSection('location')">
+        <span class="nav-item-icon">📍</span> Update Location
+      </li>
+      <li class="nav-item" onclick="navigateToSection('about')">
+        <span class="nav-item-icon">ℹ️</span> About 211
+      </li>
+      <li class="nav-item" onclick="navigateToSection('help')">
+        <span class="nav-item-icon">❓</span> Help
+      </li>
+    </ul>
+  </nav>
+  
+  <div class="nav-overlay" id="navOverlay" onclick="closeNavMenu()"></div>
+  
   <div class="container">
     <header>
       <h1>🌟 Santa Barbara 211</h1>
@@ -732,8 +965,30 @@
       };
     }
     
-    // Display search results
+    // Display search results with skeleton loading
     function displaySearchResults(resources) {
+      const container = document.getElementById('searchResults');
+      
+      // Show skeleton loaders first
+      let skeletons = '';
+      for (let i = 0; i < Math.min(3, resources.length || 3); i++) {
+        skeletons += `
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+          </div>
+        `;
+      }
+      container.innerHTML = skeletons;
+      
+      // Delay showing actual results for skeleton effect
+      setTimeout(() => {
+        renderActualResults(resources);
+      }, 500);
+    }
+    
+    function renderActualResults(resources) {
       const container = document.getElementById('searchResults');
       
       if (!resources || resources.length === 0) {
@@ -1061,6 +1316,116 @@
         loadResources(e.target.value);
       }, 300);
     });
+    
+    // Show/hide splash screen
+    setTimeout(() => {
+      const splash = document.getElementById('splashScreen');
+      if (splash) {
+        splash.classList.add('hide');
+        setTimeout(() => splash.style.display = 'none', 500);
+        // Check if user needs onboarding
+        checkAndShowOnboarding();
+      }
+    }, 2000);
+    
+    // Toggle navigation menu
+    function toggleNavMenu() {
+      const navbar = document.getElementById('slideNavbar');
+      const overlay = document.getElementById('navOverlay');
+      navbar.classList.toggle('open');
+      overlay.classList.toggle('show');
+    }
+    
+    function closeNavMenu() {
+      const navbar = document.getElementById('slideNavbar');
+      const overlay = document.getElementById('navOverlay');
+      navbar.classList.remove('open');
+      overlay.classList.remove('show');
+    }
+    
+    function navigateToSection(section) {
+      closeNavMenu();
+      // Handle navigation based on section
+      switch(section) {
+        case 'home':
+          showHome();
+          break;
+        case 'categories':
+          document.getElementById('categories').scrollIntoView({ behavior: 'smooth' });
+          break;
+        case 'search':
+          document.getElementById('searchInput').focus();
+          break;
+        case 'location':
+          document.getElementById('userZipCode').focus();
+          break;
+        default:
+          break;
+      }
+    }
+    
+    function showHome() {
+      document.getElementById('categories').classList.remove('hidden');
+      document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('detailSection').classList.add('hidden');
+      document.getElementById('resources').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+    
+    // Show skeleton loaders
+    function showSkeletonLoaders() {
+      const container = document.getElementById('resources');
+      let skeletons = '';
+      for (let i = 0; i < 3; i++) {
+        skeletons += `
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text"></div>
+          </div>
+        `;
+      }
+      container.innerHTML = skeletons;
+    }
+    
+    // Modify loadResources to show skeleton first
+    const originalLoadResources = loadResources;
+    loadResources = async function(...args) {
+      showSkeletonLoaders();
+      await originalLoadResources(...args);
+    };
+    
+    // Simple onboarding check
+    function checkAndShowOnboarding() {
+      const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+      if (!hasSeenOnboarding) {
+        // Show onboarding modal
+        showOnboardingModal();
+      }
+    }
+    
+    // Simple onboarding modal
+    function showOnboardingModal() {
+      const modalHTML = `
+        <div id="onboardingModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 2000;">
+          <div style="background: white; padding: 40px; border-radius: 20px; max-width: 500px; text-align: center;">
+            <img src="211-logo.png" style="width: 150px; margin-bottom: 20px;" />
+            <h2 style="color: #005191; margin-bottom: 20px;">Welcome to Santa Barbara 211</h2>
+            <p style="color: #666; margin-bottom: 30px; line-height: 1.6;">Find essential services including food, shelter, health care and more. Set your location to find resources near you.</p>
+            <button onclick="closeOnboarding()" style="background: #005191; color: white; border: none; padding: 15px 40px; border-radius: 5px; font-size: 16px; cursor: pointer;">Get Started</button>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    function closeOnboarding() {
+      const modal = document.getElementById('onboardingModal');
+      if (modal) {
+        modal.remove();
+        localStorage.setItem('hasSeenOnboarding', 'true');
+      }
+    }
     
     // Initialize
     loadCategories();
