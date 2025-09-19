@@ -1,13 +1,14 @@
+// apps/mobile/app.config.js
 export default {
   expo: {
     name: "Santa Barbara 211",
     slug: "sb211",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/sb211-icon.png",
     userInterfaceStyle: "light",
     splash: {
-      image: "./assets/splash-icon.png",
+      image: "./assets/new-211-logo.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff"
     },
@@ -15,7 +16,8 @@ export default {
       "**/*"
     ],
     ios: {
-      supportsTablet: true
+      supportsTablet: true,
+      bundleIdentifier: "com.appbundle.sb211"
     },
     android: {
       adaptiveIcon: {
@@ -28,3 +30,4 @@ export default {
     }
   }
 };
+
