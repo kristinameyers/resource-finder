@@ -1,3 +1,4 @@
+// apps/mobile/src/components/CategoryGrid.tsx
 // Update the import path to the correct location of Category type
 import { Category } from "../types/shared-schema";
 import { getCategoryColor } from './CategoryIcons';

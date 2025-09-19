@@ -1,3 +1,4 @@
+// apps/mobile/src/components/CategoryGridSkeleton.tsx
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Skeleton } from "./ui/Skeleton";

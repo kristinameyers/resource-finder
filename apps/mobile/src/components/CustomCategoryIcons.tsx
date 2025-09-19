@@ -1,3 +1,4 @@
+// apps/mobile/src/components/CustomCategoryIcons.tsx
 import React from 'react';
 
 // Custom SVG icons with rounded frame background
