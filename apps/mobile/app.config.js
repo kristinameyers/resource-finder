@@ -20,6 +20,7 @@ export default {
       bundleIdentifier: "com.appbundle.sb211"
     },
     android: {
+      package: "com.appbundle.sb211",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#FFFFFF"
@@ -27,6 +28,11 @@ export default {
     },
     web: {
       favicon: "./assets/favicon.png"
+    },
+    extra: {
+      eas: {
+        projectId: "988aaa2e-2fa4-431d-8b6c-36aebc120953"
+      }
     }
   }
 };
