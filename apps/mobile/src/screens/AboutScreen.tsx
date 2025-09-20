@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Linking, StyleSheet } from 'react-native';
-import { Card } from '../components/ui/Card';
+import { Card } from '../components/ui/card';
 import { useTranslatedText } from '../components/TranslatedText';
 
 export default function About() {
