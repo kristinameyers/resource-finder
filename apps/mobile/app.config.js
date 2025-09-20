@@ -17,7 +17,10 @@ export default {
     ],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.appbundle.sb211"
+      bundleIdentifier: "com.appbundle.sb211",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
+      }
     },
     android: {
       package: "com.appbundle.sb211",
@@ -36,4 +39,3 @@ export default {
     }
   }
 };
-
