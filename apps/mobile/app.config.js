@@ -1,4 +1,3 @@
-// apps/mobile/app.config.js
 export default {
   expo: {
     name: "Santa Barbara 211",
@@ -36,6 +35,9 @@ export default {
       eas: {
         projectId: "988aaa2e-2fa4-431d-8b6c-36aebc120953"
       }
-    }
+    },
+    plugins: [
+      "expo-font"
+    ]
   }
 };
