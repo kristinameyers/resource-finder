@@ -16,7 +16,7 @@ import { useTranslatedText } from '../../components/TranslatedText';
 import { fetchCategories } from '../../api/api';
 import { Category, Subcategory } from '../../types/shared-schema';
 
-const new211Logo = require('../../../assets/new-211-logo.png');
+const new211Logo = require('../../../assets/images/new-211-logo.png');
 
 import { DrawerParamList } from "../../../App"; // adjust import path as needed
 

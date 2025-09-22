@@ -26,7 +26,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
     <View style={styles.splashContainer}>
       <View style={styles.logoContainer}>
         <Image
-          source={require("../../assets/logo-2020_1754948553294.png")}
+          source={require("../../assets/images/logo-2020_1754948553294.png")}
           style={styles.logo}
           resizeMode="contain"
         />
