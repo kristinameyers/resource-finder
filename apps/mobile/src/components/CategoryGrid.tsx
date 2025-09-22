@@ -1,17 +1,11 @@
 // apps/mobile/src/components/CategoryGrid.tsx
-// Update the import path to the correct location of Category type
+import React from "react";
+import { View, Text, TouchableOpacity, Image, StyleSheet, AccessibilityState } from "react-native";
 import { Category } from "../types/shared-schema";
 import { getCategoryColor } from './CategoryIcons';
 import { useTranslatedText } from "./TranslatedText";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 
-// Category translation helper component
-function CategoryLabel({ category }: { category: Category }) {
-  const { text } = useTranslatedText(category.name);
-  return <>{text}</>;
-}
-
-// Import PNG icons
 import educationIcon from "../assets/icons/education.png";
 import legalAssistanceIcon from "../assets/icons/legal-assistance.png";
 import childrenFamilyIcon from "../assets/icons/children-family.png";
@@ -24,6 +18,28 @@ import youngAdultsIcon from "../assets/icons/young-adults.png";
 import transportationIcon from "../assets/icons/transportation.png";
 import hygieneHouseholdIcon from "../assets/icons/hygiene-household.png";
 
+function CategoryLabel({ category }: { category: Category }) {
+  const { text } = useTranslatedText(category.name);
+  return <Text style={styles.categoryLabel}>{text}</Text>;
+}
+
+// Map of category id to icon
+const iconMap: Record<string, any> = {
+  'education': educationIcon,
+  'legal-assistance': legalAssistanceIcon,
+  'children-family': childrenFamilyIcon,
+  'food': foodIcon,
+  'finance-employment': financeEmploymentIcon,
+  'healthcare': healthcareIcon,
+  'housing': housingIcon,
+  'substance-use': substanceUseIcon,
+  'young-adults': youngAdultsIcon,
+  'transportation': transportationIcon,
+  'hygiene-household': hygieneHouseholdIcon,
+  'mental-wellness': healthcareIcon,
+  'utilities': financeEmploymentIcon,
+};
+
 interface CategoryGridProps {
   categories: Category[];
   onCategorySelect: (categoryId: string) => void;
@@ -33,66 +49,135 @@ interface CategoryGridProps {
 export default function CategoryGrid({ categories, onCategorySelect, selectedCategoryId }: CategoryGridProps) {
   const { text: browseCategoriesText } = useTranslatedText("Search Category");
   const { triggerHaptic, reduceMotion } = useAccessibility();
+
   return (
-    <div className="bg-[#005191] px-6 py-8" style={{ margin: '0', borderRadius: '0' }}>
-      <h2 className="text-white text-center mb-6 text-3xl font-normal">{browseCategoriesText}</h2>
-      <div className="grid grid-cols-3 gap-6 justify-items-center">
+    <View style={styles.wrapper}>
+      <Text style={styles.title}>{browseCategoriesText}</Text>
+      <View style={styles.grid}>
         {categories.map((category) => {
-          const iconMap: Record<string, string> = {
-            'education': educationIcon,
-            'legal-assistance': legalAssistanceIcon,
-            'children-family': childrenFamilyIcon,
-            'food': foodIcon,
-            'finance-employment': financeEmploymentIcon,
-            'healthcare': healthcareIcon,
-            'housing': housingIcon,
-            'substance-use': substanceUseIcon,
-            'young-adults': youngAdultsIcon,
-            'transportation': transportationIcon,
-            'hygiene-household': hygieneHouseholdIcon,
-            // Add fallbacks for remaining missing icons
-            'mental-wellness': healthcareIcon,
-            'utilities': financeEmploymentIcon,
-          };
-          
           const categoryIcon = iconMap[category.id];
           const isSelected = selectedCategoryId === category.id;
-          
+
+          const accessibilityState: AccessibilityState = { selected: isSelected };
           return (
-            <button 
-              key={category.id} 
-              className={`cursor-pointer ${
-                reduceMotion ? 'transition-none' : 'transition-all duration-200 hover:shadow-lg'
-              } border-0 overflow-hidden rounded-[32px] min-h-[140px] w-[140px] h-[140px] flex flex-col bg-[#256BAE] border-2 border-white/25 shadow-lg ${
-                isSelected 
-                  ? 'ring-2 ring-white shadow-xl transform scale-105' 
-                  : `${reduceMotion ? '' : 'hover:shadow-xl hover:transform hover:scale-102'}`
-              }`}
-              onClick={() => {
-                triggerHaptic('light');
+            <TouchableOpacity
+              key={category.id}
+              style={[
+                styles.gridItem,
+                isSelected && styles.selectedItem,
+                !isSelected && !reduceMotion && styles.unselectedAnimated
+              ]}
+              onPress={() => {
+                triggerHaptic && triggerHaptic('light');
                 onCategorySelect(category.id);
               }}
-              aria-label={`Select ${category.name} category`}
-              aria-pressed={isSelected}
-              role="button"
+              accessibilityLabel={`Select ${category.name} category`}
+              accessibilityRole="button"
+              accessibilityState={accessibilityState}
+              activeOpacity={0.85}
             >
-              <div className="p-6 flex-1 flex flex-col items-center justify-center text-center">
-                <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                  {categoryIcon ? (
-                    <img src={categoryIcon} alt={category.name} className="h-[42px] w-[42px]" />
-                  ) : (
-                    <div className="h-[42px] w-[42px] bg-white/20 rounded-lg"></div>
-                  )}
-                </div>
-                <h3 className="font-medium leading-tight category-text text-white">
-                  <CategoryLabel category={category} />
-                  {isSelected && <span className="sr-only">Selected</span>}
-                </h3>
-              </div>
-            </button>
+              <View style={styles.iconWrap}>
+                {categoryIcon ? (
+                  <Image source={categoryIcon} style={styles.iconImage} resizeMode="contain" />
+                ) : (
+                  <View style={styles.iconPlaceholder} />
+                )}
+              </View>
+              <CategoryLabel category={category} />
+              {isSelected && (
+                <Text
+                  style={styles.srOnly}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                >
+                  Selected
+                </Text>
+              )}
+            </TouchableOpacity>
           );
         })}
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    backgroundColor: "#005191",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    borderRadius: 0,
+    margin: 0,
+  },
+  title: {
+    textAlign: "center",
+    color: "#fff",
+    fontSize: 26,
+    marginBottom: 24,
+    fontWeight: "400",
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  gridItem: {
+    width: 140,
+    height: 140,
+    backgroundColor: "#256BAE",
+    borderRadius: 32,
+    marginBottom: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.09,
+    shadowRadius: 8,
+    borderWidth: 0,
+    overflow: "hidden",
+  },
+  selectedItem: {
+    borderWidth: 2,
+    borderColor: "#fff",
+    shadowOpacity: 0.18,
+    transform: [{ scale: 1.05 }],
+    zIndex: 1,
+  },
+  unselectedAnimated: {
+    // Could add scale/transform or shadow for hover-like feel on native if needed
+  },
+  iconWrap: {
+    width: 48,
+    height: 48,
+    marginBottom: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  iconImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+  },
+  iconPlaceholder: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: "#ffffff22",
+  },
+  categoryLabel: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  srOnly: {
+    position: "absolute",
+    height: 1,
+    width: 1,
+    overflow: "hidden",
+    left: -1000,
+    top: -1000,
+  },
+});

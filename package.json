@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/metro-config": "^0.20.17",
+    "@expo/metro-runtime": "^6.1.2",
     "@hookform/resolvers": "^5.2.1",
     "@neondatabase/serverless": "^1.0.1",
     "@replit/vite-plugin-shadcn-theme-json": "^0.0.4",
@@ -27,6 +28,7 @@
     "embla-carousel-react": "^8.3.0",
     "expo": "^53.0.22",
     "expo-constants": "^14.5.1",
+    "expo-font": "^14.0.8",
     "expo-linking": "^8.0.7",
     "expo-location": "^19.0.7",
     "express": "^4.19.2",

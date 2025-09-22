@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'; // Add more icons as needed
 import { useTranslatedText } from '../components/TranslatedText';
-import { fetchResourceById, fetchResourceDetails, fetchCategories, fetchSubcategories } from 'src/api/api';
+import { fetchResourceById, fetchResourceDetails, fetchCategories, fetchSubcategories } from '../api/api';
 import { Category, Subcategory } from '../types/shared-schema';
 
 // Replace PhoneDetails type with actual type

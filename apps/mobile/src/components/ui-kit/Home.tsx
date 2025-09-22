@@ -18,8 +18,13 @@ import { Category, Subcategory } from '../../types/shared-schema';
 
 const new211Logo = require('../../../assets/new-211-logo.png');
 
+import { DrawerParamList } from "../../../App"; // adjust import path as needed
+
 export interface HomeProps {
-  navigateTo: (route: string, params?: Record<string, any>) => void;
+  navigateTo: <Route extends keyof DrawerParamList>(
+    route: Route,
+    params?: DrawerParamList[Route]
+  ) => void;
 }
 
 function Home({ navigateTo }: HomeProps) {
@@ -99,19 +104,19 @@ function Home({ navigateTo }: HomeProps) {
 
   // Handlers
   const handleCategorySelect = (id: string) => {
-    setSelectedCategoryId(id);
-    setSelectedSubcategoryId(null);
-    // Navigate to the "ResourcesList" screen, passing category param
-    navigateTo('ResourcesList', { category: id });
-  };
+  setSelectedCategoryId(id);
+  setSelectedSubcategoryId(null);
+  // Navigate to the "ResourcesList" screen, passing category param
+  navigateTo('ResourcesList', { category: id });
+};
   const handleKeywordSearch = () => {
-    if (!keywordQuery.trim()) return;
-    setSearchType('keyword');
-    setSelectedCategoryId(null);
-    setSelectedSubcategoryId(null);
-    // Optionally navigate to ResourcesList based on keyword
-    navigateTo('ResourcesList', { keyword: keywordQuery });
-  };
+  if (!keywordQuery.trim()) return;
+  setSearchType('keyword');
+  setSelectedCategoryId(null);
+  setSelectedSubcategoryId(null);
+  // Optionally navigate to ResourcesList based on keyword
+  navigateTo('ResourcesList', { keyword: keywordQuery });
+};
   const handleUseLocation = async () => {
     setIsLocationLoading(true);
     await requestCurrentLocation().finally(() => setIsLocationLoading(false));

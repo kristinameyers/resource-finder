@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { OnboardingPreferences } from '../components/onboarding/OnboardingFlow';
+import { OnboardingPreferences } from '../components/Onboarding/OnboardingFlow';
 
 const ONBOARDING_STORAGE_KEY = 'onboarding-completed';
 const PREFERENCES_STORAGE_KEY = 'onboarding-preferences';

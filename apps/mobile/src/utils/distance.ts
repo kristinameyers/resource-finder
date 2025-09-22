@@ -1,8 +1,5 @@
 // Centralized distance calculation and geolocation utilities
-
-// --- For Node/server-side lookup (using zipcodes package or CSV data), use one approach ---
-
-// import zipcodes from 'zipcodes'; // If using 'zipcodes' NPM package
+import * as Location from 'expo-location';
 
 /**
  * Sync: Get coordinates for a zip code (node/server/zipcodes package or preloaded map)
@@ -23,6 +20,7 @@ export function getCoordinatesForZipSync(zipCode: string): { lat: number; lng: n
  */
 export async function getCoordinatesForZip(zipCode: string): Promise<{ lat: number; lng: number } | null> {
   try {
+    // Replace this with your own API endpoint/method if needed
     const response = await fetch(`/api/zip-to-coords?zipCode=${zipCode}`);
     if (response.ok) {
       const data = await response.json();
@@ -101,25 +99,16 @@ export async function filterSantaBarbaraAndSort<T extends { zipCode?: string; se
   return addDistanceAndSort(userZip, santaBarbaraResources);
 }
 
-// --- Geolocation (browser) ---
-export function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser.'));
-      return;
+// --- Geolocation: Expo Location API ---
+export async function getCurrentLocation(): Promise<{ lat: number; lng: number }> {
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      throw new Error('Location permission not granted.');
     }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({ lat: position.coords.latitude, lng: position.coords.longitude });
-      },
-      (error) => {
-        reject(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000 // 5 minutes
-      }
-    );
-  });
+    const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+    return { lat: location.coords.latitude, lng: location.coords.longitude };
+  } catch (error) {
+    throw error;
+  }
 }

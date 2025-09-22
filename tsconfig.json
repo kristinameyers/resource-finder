@@ -52,5 +52,6 @@
     "**/dist",
     "**/.expo",
     "**/.next"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }

@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { AccessibilityInfo, Vibration, Appearance } from 'react-native';
 
 export type FontScale = 'small' | 'medium' | 'large';
 export type ThemeMode = 'default' | 'high-contrast';
@@ -48,65 +49,16 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
   const [screenReader, setScreenReaderState] = useState(false);
   const [hapticFeedback, setHapticFeedbackState] = useState(true);
 
-  // Load settings from localStorage on mount
+  // Loads accessibility settings from system APIs
   useEffect(() => {
-    const savedFontSize = localStorage.getItem('accessibility-font-size') as FontScale;
-    const savedHighContrast = localStorage.getItem('accessibility-high-contrast') === 'true';
-    const savedReduceMotion = localStorage.getItem('accessibility-reduce-motion') === 'true';
-    const savedScreenReader = localStorage.getItem('accessibility-screen-reader') === 'true';
-    const savedHapticFeedback = localStorage.getItem('accessibility-haptic-feedback') !== 'false';
+    AccessibilityInfo.isBoldTextEnabled().then(setHighContrastState);
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotionState);
+    AccessibilityInfo.isScreenReaderEnabled().then(setScreenReaderState);
 
-    if (savedFontSize) setFontSizeState(savedFontSize);
-    setHighContrastState(savedHighContrast);
-    setReduceMotionState(savedReduceMotion);
-    setScreenReaderState(savedScreenReader);
-    setHapticFeedbackState(savedHapticFeedback);
-
-    // Check system preferences for reduced motion
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion && !savedReduceMotion) {
-      setReduceMotionState(true);
-    }
+    // Appearance module is for color scheme, not contrast—could expand here if wanted
   }, []);
 
-  // Apply accessibility settings to DOM and save to localStorage
-  useEffect(() => {
-    const root = document.documentElement;
-    
-    // Apply font size classes
-    root.classList.remove('font-small', 'font-medium', 'font-large');
-    root.classList.add(`font-${fontSize}`);
-    
-    // Apply high contrast
-    if (highContrast) {
-      root.classList.add('high-contrast');
-    } else {
-      root.classList.remove('high-contrast');
-    }
-    
-    // Apply reduced motion
-    if (reduceMotion) {
-      root.classList.add('reduce-motion');
-    } else {
-      root.classList.remove('reduce-motion');
-    }
-
-    // Apply screen reader optimizations
-    if (screenReader) {
-      root.classList.add('screen-reader-optimized');
-    } else {
-      root.classList.remove('screen-reader-optimized');
-    }
-    
-    // Save all settings to localStorage
-    localStorage.setItem('accessibility-font-size', fontSize);
-    localStorage.setItem('accessibility-high-contrast', highContrast.toString());
-    localStorage.setItem('accessibility-reduce-motion', reduceMotion.toString());
-    localStorage.setItem('accessibility-screen-reader', screenReader.toString());
-    localStorage.setItem('accessibility-haptic-feedback', hapticFeedback.toString());
-  }, [fontSize, highContrast, reduceMotion, screenReader, hapticFeedback]);
-
-  // Font size scaling function
+  // Font size calculation for scaling
   const getFontSize = (baseSize: number): number => {
     switch (fontSize) {
       case 'small': return baseSize * 0.85;
@@ -115,22 +67,15 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     }
   };
 
-  // Haptic feedback function
+  // Haptic feedback function for mobile
   const triggerHaptic = (type: 'light' | 'medium' | 'heavy' = 'light') => {
     if (!hapticFeedback) return;
-    
-    // Use Vibration API if available
-    if ('vibrator' in navigator || 'vibrate' in navigator) {
-      const patterns = {
-        light: [10],
-        medium: [20],
-        heavy: [50]
-      };
-      navigator.vibrate?.(patterns[type]);
-    }
+    if (type === 'light') Vibration.vibrate(10);
+    else if (type === 'medium') Vibration.vibrate(20);
+    else Vibration.vibrate(50);
   };
 
-  // Theme configuration
+  // Color theme, high contrast variant
   const theme = highContrast
     ? {
         background: '#ffffff',
@@ -145,7 +90,7 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
         accent: '#539ED0'
       };
 
-  // Setter functions that also trigger haptic feedback
+  // Setter functions for state
   const setFontSize = (size: FontScale) => {
     setFontSizeState(size);
     triggerHaptic('light');
@@ -168,7 +113,6 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 
   const setHapticFeedback = (enabled: boolean) => {
     setHapticFeedbackState(enabled);
-    // Don't trigger haptic when disabling haptics
     if (enabled) triggerHaptic('light');
   };
 
