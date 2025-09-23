@@ -26,6 +26,7 @@ interface OnboardingFlowProps {
   onComplete: (preferences: OnboardingPreferences) => void;
 }
 
+// Always match category IDs everywhere!
 const categories = [
   { id: 'children-family', name: 'Children & Family' },
   { id: 'food', name: 'Food' },
@@ -57,9 +58,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const { text: locationDescText } = useTranslatedText('Use Your Current Location or Enter Your Zip Code');
   const { text: enterZipText } = useTranslatedText('Enter your zip code');
   const { text: useLocationText } = useTranslatedText('Click to use your current location');
-  const { text: saveText } = useTranslatedText('Save');
+  const { text: continueText } = useTranslatedText('Continue to Home');
   const { text: skipText } = useTranslatedText('Skip');
-  const { text: selectThreeText } = useTranslatedText('Select Three Resources That You Use Most Often');
+  const { text: selectThreeText } = useTranslatedText('Select Up to Three Resources You Use Most Often');
 
   const handleNext = (): void => {
     if (triggerHaptic) triggerHaptic('light');
@@ -171,15 +172,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <Text style={styles.selectedCount}>
         {selectedCategories.length > 0
           ? `${selectedCategories.length} of 3 categories selected`
-          : "Categories are optional - click Continue to proceed"}
+          : "Selecting categories is optional. Click Continue to proceed."}
       </Text>
       <TouchableOpacity
-        style={styles.primaryBtn}
+        style={[
+          styles.primaryBtn,
+          selectedCategories.length === 0 && { backgroundColor: "#A5AAC0" } // Optional: gray out if nothing is selected
+        ]}
         onPress={handleComplete}
         accessibilityLabel="Complete onboarding and go to home screen"
       >
         <MaterialIcons name="home" size={22} color="#fff" style={{ marginRight: 10 }} />
-        <Text style={styles.primaryBtnText}>Continue to Home</Text>
+        <Text style={styles.primaryBtnText}>{continueText}</Text>
         <MaterialIcons name="arrow-forward" size={22} color="#fff" style={{ marginLeft: 7 }} />
       </TouchableOpacity>
       <TouchableOpacity

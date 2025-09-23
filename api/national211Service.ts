@@ -1,5 +1,3 @@
-// apps/mobile/src/api/national211Service.ts
-
 import { Resource, Category, Subcategory, Location } from "../types/shared-schema";
 
 // Pull environment variables with fallback for Expo/React Native

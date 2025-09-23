@@ -1,50 +1,26 @@
-// apps/mobile/src/components/CategoryGrid.tsx
 import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, AccessibilityState } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, AccessibilityState, Image, ImageSourcePropType } from "react-native";
 import { Category } from "../types/shared-schema";
-import { getCategoryColor } from './CategoryIcons';
+import { getCategoryGridIcon } from './CategoryIcons';
 import { useTranslatedText } from "./TranslatedText";
 import { useAccessibility } from "../contexts/AccessibilityContext";
-
-import educationIcon from "../assets/icons/education.png";
-import legalAssistanceIcon from "../assets/icons/legal-assistance.png";
-import childrenFamilyIcon from "../assets/icons/children-family.png";
-import foodIcon from "../assets/icons/food.png";
-import financeEmploymentIcon from "../assets/icons/finance-employment.png";
-import healthcareIcon from "../assets/icons/healthcare.png";
-import housingIcon from "../assets/icons/housing.png";
-import substanceUseIcon from "../assets/icons/substance-use.png";
-import youngAdultsIcon from "../assets/icons/young-adults.png";
-import transportationIcon from "../assets/icons/transportation.png";
-import hygieneHouseholdIcon from "../assets/icons/hygiene-household.png";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 function CategoryLabel({ category }: { category: Category }) {
   const { text } = useTranslatedText(category.name);
   return <Text style={styles.categoryLabel}>{text}</Text>;
 }
 
-// Map of category id to icon
-const iconMap: Record<string, any> = {
-  'education': educationIcon,
-  'legal-assistance': legalAssistanceIcon,
-  'children-family': childrenFamilyIcon,
-  'food': foodIcon,
-  'finance-employment': financeEmploymentIcon,
-  'healthcare': healthcareIcon,
-  'housing': housingIcon,
-  'substance-use': substanceUseIcon,
-  'young-adults': youngAdultsIcon,
-  'transportation': transportationIcon,
-  'hygiene-household': hygieneHouseholdIcon,
-  'mental-wellness': healthcareIcon,
-  'utilities': financeEmploymentIcon,
-};
-
 interface CategoryGridProps {
   categories: Category[];
-  onCategorySelect: (categoryId: string) => void;
+  onCategorySelect: (categoryId: string, categoryName: string) => void;
   selectedCategoryId: string | null;
 }
+
+// type guards for icon config
+type IconConfig =
+  | { type: "png"; icon: ImageSourcePropType }
+  | { type: "vector"; icon: { iconSet: "Ionicons" | "MaterialCommunityIcons"; name: string } };
 
 export default function CategoryGrid({ categories, onCategorySelect, selectedCategoryId }: CategoryGridProps) {
   const { text: browseCategoriesText } = useTranslatedText("Search Category");
@@ -55,21 +31,22 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
       <Text style={styles.title}>{browseCategoriesText}</Text>
       <View style={styles.grid}>
         {categories.map((category) => {
-          const categoryIcon = iconMap[category.id];
+          // Ensure type safety!
+          const iconConfig = getCategoryGridIcon(category.id) as IconConfig;
           const isSelected = selectedCategoryId === category.id;
-
           const accessibilityState: AccessibilityState = { selected: isSelected };
+
           return (
             <TouchableOpacity
               key={category.id}
               style={[
                 styles.gridItem,
                 isSelected && styles.selectedItem,
-                !isSelected && !reduceMotion && styles.unselectedAnimated
+                !isSelected && !reduceMotion && styles.unselectedAnimated,
               ]}
               onPress={() => {
-                triggerHaptic && triggerHaptic('light');
-                onCategorySelect(category.id);
+                triggerHaptic && triggerHaptic("light");
+                onCategorySelect(category.id, category.name);
               }}
               accessibilityLabel={`Select ${category.name} category`}
               accessibilityRole="button"
@@ -77,12 +54,15 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
               activeOpacity={0.85}
             >
               <View style={styles.iconWrap}>
-                {categoryIcon ? (
-                  <Image source={categoryIcon} style={styles.iconImage} resizeMode="contain" />
+                {iconConfig.type === "png" ? (
+                  <Image source={iconConfig.icon} style={styles.iconImage} resizeMode="contain" />
+                ) : iconConfig.icon.iconSet === "Ionicons" ? (
+                  <Ionicons name={iconConfig.icon.name as any} size={38} color="#fff" />
                 ) : (
-                  <View style={styles.iconPlaceholder} />
+                  <MaterialCommunityIcons name={iconConfig.icon.name as any} size={38} color="#fff" />
                 )}
               </View>
+
               <CategoryLabel category={category} />
               {isSelected && (
                 <Text
@@ -143,9 +123,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.05 }],
     zIndex: 1,
   },
-  unselectedAnimated: {
-    // Could add scale/transform or shadow for hover-like feel on native if needed
-  },
+  unselectedAnimated: {},
   iconWrap: {
     width: 48,
     height: 48,
