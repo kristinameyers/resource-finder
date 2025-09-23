@@ -19,16 +19,15 @@
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["apps/client/src/*"],
-      "@assets/*": ["apps/client/src/assets/*"],
-      "@shared/*": ["packages/shared-schema/src/*"],
-      "@shared/schema": ["packages/shared-schema/src/index.ts"],
-      "@sb211/hooks/*": ["packages/hooks/src/*"],
-      "@sb211/components/*": ["packages/components/src/*"],
-      "@sb211/shared-schema/*": ["packages/shared-schema/src/*"],
-      "@sb211/shared-schema": ["packages/shared-schema/src/index.ts"],
-      "@sb211/taxonomy": ["packages/taxonomy/src/index.ts"],
-      "@sb211/ui-kit/*": ["packages/ui-kit/src/*"]
+      "@components/*": ["components/*"],
+      "@screens/*": ["screens/*"],
+      "@hooks/*": ["hooks/*"],
+      "@contexts/*": ["contexts/*"],
+      "@assets/*": ["assets/*"],
+      "@types/*": ["types/*"],
+      "@shared/*": ["shared/*"],
+      "@utils/*": ["utils/*"],
+      "@scripts/*": ["scripts/*"]
     },
     "typeRoots": ["node_modules/@types"]
   }

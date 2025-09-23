@@ -1,155 +1,50 @@
-# Resource Finder Application
+# Welcome to your Expo app 👋
 
-A comprehensive community resource discovery platform that helps users find essential local services through intelligent search capabilities and location-based filtering.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Features
+## Get started
 
-- **Comprehensive Resource Search**: Integrates with National 211 API for real-time community resource data
-- **Official Taxonomy Integration**: Uses official Santa Barbara 211 taxonomy codes for precise resource categorization
-- **Location-Based Filtering**: Distance calculations with zip code support and browser geolocation
-- **Smart Navigation**: Context-preserving back navigation and URL parameter support
-- **Anonymous Access**: No user registration required for core functionality
-- **Favorites System**: Local device storage for user favorites
-- **Responsive Design**: Mobile-first design with desktop support
-- **Accessibility**: ADA-compliant design with proper contrast and keyboard navigation
+1. Install dependencies
 
-## Technology Stack
+   ```bash
+   npm install
+   ```
 
-### Frontend
-- **React 18** with TypeScript
-- **Wouter** for routing
-- **Tailwind CSS** with shadcn/ui components
-- **TanStack Query** for state management
-- **Vite** for build tooling
+2. Start the app
 
-### Backend
-- **Express.js** with TypeScript
-- **Drizzle ORM** with PostgreSQL (Neon serverless)
-- **National 211 API V2** integration
-- **Firebase Firestore** for voting data
+   ```bash
+   npx expo start
+   ```
 
-## Getting Started
+In the output, you'll find options to open the app in a
 
-### Prerequisites
-- Node.js 18+ 
-- PostgreSQL database (Neon recommended)
-- National 211 API key
-- Firebase project for voting data
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-### Environment Variables
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-Create a `.env` file with the following variables:
+## Get a fresh project
 
-```env
-# Database
-DATABASE_URL=your_postgresql_connection_string
+When you're ready, run:
 
-# National 211 API
-NATIONAL_211_API_KEY=your_api_key
-NATIONAL_211_API_URL=https://api.211.org/resources/v2/search
-
-# Firebase Configuration
-FIREBASE_API_KEY=your_firebase_api_key
-FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-FIREBASE_APP_ID=your_app_id
-```
-
-### Installation
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/resource-finder.git
-cd resource-finder
+npm run reset-project
 ```
 
-> **Note**: Replace `yourusername` with your actual GitHub username
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-2. Install dependencies:
-```bash
-npm install
-```
+## Learn more
 
-3. Set up the database:
-```bash
-npm run db:push
-```
+To learn more about developing your project with Expo, look at the following resources:
 
-4. Start the development server:
-```bash
-npm run dev
-```
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-The application will be available at `http://localhost:5000`
+## Join the community
 
-## API Integration
+Join our community of developers creating universal apps.
 
-### National 211 API Configuration
-
-The application uses the National 211 API V2 with the following proven configuration:
-
-- **Endpoint**: `/keyword` at `https://api.211.org/resources/v2/search/keyword`
-- **Authentication**: `Api-Key` header
-- **Location Mode**: `locationMode: 'Serving'` for local service discovery
-- **Search Strategy**: Primary taxonomy code search with text fallback
-- **Official Taxonomy Codes**: 
-  - BH = Housing
-  - BD = Food  
-  - L = Health Care
-  - P = Children & Family
-  - And more...
-
-## Deployment
-
-### Replit Deployment
-
-This application is optimized for Replit deployment with automatic workflows and environment management.
-
-### Manual Deployment
-
-For other platforms:
-
-1. Build the application:
-```bash
-npm run build
-```
-
-2. Set up environment variables on your hosting platform
-3. Deploy both frontend and backend (single server deployment)
-
-## Project Structure
-
-```
-├── client/          # React frontend
-│   ├── src/
-│   │   ├── components/  # Reusable UI components
-│   │   ├── hooks/       # Custom React hooks
-│   │   ├── pages/       # Route components
-│   │   └── lib/         # Utilities and API clients
-├── server/          # Express backend
-│   ├── data/        # Official taxonomy data
-│   ├── services/    # API integrations
-│   └── routes.ts    # API endpoints
-├── shared/          # Shared TypeScript schemas
-└── attached_assets/ # Static assets and data files
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- National 211 for providing comprehensive community resource data
-- Santa Barbara 211 for official taxonomy specifications
-- Replit for hosting and development platform
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

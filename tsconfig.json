@@ -1,57 +1,27 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
     "strict": true,
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true,
     "jsx": "react-native",
-    "moduleResolution": "node",
-    "baseUrl": ".",
     "paths": {
-      "@sb211/hooks/*": [
-        "apps/mobile/src/hooks/*"
-      ],
-      "@sb211/lib/*": [
-        "packages/lib/src/*"
-      ],
-      "@sb211/components/*": [
-        "packages/components/src/*"
-      ],
-      "@sb211/shared-schema": [
-        "packages/shared-schema/src"
-      ],
-      "@sb211/shared-schema/*": [
-        "packages/shared-schema/src/*"
-      ],
-      "@sb211/assets/*": [
-        "apps/mobile/assets/*"
-      ],
       "@/*": [
-        "apps/mobile/src/*"
+        "./*"
       ]
     },
-    "typeRoots": [
-      "./node_modules/@types"
-    ]
+    "allowSyntheticDefaultImports": true,
+    "lib": ["dom", "dom.iterable", "es6"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
   "include": [
-    "apps/**/*",
-    "packages/**/*",
-    "scripts/**/*",
-    "tools/**/*",
-    "server/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "client",
-    "**/dist",
-    "**/.expo",
-    "**/.next"
-  ],
-  "extends": "expo/tsconfig.base"
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }
