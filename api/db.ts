@@ -1,5 +1,3 @@
-// apps/mobile/src/utils/db.ts
-
 /**
  * API utility functions for mobile.
  * Use these for fetching data from your backend/service.

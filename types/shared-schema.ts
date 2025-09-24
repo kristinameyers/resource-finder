@@ -19,6 +19,7 @@ export interface Resource {
   thumbsUp: number;
   thumbsDown: number;
   userVote?: 'up' | 'down' | null;
+  
   // Enhanced 211 API fields
   applicationProcess?: string;
   documents?: string;
@@ -110,3 +111,29 @@ export const resourceSchema = z.object({
 
 // Temporary placeholder for users table (if needed)
 export const users = {} as any;
+
+// src/types/shared-schema.ts   (or wherever the file lives)
+
+// Existing imports / exports …
+
+// -------------------- New interfaces --------------------
+export interface ServiceAtLocationDto {
+  /** Human‑readable name of the service */
+  serviceName?: string;
+  /** Fallback name that the legacy API used */
+  serviceAtLocationName?: string;
+  /** Any other fields you need – add them as optional */
+  // description?: string;
+  // phone?: string;
+  // …
+}
+
+export interface ResourceDetail {
+  /** The display name that the UI shows */
+  serviceName: string;
+  // Add every property you map in `getResourceDetail`
+  // description?: string;
+  // phone?: string;
+  // website?: string;
+  // …
+}

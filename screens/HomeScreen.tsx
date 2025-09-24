@@ -30,10 +30,10 @@ type HomeScreenNavProp = {
 };
 
 export default function HomeScreen({ navigation }: HomeScreenNavProp) {
-  const { preferences } = useOnboarding?.() || {};
-  const { text: loadingText } = useTranslatedText?.('Loading...') || { text: 'Loading...' };
-  const { text: footerText } = useTranslatedText?.('Resource Finder') || { text: 'Resource Finder' };
-  const { text: footerSubtext } = useTranslatedText?.('Find local resources and services') || { text: 'Find local resources and services' };
+  const { preferences } = useOnboarding() || {};
+  const { text: loadingText } = useTranslatedText('Loading...') || { text: 'Loading...' };
+  const { text: footerText } = useTranslatedText('Resource Finder') || { text: 'Resource Finder' };
+  const { text: footerSubtext } = useTranslatedText('Find local resources and services') || { text: 'Find local resources and services' };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -90,6 +90,8 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     clearLocation?.();
     setZipCode('');
   };
+
+  console.log('categories length:', categories.length, 'sorted length:', sortedCategories.length);
 
   return (
     <SafeAreaView style={styles.container}>
