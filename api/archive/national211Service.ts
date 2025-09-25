@@ -1,4 +1,4 @@
-import { Resource, Category, Subcategory, Location } from "../types/shared-schema";
+import { Resource, Category, Subcategory, Location } from "../../types/shared-schema";
 
 // Pull environment variables with fallback for Expo/React Native
 const NATIONAL_211_API_URL: string =

@@ -1,6 +1,6 @@
 import { Resource } from "../types/shared-schema";
 import { useQuery } from "@tanstack/react-query";
-import { fetchResources } from "../api/api";
+import { fetchResources } from "../api/archive/api";
 
 interface ResourcesResponse {
   resources: Resource[];

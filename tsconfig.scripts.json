@@ -1,0 +1,14 @@
+// tsconfig.scripts.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/scripts",
+    "rootDir": "scripts",
+    "module": "commonjs",          // compile to CJS so Node can run it directly
+    "target": "es2020",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["scripts/**/*.ts"]
+}

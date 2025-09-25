@@ -1,4 +1,4 @@
-import { Resource, Category, Subcategory, Location } from "../types/shared-schema";
+import { Resource, Category, Subcategory, Location } from "../../types/shared-schema";
 
 // Expo/React Native: Use environment variable (see .env setup)
 const NATIONAL_211_API_URL = process.env.EXPO_PUBLIC_NATIONAL_211_API_URL || "";

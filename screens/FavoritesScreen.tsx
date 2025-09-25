@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText'; // Adapt import if needed
 import { useQuery } from '@tanstack/react-query';
-import { fetchCategories, fetchSubcategories } from '../api/api';
+import { fetchCategories, fetchSubcategories } from '../api/archive/api';
 import { Category, Subcategory } from '../types/shared-schema';
 
 interface FavoriteResource {

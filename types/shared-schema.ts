@@ -39,16 +39,14 @@ export interface Resource {
 export interface Category {
   id: string;
   name: string;
-  description?: string;
-  taxonomyCode?: string;
   icon?: string;
+  keywords: string[];
 }
 
 export interface Subcategory {
   id: string;
   name: string;
   categoryId: string;
-  description?: string;
   taxonomyCode?: string;
 }
 
@@ -112,8 +110,6 @@ export const resourceSchema = z.object({
 // Temporary placeholder for users table (if needed)
 export const users = {} as any;
 
-// src/types/shared-schema.ts   (or wherever the file lives)
-
 // Existing imports / exports …
 
 // -------------------- New interfaces --------------------
@@ -137,3 +133,16 @@ export interface ResourceDetail {
   // website?: string;
   // …
 }
+
+export type MainCategory = Category;
+
+// src/types/shared-schema.ts  (or wherever you keep shared types)
+export interface Location {
+  city: string;
+  state: string;
+  country: string;
+  // optional extra fields
+  zip?: string;
+  addressLine1?: string;
+}
+export type PartialLocation = Partial<Location>;

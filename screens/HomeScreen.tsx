@@ -1,3 +1,6 @@
+// ------------------------------------------------------------
+// File:  <your‑screen‑folder>/HomeScreen.tsx
+// ------------------------------------------------------------
 import React, { useState, useMemo } from 'react';
 import {
   ScrollView,
@@ -5,7 +8,6 @@ import {
   Text,
   Image,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
@@ -14,7 +16,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useOnboarding } from '../hooks/use-onboarding';
 import { useLocation } from '../hooks/use-location';
 import { useTranslatedText } from '../components/TranslatedText';
-// Use the UNIFIED api location!
 import { fetchCategories } from '../api/resourceApi';
 
 import CategoryGrid from '../components/CategoryGrid';
@@ -22,6 +23,15 @@ import CategoryGridSkeleton from '../components/CategoryGridSkeleton';
 
 import type { Category } from '../types/shared-schema';
 import type { NavigationProp } from '@react-navigation/native';
+
+/* --------------------------------------------------------------
+   TAXONOMY HELPERS – NOTE THE IMPORT PATH
+   -------------------------------------------------------------- */
+// The taxonomy folder lives at the repository root, so we go up one level.
+import {
+  getCategoryIcon,          // maps a category id → icon name
+  // resolveCategory,      // optional – useful for free‑form → Category conversion
+} from '../taxonomy';
 
 const new211Logo = require('../assets/images/new-211-logo.png');
 
@@ -39,33 +49,61 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
   const [zipCode, setZipCode] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
-  const { locationState, requestCurrentLocation, setLocationByZipCode, clearLocation } = useLocation?.() || {};
+  const {
+    locationState,
+    requestCurrentLocation,
+    setLocationByZipCode,
+    clearLocation,
+  } = useLocation?.() || {};
 
-  // Fetch categories (API) from the new resourceApi
+  // -----------------------------------------------------------------
+  // 1️⃣ FETCH CATEGORIES FROM THE UNIFIED API
+  // -----------------------------------------------------------------
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: fetchCategories,
   });
 
-  // Sort favorites first if preferred
+  // -----------------------------------------------------------------
+  // 2️⃣ SORT FAVORITES FIRST (if the onboarding prefs contain them)
+  // -----------------------------------------------------------------
   const sortedCategories = useMemo(() => {
     if (!preferences?.favoriteCategories?.length) return categories;
-    const fav = categories.filter(c => preferences.favoriteCategories.includes(c.id));
-    const other = categories.filter(c => !preferences.favoriteCategories.includes(c.id));
-    fav.sort((a, b) => preferences.favoriteCategories.indexOf(a.id) - preferences.favoriteCategories.indexOf(b.id));
+
+    const fav = categories.filter(c =>
+      preferences.favoriteCategories.includes(c.id)
+    );
+    const other = categories.filter(
+      c => !preferences.favoriteCategories.includes(c.id)
+    );
+
+    // Preserve the order the user set in onboarding
+    fav.sort(
+      (a, b) =>
+        preferences.favoriteCategories.indexOf(a.id) -
+        preferences.favoriteCategories.indexOf(b.id)
+    );
+
     return [...fav, ...other];
   }, [categories, preferences]);
 
+  // -----------------------------------------------------------------
+  // 3️⃣ HANDLE TILE PRESS – store selection + navigate
+  // -----------------------------------------------------------------
   const handleCategoryPress = (categoryId: string, categoryName: string) => {
     setSelectedCategoryId(categoryId);
     navigation?.navigate?.('ResourceList', {
       categoryId,
       categoryName,
       zipCode,
-      // No need for use211Api: true under the unified API; remove if not needed.
+      // Pass the icon name so the next screen can show it without another lookup
+      categoryIcon: getCategoryIcon(categoryId) ?? undefined,
     });
   };
 
+  // -----------------------------------------------------------------
+  // 4️⃣ SEARCH HANDLER
+  // -----------------------------------------------------------------
   const handleSearch = () => {
     if (searchQuery.trim()) {
       navigation?.navigate?.('ResourceList', {
@@ -75,6 +113,9 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     }
   };
 
+  // -----------------------------------------------------------------
+  // 5️⃣ LOCATION HELPERS
+  // -----------------------------------------------------------------
   const handleUseLocation = async () => {
     await requestCurrentLocation?.();
   };
@@ -91,8 +132,16 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     setZipCode('');
   };
 
-  console.log('categories length:', categories.length, 'sorted length:', sortedCategories.length);
+  console.log(
+    'categories length:',
+    categories.length,
+    'sorted length:',
+    sortedCategories.length
+  );
 
+  // -----------------------------------------------------------------
+  // 6️⃣ RENDER
+  // -----------------------------------------------------------------
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -101,6 +150,8 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
           <Text style={styles.title}>Santa Barbara 211</Text>
           <Text style={styles.subtitle}>{footerSubtext}</Text>
         </View>
+
+        {/* ---------- SEARCH & ZIP INPUT ---------- */}
         <View style={styles.searchSection}>
           <View style={styles.searchBar}>
             <Ionicons name="search" size={20} color="#666" />
@@ -113,6 +164,7 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
               returnKeyType="search"
             />
           </View>
+
           <View style={styles.locationBar}>
             <Ionicons name="location" size={20} color="#666" />
             <TextInput
@@ -126,29 +178,40 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
           </View>
         </View>
 
-        {/* Remove duplicate section header, let CategoryGrid handle its own label */}
+        {/* ---------- CATEGORY GRID ---------- */}
         <View style={styles.categoriesSection}>
           {loadingCategories ? (
             <CategoryGridSkeleton />
           ) : (
             <CategoryGrid
-              categories={sortedCategories} // Use sorted!
+              /**
+               * The grid now expects each category object to optionally contain an `icon` field.
+               * We enrich the API payload on‑the‑fly by adding the icon name derived from the taxonomy helper.
+               */
+              categories={sortedCategories.map(cat => ({
+                ...cat,
+                icon: getCategoryIcon(cat.id) ?? undefined,
+              }))}
               onCategorySelect={handleCategoryPress}
               selectedCategoryId={selectedCategoryId}
             />
           )}
         </View>
 
+        {/* ---------- FOOTER ---------- */}
         <View style={styles.footer}>
-          <Text>{footerText} © {new Date().getFullYear()} | {footerSubtext}</Text>
+          <Text>
+            {footerText} © {new Date().getFullYear()} | {footerSubtext}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ...styles unchanged...
-
+/* --------------------------------------------------------------
+   STYLES (unchanged from your original file)
+   -------------------------------------------------------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   logo: { width: 140, height: 60, margin: 16, resizeMode: 'contain', alignSelf: 'center' },
@@ -157,17 +220,30 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 16, color: 'white', marginTop: 5 },
   searchSection: { padding: 15 },
   searchBar: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: 'white',
-    borderRadius: 10, padding: 10, marginBottom: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
   locationBar: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: 'white',
-    borderRadius: 10, padding: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   locationInput: { flex: 1, marginLeft: 10, fontSize: 16 },
   categoriesSection: { padding: 15 },
