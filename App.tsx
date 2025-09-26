@@ -26,7 +26,7 @@ export type DrawerParamList = {
   SearchCategory: undefined;
   SearchKeyword: undefined;
   UpdateLocation: undefined;
-  ResourcesList: { category?: string; keyword?: string };
+  ResourceList: { category?: string; keyword?: string };
   ResourceDetail: { id: string };
   Favorites: undefined;
   About: undefined;
@@ -62,7 +62,7 @@ export default function App() {
                   <Drawer.Screen name="SearchCategory" component={SearchCategoryScreen} options={{ title: "Search Category" }} />
                   <Drawer.Screen name="SearchKeyword" component={SearchKeywordScreen} options={{ title: "Search Keyword" }} />
                   <Drawer.Screen name="UpdateLocation" component={UpdateLocationScreen} options={{ title: "Update Location" }} />
-                  <Drawer.Screen name="ResourcesList" component={ResourceListScreen} options={{ title: "Resources List" }} />
+                  <Drawer.Screen name="ResourceList" component={ResourceListScreen} options={{ title: "Resources List" }} />
                   <Drawer.Screen name="ResourceDetail" component={ResourceDetailScreen} options={{ title: "Resource Detail" }} initialParams={{ id: "" }} />
                   <Drawer.Screen name="Favorites" component={FavoritesScreen} options={{ title: "Favorites" }} />
                   <Drawer.Screen name="About" component={AboutScreen} options={{ title: "About" }} />

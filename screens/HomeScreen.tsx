@@ -1,5 +1,5 @@
 // ------------------------------------------------------------
-// File:  <your‑screen‑folder>/HomeScreen.tsx
+// File:  HomeScreen.tsx
 // ------------------------------------------------------------
 import React, { useState, useMemo } from 'react';
 import {
@@ -86,18 +86,25 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
 
     return [...fav, ...other];
   }, [categories, preferences]);
+  console.log("navigation state:", navigation);
+
 
   // -----------------------------------------------------------------
   // 3️⃣ HANDLE TILE PRESS – store selection + navigate
   // -----------------------------------------------------------------
   const handleCategoryPress = (categoryId: string, categoryName: string) => {
+    // Resolve the icon for the selected category (optional)
+    const icon = getCategoryIcon(categoryId) ?? undefined;
+
     setSelectedCategoryId(categoryId);
-    navigation?.navigate?.('ResourceList', {
+    navigation?.navigate?.("ResourceList", {
+      // The list screen expects a `keyword` – we use the human‑readable name
+      keyword: categoryName,
+      zipCode,
+      // The following fields are optional but now type‑safe thanks to AppNavigator
       categoryId,
       categoryName,
-      zipCode,
-      // Pass the icon name so the next screen can show it without another lookup
-      categoryIcon: getCategoryIcon(categoryId) ?? undefined,
+      categoryIcon: icon,
     });
   };
 

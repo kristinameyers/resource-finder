@@ -1,5 +1,3 @@
-// packages/components/src/DrawerButton.js
-import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 
 export default function DrawerButton({ onPress }) {

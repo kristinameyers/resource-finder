@@ -1,13 +1,18 @@
+// src/types/shared-schema.ts
 import { z } from "zod";
 
-// Base resource type definition
+/* ------------------------------------------------------------------
+   1️⃣  Core data models (used throughout the app)
+   ------------------------------------------------------------------ */
+
+/** A single resource returned from the 211 API */
 export interface Resource {
   id: string;
   name: string;
   description: string;
   categoryId: string;
   subcategoryId?: string;
-  location: string;
+  location: string;          // usually a ZIP or address string
   zipCode: string;
   url?: string;
   phone?: string;
@@ -18,9 +23,12 @@ export interface Resource {
   languages?: string[];
   thumbsUp: number;
   thumbsDown: number;
-  userVote?: 'up' | 'down' | null;
-  
-  // Enhanced 211 API fields
+  userVote?: "up" | "down" | null;
+
+  /** NEW – organization name that the UI displays */
+  organizationName?: string;
+
+  /* ---------- Enhanced 211 fields (optional) ---------- */
   applicationProcess?: string;
   documents?: string;
   fees?: string;
@@ -36,6 +44,7 @@ export interface Resource {
   distanceMiles?: number;
 }
 
+/** Top‑level category (shown in the grid) */
 export interface Category {
   id: string;
   name: string;
@@ -43,6 +52,7 @@ export interface Category {
   keywords: string[];
 }
 
+/** Sub‑category – always belongs to a parent Category */
 export interface Subcategory {
   id: string;
   name: string;
@@ -50,30 +60,85 @@ export interface Subcategory {
   taxonomyCode?: string;
 }
 
+/**
+ * Unified **Location** type.
+ *
+ * It contains the address fields required by the API (`city`, `state`,
+ * `country`) **plus** optional geo/ZIP fields that other parts of the
+ * codebase use (`id`, `name`, `zipCode`, `latitude`, `longitude`,
+ * `type`, `value`). Making everything optional lets us use the same
+ * type for both purposes without TypeScript conflicts.
+ */
 export interface Location {
+  // Address fields (always present for a full location)
+  city?: string;
+  state?: string;
+  country?: string;
+
+  // Optional geo / zip / address helper fields
   id?: string;
   name?: string;
   zipCode?: string;
   latitude?: number;
   longitude?: number;
-  type?: 'zipCode' | 'address';
+  type?: "zipCode" | "address";
   value?: string;
 }
 
+/** Helper – a location where any field may be missing */
+export type PartialLocation = Partial<Location>;
+
+/** Simple user record */
 export interface User {
   id: string;
   email?: string;
   name?: string;
-  username?: string; // <--- Added here
+  /** Username is optional – added for onboarding */
+  username?: string;
 }
 
+/** Payload used when creating a new user */
 export interface InsertUser {
   email?: string;
   name?: string;
-  username?: string; // <--- Added here if needed for creation
+  /** Username is optional – added for onboarding */
+  username?: string;
 }
 
-// Zod schemas for validation
+/* ------------------------------------------------------------------
+   2️⃣  DTOs used by the detailed resource endpoint
+   ------------------------------------------------------------------ */
+export interface ServiceAtLocationDto {
+  /** Human‑readable name of the service */
+  serviceName?: string;
+  /** Legacy field kept for backward compatibility */
+  serviceAtLocationName?: string;
+  // Add any extra fields you need here (description, phone, etc.)
+  // description?: string;
+  // phone?: string;
+  // …
+}
+
+/** The shape returned by the “resource details” API call */
+export interface ResourceDetail {
+  /** The display name that the UI shows */
+  serviceName: string;
+  // Add every property you map in `getResourceDetail`
+  // description?: string;
+  // phone?: string;
+  // website?: string;
+  // …
+}
+
+/* ------------------------------------------------------------------
+   3️⃣  Miscellaneous exported types
+   ------------------------------------------------------------------ */
+export type MainCategory = Category;
+
+/* ------------------------------------------------------------------
+   4️⃣  Zod schema for runtime validation (keeps in sync with
+       the TypeScript interface above)
+   ------------------------------------------------------------------ */
 export const resourceSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -91,58 +156,30 @@ export const resourceSchema = z.object({
   languages: z.array(z.string()).optional(),
   thumbsUp: z.number().default(0),
   thumbsDown: z.number().default(0),
-  userVote: z.enum(['up', 'down']).nullable().optional(),
+  userVote: z.enum(["up", "down"]).nullable().optional(),
+
+  /** NEW – organization name (optional) */
+  organizationName: z.string().optional(),
+
+  /* ---------- Enhanced 211 fields (optional) ---------- */
   applicationProcess: z.string().optional(),
   documents: z.string().optional(),
   fees: z.string().optional(),
   serviceAreas: z.string().optional(),
   hoursOfOperation: z.string().optional(),
-  phoneNumbers: z.object({
-    main: z.string().optional(),
-    fax: z.string().optional(),
-    tty: z.string().optional(),
-    crisis: z.string().optional(),
-  }).optional(),
+  phoneNumbers: z
+    .object({
+      main: z.string().optional(),
+      fax: z.string().optional(),
+      tty: z.string().optional(),
+      crisis: z.string().optional(),
+    })
+    .optional(),
   additionalLanguages: z.array(z.string()).optional(),
   distanceMiles: z.number().optional(),
 });
 
-// Temporary placeholder for users table (if needed)
+/* ------------------------------------------------------------------
+   5️⃣  Temporary placeholder for the users table (if needed)
+   ------------------------------------------------------------------ */
 export const users = {} as any;
-
-// Existing imports / exports …
-
-// -------------------- New interfaces --------------------
-export interface ServiceAtLocationDto {
-  /** Human‑readable name of the service */
-  serviceName?: string;
-  /** Fallback name that the legacy API used */
-  serviceAtLocationName?: string;
-  /** Any other fields you need – add them as optional */
-  // description?: string;
-  // phone?: string;
-  // …
-}
-
-export interface ResourceDetail {
-  /** The display name that the UI shows */
-  serviceName: string;
-  // Add every property you map in `getResourceDetail`
-  // description?: string;
-  // phone?: string;
-  // website?: string;
-  // …
-}
-
-export type MainCategory = Category;
-
-// src/types/shared-schema.ts  (or wherever you keep shared types)
-export interface Location {
-  city: string;
-  state: string;
-  country: string;
-  // optional extra fields
-  zip?: string;
-  addressLine1?: string;
-}
-export type PartialLocation = Partial<Location>;

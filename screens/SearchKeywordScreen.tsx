@@ -7,7 +7,7 @@ import { useTranslatedText } from "../components/TranslatedText";
 
 // Type for your navigator stack
 type RootStackParamList = {
-  ResourcesList: { keyword: string; useApi: boolean };
+  ResourceList: { keyword: string; useApi: boolean };
   SearchCategory: undefined;
 };
 
@@ -21,7 +21,7 @@ export default function SearchKeywordScreen() {
     // Actions
   const handleSearch = () => {
     if (keyword.trim()) {
-      navigation.navigate("ResourcesList", {
+      navigation.navigate("ResourceList", {
         keyword: keyword.trim(),
         useApi: true,
       });

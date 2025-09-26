@@ -13,19 +13,19 @@ type MainCategory =
 // Main Categories (some use taxonomyCode, some use keywords)
 export const MAIN_CATEGORIES: Record<string, MainCategory> = {
     // Taxonomy code only categories
-  'housing': { name: 'Housing', taxonomyCode: 'BH-1800.8500' },
-  'food': { name: 'Food', taxonomyCode: 'BD-5000' },
-  'healthcare': { name: 'Health Care', taxonomyCode: 'LN' },
-  'mental-wellness': { name: 'Mental Wellness', taxonomyCode: 'RP-1400' },
-  'substance-use': { name: 'Substance Use', taxonomyCode: 'RX-8250' },
-  'children-family': { name: 'Children & Family', taxonomyCode: 'PH-2360.2400' },
-  'young-adults': { name: 'Young Adults', taxonomyCode: 'PS-9800' },
-  'legal-assistance': { name: 'Legal Assistance', taxonomyCode: 'FT' },
-  'utilities': { name: 'Utilities', taxonomyCode: 'BV' },
-  'transportation': { name: 'Transportation', taxonomyCode: 'BT-4500' },
-  'hygiene-household': { name: 'Hygiene & Household', taxonomyCode: 'BM-3000' },
 
 // Keywords only categories
+  'housing': { name: 'Housing', keywords: ['housing'] },
+  'food': { name: 'Food', keywords: ['food'] },
+  'healthcare': { name: 'Health Care', keywords: ['healthcare'] },
+  'mental-wellness': { name: 'Mental Wellness', keywords: ['wellness'] },
+  'substance-use': { name: 'Substance Use', keywords: ['addiction'] },
+  'children-family': { name: 'Children & Family', keywords: ['family'] },
+  'young-adults': { name: 'Young Adults', keywords: ['youth'] },
+  'legal-assistance': { name: 'Legal Assistance', keywords: ['legal'] },
+  'utilities': { name: 'Utilities', keywords: ['utilities'] },
+  'transportation': { name: 'Transportation', keywords: ['transportation'] },
+  'hygiene-household': { name: 'Hygiene & Household', keywords: ['hygiene, household'] },
   'finance-employment': { name: 'Finance & Employment', keywords: ['finance'] },
   'education': { name: 'Education', keywords: ['education'] }
 };

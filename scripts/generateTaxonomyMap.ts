@@ -1,5 +1,5 @@
 // scripts/generateTaxonomyMap.ts
-import subcategories from '../taxonomy/subcategories.json';
+import subcategories from '../taxonomy/subCategories.json';
 const map = Object.entries(subcategories).reduce((acc, [_cat, subs]) => {
   subs.forEach(s => acc[s.name] = s.taxonomyCode);
   return acc;

@@ -16,7 +16,7 @@ interface Category {
 }
 
 type RootStackParamList = {
-  ResourcesList: { categoryId: string; useApi: boolean };
+  ResourceList: { categoryId: string; useApi: boolean };
   SearchKeyword: undefined;
 };
 
@@ -41,7 +41,7 @@ export default function SearchCategoryScreen() {
   const categories = categoriesResponse || [];
 
   const handleCategorySelect = (categoryId: string) => {
-    navigation.navigate("ResourcesList", { categoryId, useApi: true });
+    navigation.navigate("ResourceList", { categoryId, useApi: true });
   };
   const handleSearchKeyword = () => {
     navigation.navigate("SearchKeyword");

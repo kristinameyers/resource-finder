@@ -7,7 +7,7 @@ import type { Category, Subcategory } from "../types/shared-schema";
 
 /* ---------- 1️⃣ Load the static JSON ------------------------ */
 import mainCategoriesRaw from "./mainCategories.json";
-import subcategoriesRaw from "./subcategories.json";
+import subCategoriesRaw from "./subCategories.json";
 
 /* ---------- 2️⃣ Give the JSON a typed shape ----------------- */
 // Main categories already match the `Category` interface.
@@ -17,7 +17,7 @@ export const MAIN_CATEGORIES: Record<string, Category> =
 /* ---------- 3️⃣ Prepare the raw sub‑category data ------------- */
 // The JSON we import does **not** contain `categoryId`. We type it
 // loosely first, then we’ll inject the missing field.
-const rawSubcategories = subcategoriesRaw as Record<
+const rawSubcategories = subCategoriesRaw as Record<
   string,
   { id: string; name: string; taxonomyCode: string }[]
 >;

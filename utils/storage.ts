@@ -25,13 +25,34 @@ import {
 import {
   MAIN_CATEGORIES,
   getSubcategoriesForCategory,
-} from "../api/archive/officialTaxonomy";
+} from "../api/officialTaxonomy";
 
 import { calculateDistanceBetweenZipCodes, getCoordinatesForZip } from "./distance";
 
 import fetch from "node-fetch";
 import { readFileSync } from "fs";
 import { join } from "path";
+
+/* -------------------------------------------------------------------------- */
+/* 0️⃣  Helper: generic great‑circle distance (lat/lng → miles)                */
+/* -------------------------------------------------------------------------- */
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 3959; // Earth radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 /* -------------------------------------------------------------------------- */
 /* 1️⃣  Load the generated locations JSON (fallback to empty array)           */
@@ -251,13 +272,15 @@ class MemStorage implements IStorage {
     }));
   }
 
-  /* --------------------  LOCATION HELPERS ------------------------------- */
+  /* -------------------- LOCATION HELPERS ------------------------------- */
   async getLocations(): Promise<Location[]> {
     return this.locations;
   }
 
-  /** Look up a location by ZIP. If it isn’t cached yet we fetch the
-   *  coordinates from the CSV‑based helper and cache the result. */
+  /**
+   * Look up a location by ZIP. If it isn’t cached yet we fetch the
+   * coordinates from the CSV‑derived helper and cache the result.
+   */
   async getLocationByZipCode(zipCode: string): Promise<Location | undefined> {
     const normalized = zipCode.trim().padStart(5, "0");
 
@@ -290,11 +313,11 @@ class MemStorage implements IStorage {
     latitude: number,
     longitude: number
   ): Promise<Location | undefined> {
-    // Optional: implement a nearest‑neighbor search against this.locations.
+    // Optional: implement nearest‑neighbor search against this.locations.
     return undefined;
   }
 
-  /* --------------------  VOTING / RATING ------------------------------- */
+  /* -------------------- VOTING / RATING ------------------------------- */
   async getRatings(resourceId: string) {
     const { getVoteStats } = await import("./firestoreVotingService");
     return getVoteStats(resourceId);
@@ -322,12 +345,12 @@ class MemStorage implements IStorage {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 5️⃣  Export a singleton instance for the rest of the app to use             */
+/* 5️⃣  Export a singleton instance for the rest of the app to use            */
 /* -------------------------------------------------------------------------- */
 export const storage = new MemStorage();
 
 /* -------------------------------------------------------------------------- */
-/* 6️⃣  Export the IStorage interface (kept in this file for convenience)     */
+/* 6️⃣  Export the IStorage interface (kept here for convenience)            */
 /* -------------------------------------------------------------------------- */
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;

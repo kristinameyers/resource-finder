@@ -6,13 +6,12 @@ import {
   Resource,
   Category,
   Subcategory,
+  Location as Loc,
 } from "../types/shared-schema";
 
 import {
   MAIN_CATEGORIES,
   SUBCATEGORIES,
-  resolveCategory,
-  getCategoryIcon,
 } from "../taxonomy";
 
 /* --------------------------------------------------------------
@@ -24,7 +23,7 @@ const BASE_URL =
   "https://api.211.org/resources/v2";
 
 /* --------------------------------------------------------------
-   Helper – build a clean URL
+   Helper – build a clean URL (adds trailing slash, removes double slashes)
    -------------------------------------------------------------- */
 function buildUrl(path: string, params?: URLSearchParams): string {
   const cleanBase = BASE_URL.replace(/\/+$/, "/");
@@ -34,16 +33,7 @@ function buildUrl(path: string, params?: URLSearchParams): string {
 }
 
 /* --------------------------------------------------------------
-   Runtime guard – ensure the payload looks like an object
-   -------------------------------------------------------------- */
-function assertObject<T>(payload: any, context: string): asserts payload is T {
-  if (payload === null || typeof payload !== "object") {
-    throw new Error(`Unexpected response shape in ${context}`);
-  }
-}
-
-/* --------------------------------------------------------------
-   Unified GET – logs (dev only), normalises errors, validates data
+   Unified GET – logs (dev only), normalises errors, validates JSON
    -------------------------------------------------------------- */
 async function httpGet<T>(path: string, params?: URLSearchParams): Promise<T> {
   const url = buildUrl(path, params);
@@ -52,18 +42,20 @@ async function httpGet<T>(path: string, params?: URLSearchParams): Promise<T> {
   if (API_KEY) headers["Api-Key"] = API_KEY;
 
   try {
-    const response = await axios.get<T>(url, { headers });
+    const resp = await axios.get<T>(url, { headers });
 
-    // Debug logging only in development builds
+    // Debug‑only logging (won’t appear in production builds)
     if (__DEV__) {
-      console.log("🔎 GET", url, "→", response.status);
-      console.log("🔎 Raw response data:", response.data);
+      console.log("🔎 GET", url, "→", resp.status);
+      console.log("🔎 Raw data:", resp.data);
     }
 
-    // Basic runtime guard – helps catch malformed API responses early
-    assertObject<T>(response.data, `GET ${path}`);
+    // Basic runtime guard – ensures we got an object back
+    if (resp.data === null || typeof resp.data !== "object") {
+      throw new Error("Malformed API response – expected an object");
+    }
 
-    return response.data;
+    return resp.data;
   } catch (err: any) {
     if (err.response) {
       const { status, data } = err.response;
@@ -74,83 +66,24 @@ async function httpGet<T>(path: string, params?: URLSearchParams): Promise<T> {
 }
 
 /* ------------------------------------------------------------------
-   DETAIL DTO – keep only the fields you actually render.
+   TAXONOMY MAP – generated from the static sub‑category list.
    ------------------------------------------------------------------ */
-export interface ServiceAtLocationDetails {
-  serviceAtLocationId: string;
-  organizationId: string;
-  serviceId: string;
-  locationId: string;
-
-  organizationName: string;
-  serviceName: string;
-  locationName: string;
-
-  organizationDescription?: string;
-  serviceDescription?: string;
-  locationDescription?: string;
-
-  serviceHoursText?: string;
-  locationHoursText?: string;
-
-  website?: string;
-  fees?: string;
-  applicationProcess?: string;
-  eligibility?: string;
-  documentsRequired?: string;
-
-  languagesOffered?: string[];
-  disabilitiesAccess?: string;
-
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-  };
-
-  servicePhones?: { number: string; type?: string }[];
-}
-
-/* ------------------------------------------------------------------
-   FETCH DETAILED INFO FOR ONE RESOURCE
-   ------------------------------------------------------------------ */
-export async function fetchResourceDetail(
-  serviceAtLocationId: string
-): Promise<ServiceAtLocationDetails> {
-  if (!serviceAtLocationId) {
-    throw new Error("Missing serviceAtLocationId");
-  }
-
-  const endpoint = `/query/service-at-location-details/${encodeURIComponent(
-    serviceAtLocationId
-  )}`;
-
-  return await httpGet<ServiceAtLocationDetails>(endpoint);
-}
-
-/* --------------------------------------------------------------
-   TAXONOMY MAP – built from the static taxonomy JSON
-   -------------------------------------------------------------- */
 export const TAXONOMY_MAP: Record<string, string> = (() => {
   const map: Record<string, string> = {};
-
-  // Walk through every sub‑category and expose its human‑readable name →
-  // taxonomy code. This guarantees the map stays in sync with the JSON.
-  Object.values(SUBCATEGORIES).forEach((subList) => {
-    subList.forEach((sub) => {
+  // Walk every sub‑category and store its taxonomyCode keyed by the *display name*
+  Object.values(SUBCATEGORIES).forEach((subArr) => {
+    subArr.forEach((sub) => {
       if (sub.name && sub.taxonomyCode) {
         map[sub.name] = sub.taxonomyCode;
       }
     });
   });
-
   return map;
 })();
 
-/* --------------------------------------------------------------
+/* ------------------------------------------------------------------
    FETCH RESOURCES – core function used by the infinite‑scroll list
-   -------------------------------------------------------------- */
+   ------------------------------------------------------------------ */
 export interface ResourcePage {
   items: Resource[];
   total: number;
@@ -158,12 +91,12 @@ export interface ResourcePage {
 }
 
 /**
- * Fetch a page of resources for a given sub‑category.
+ * Fetch a page of resources for a given **sub‑category** (or plain keyword).
  *
- * @param subcatName Human‑readable sub‑category (e.g. "Food Pantries")
- * @param zipCode    Optional 5‑digit ZIP (validated)
- * @param skip       Pagination offset (must be ≥ 0 and a multiple of `size`)
- * @param size       Page size (defaults to 20, must be > 0 and ≤ 100)
+ * @param subcatName   Human‑readable sub‑category name (e.g. "Food Pantries")
+ * @param zipCode      Optional 5‑digit ZIP (if omitted we fall back to county)
+ * @param skip         Pagination offset (must be a multiple of `size`)
+ * @param size         Page size (default 20, max 100)
  */
 export async function fetchResourcesBySubcategory(
   subcatName: string,
@@ -171,59 +104,48 @@ export async function fetchResourcesBySubcategory(
   skip = 0,
   size = 20
 ): Promise<ResourcePage> {
-  // ---- basic argument validation ---------------------------------
-  if (skip < 0 || skip % size !== 0) {
-    throw new Error("`skip` must be a non‑negative multiple of `size`");
-  }
-
-  if (size <= 0 || size > 100) {
-    throw new Error("`size` must be between 1 and 100");
-  }
-
-  if (zipCode && !/^\d{5}$/.test(zipCode)) {
-    throw new Error(
-      "`zipCode` must be a 5‑digit US postal code (e.g. 90210)"
-    );
-  }
-
-  // ---- taxonomy lookup -------------------------------------------
+  // --------------------------------------------------------------
+  // 1️⃣ Determine whether we have a taxonomy code or a plain keyword
+  // --------------------------------------------------------------
   const taxonomyCode = TAXONOMY_MAP[subcatName];
-  if (!taxonomyCode) {
-    throw new Error(`Unknown sub‑category "${subcatName}"`);
-  }
+  const isTaxonomy = Boolean(taxonomyCode);
+  const keywordParam = isTaxonomy ? taxonomyCode! : subcatName;
 
-  // ---- build query parameters -------------------------------------
+  // --------------------------------------------------------------
+  // 2️⃣ Build query parameters according to the spec you gave
+  // --------------------------------------------------------------
   const qp = new URLSearchParams();
-  qp.append("keywords", taxonomyCode);
-  qp.append("keywordIsTaxonomyCode", "true");
-  qp.append("searchMode", "All");
+  qp.append("keywords", keywordParam);
+  qp.append("keywordIsTaxonomyCode", isTaxonomy ? "true" : "false");
+  qp.append("searchMode", "All"); // strict match per spec
 
+  // Location handling
   if (zipCode) {
     qp.append("location", zipCode);
-    qp.append("distance", "100"); // could be made configurable later
+    qp.append("distance", "100"); // fixed radius for zip‑code searches
     qp.append("orderByDistance", "true");
   } else {
-    qp.append("location", "Santa Barbara County, California");
+    qp.append("location", "Santa Barbara, California");
     qp.append("orderByDistance", "false");
   }
 
   qp.append("size", size.toString());
   qp.append("skip", skip.toString());
 
-  // ---- actual request ---------------------------------------------
+  // --------------------------------------------------------------
+  // 3️⃣ Call the unified 211 endpoint
+  // --------------------------------------------------------------
   const data = await httpGet<{
     resources: Resource[];
     total?: number;
   }>("/search/keyword", qp);
 
-  // Defensive shape check – the runtime guard in httpGet already ran,
-  // but we double‑check the array because the API sometimes mis‑labels it.
+  // Defensive shape check – the runtime guard in httpGet already ensured an object,
+  // but we double‑check the array shape.
   if (!Array.isArray(data.resources)) {
     throw new Error("Malformed API response – `resources` is not an array");
   }
 
-  // The API *should* always return `total`; if it doesn’t we fall back
-  // to the length of the returned page (best‑effort).
   const total = typeof data.total === "number" ? data.total : data.resources.length;
   const hasMore = skip + size < total;
 
@@ -234,18 +156,26 @@ export async function fetchResourcesBySubcategory(
   };
 }
 
-/* --------------------------------------------------------------
-   CATEGORY HELPERS
-   -------------------------------------------------------------- */
+/* ------------------------------------------------------------------
+   FETCH CATEGORIES – **STATIC** – use the taxonomy JSON.
+   ------------------------------------------------------------------ */
 export async function fetchCategories(): Promise<Category[]> {
-  try {
-    const { categories } = await httpGet<{ categories: Category[] }>(
-      "/categories"
-    );
-    return categories;
-  } catch (e) {
-    throw new Error(`Failed to load categories – ${(e as Error).message}`);
+  // Convert the MAIN_CATEGORIES map into an array that matches the
+  // Category interface (including the required `keywords` field).
+  const categoriesArray: Category[] = Object.entries(MAIN_CATEGORIES).map(
+    ([id, cat]) => ({
+      id,
+      name: cat.name,
+      icon: cat.icon,
+      // Some taxonomy entries may omit keywords – default to an empty array.
+      keywords: Array.isArray(cat.keywords) ? cat.keywords : [],
+    })
+  );
+
+  if (__DEV__) {
+    console.log("📦 fetchCategories →", categoriesArray.length, "categories");
   }
+  return categoriesArray;
 }
 
 export async function fetchSubcategories(
@@ -253,35 +183,35 @@ export async function fetchSubcategories(
 ): Promise<Subcategory[]> {
   const qp = new URLSearchParams();
   qp.append("categoryId", categoryId);
-
-  try {
-    const { subcategories } = await httpGet<{
-      subcategories: Subcategory[];
-    }>("/subcategories", qp);
-    return subcategories;
-  } catch (e) {
-    throw new Error(
-      `Failed to load sub‑categories for "${categoryId}" – ${
-        (e as Error).message
-      }`
-    );
-  }
+  const { subcategories } = await httpGet<{
+    subcategories: Subcategory[];
+  }>("/subcategories", qp);
+  return subcategories;
 }
 
-/* --------------------------------------------------------------
+/* ------------------------------------------------------------------
    GEOLOCATION – thin wrapper around expo-location
-   -------------------------------------------------------------- */
+   ------------------------------------------------------------------ */
+/**
+ * Get the device’s current GPS coordinates.
+ * Works with all Expo SDKs – the PermissionStatus enum already
+ * contains the GRANTED value, so we don’t need a string comparison.
+ */
 export async function getCurrentLocation(): Promise<{
   latitude: number;
   longitude: number;
 }> {
+  // Request foreground location permission
   const { status } = await Location.requestForegroundPermissionsAsync();
 
-  // `status` is a string union: "granted" | "denied" | "undetermined"
-  if (status !== "granted") {
+  // The enum value for “granted” is Location.PermissionStatus.GRANTED
+  const granted = status === Location.PermissionStatus.GRANTED;
+
+  if (!granted) {
     throw new Error("Location permission not granted");
   }
 
+  // Permission granted – fetch the actual coordinates
   const loc = await Location.getCurrentPositionAsync({});
   return {
     latitude: loc.coords.latitude,
@@ -289,9 +219,9 @@ export async function getCurrentLocation(): Promise<{
   };
 }
 
-/* --------------------------------------------------------------
+/* ------------------------------------------------------------------
    Haversine utility (optional, client‑side distance calc)
-   -------------------------------------------------------------- */
+   ------------------------------------------------------------------ */
 export function haversineDistance(
   lat1: number,
   lon1: number,

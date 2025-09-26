@@ -1,5 +1,3 @@
-// packages/components/src/AppBar.js
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function AppBar({ title }) {
