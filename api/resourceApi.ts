@@ -12,6 +12,8 @@ import {
 import {
   MAIN_CATEGORIES,
   SUBCATEGORIES,
+  resolveCategory,
+  getCategoryIcon,
 } from "../taxonomy";
 
 /* --------------------------------------------------------------
@@ -26,9 +28,9 @@ const BASE_URL =
    Helper – build a clean URL (adds trailing slash, removes double slashes)
    -------------------------------------------------------------- */
 function buildUrl(path: string, params?: URLSearchParams): string {
-  const cleanBase = BASE_URL.replace(/\/+$/, "/");
+  const cleanBase = BASE_URL.replace(/\/+$/, "");
   const cleanPath = path.replace(/^\/+/, "");
-  const url = `${cleanBase}${cleanPath}`;
+  const url = `${cleanBase}/${cleanPath}`;
   return params && params.toString() ? `${url}?${params}` : url;
 }
 
@@ -40,7 +42,7 @@ async function httpGet<T>(path: string, params?: URLSearchParams): Promise<T> {
   const headers: Record<string, string> = {};
 
   if (API_KEY) headers["Api-Key"] = API_KEY;
-
+console.log('Axios GET request:', { url, headers });
   try {
     const resp = await axios.get<T>(url, { headers });
 
@@ -68,7 +70,7 @@ async function httpGet<T>(path: string, params?: URLSearchParams): Promise<T> {
 /* ------------------------------------------------------------------
    TAXONOMY MAP – generated from the static sub‑category list.
    ------------------------------------------------------------------ */
-export const TAXONOMY_MAP: Record<string, string> = (() => {
+   export const TAXONOMY_MAP: Record<string, string> = (() => {
   const map: Record<string, string> = {};
   // Walk every sub‑category and store its taxonomyCode keyed by the *display name*
   Object.values(SUBCATEGORIES).forEach((subArr) => {
@@ -82,6 +84,77 @@ export const TAXONOMY_MAP: Record<string, string> = (() => {
 })();
 
 /* ------------------------------------------------------------------
+   FETCH CATEGORIES – **STATIC** – use the taxonomy JSON.
+   ------------------------------------------------------------------ */
+export async function fetchCategories(): Promise<Category[]> {
+  const categoriesArray: Category[] = Object.entries(MAIN_CATEGORIES).map(
+    ([id, cat]) => ({
+      id,
+      name: cat.name,
+      icon: cat.icon,
+      keywords: Array.isArray(cat.keywords) ? cat.keywords : [],
+    })
+  );
+
+  if (__DEV__) {
+    console.log("📦 fetchCategories →", categoriesArray.length, "categories");
+  }
+
+  return categoriesArray;
+}
+
+// fetchResourcesByMainCategory – for HomeScreen icon clicks (just plain keyword search)
+export async function fetchResourcesByMainCategory(
+  categoryName: string,
+  zipCode?: string,
+  skip = 0,
+  size = 20
+): Promise<ResourcePage> {
+  console.log('fetchResourcesByMainCategory called!'); // ← move INSIDE the function
+
+  // Format keyword for API (lowercase, trim)
+  const keywordParam = categoryName.trim().toLowerCase();
+
+  const qp = new URLSearchParams();
+  qp.append("keywords", keywordParam);
+  qp.append("keywordIsTaxonomyCode", "false");
+  //qp.append("searchMode", "All");
+
+  // Location logic
+  if (zipCode) {
+    qp.append("location", zipCode);
+    qp.append("locationMode", "postalcode");
+    //qp.append("distance", "100");
+    //qp.append("orderByDistance", "true");
+  } else {
+    qp.append("location", "Santa Barbara");
+    qp.append("locationMode", "city");
+    //qp.append("orderByDistance", "false");
+  }
+
+  //qp.append("size", size.toString());
+  //qp.append("skip", skip.toString());
+
+  // <<< PLACE console.logs HERE to see input BEFORE API call >>>
+  console.log('🔎 keywords:', keywordParam);
+  //console.log('🔎 keywordIsTaxonomyCode:', "false");
+  console.log('🔎 location:', zipCode || 'Santa Barbara');
+  console.log('🔎 locationMode:', zipCode ? 'postalcode' : 'city');
+  console.log('Actual request:', buildUrl('/search/keyword', qp));
+
+  const data = await httpGet<{ resources: Resource[]; total?: number }>("/search/keyword", qp);
+
+  if (!Array.isArray(data.resources)) {
+    throw new Error("Malformed API response – `resources` is not an array");
+  }
+
+  const total = typeof data.total === "number" ? data.total : data.resources.length;
+  const hasMore = skip + size < total;
+
+  return { items: data.resources, total, hasMore };
+}
+
+/* ------------------------------------------------------------------
    FETCH RESOURCES – core function used by the infinite‑scroll list
    ------------------------------------------------------------------ */
 export interface ResourcePage {
@@ -89,7 +162,6 @@ export interface ResourcePage {
   total: number;
   hasMore: boolean;
 }
-
 /**
  * Fetch a page of resources for a given **sub‑category** (or plain keyword).
  *
@@ -109,7 +181,12 @@ export async function fetchResourcesBySubcategory(
   // --------------------------------------------------------------
   const taxonomyCode = TAXONOMY_MAP[subcatName];
   const isTaxonomy = Boolean(taxonomyCode);
-  const keywordParam = isTaxonomy ? taxonomyCode! : subcatName;
+
+  // IMPORTANT: the 211 API expects **lower‑case** keywords when
+  // `keywordIsTaxonomyCode` is false.
+  const keywordParam = isTaxonomy
+    ? taxonomyCode!                         // already the exact code
+    : subcatName.trim().toLowerCase();     // normalise plain keywords
 
   // --------------------------------------------------------------
   // 2️⃣ Build query parameters according to the spec you gave
@@ -156,28 +233,6 @@ export async function fetchResourcesBySubcategory(
   };
 }
 
-/* ------------------------------------------------------------------
-   FETCH CATEGORIES – **STATIC** – use the taxonomy JSON.
-   ------------------------------------------------------------------ */
-export async function fetchCategories(): Promise<Category[]> {
-  // Convert the MAIN_CATEGORIES map into an array that matches the
-  // Category interface (including the required `keywords` field).
-  const categoriesArray: Category[] = Object.entries(MAIN_CATEGORIES).map(
-    ([id, cat]) => ({
-      id,
-      name: cat.name,
-      icon: cat.icon,
-      // Some taxonomy entries may omit keywords – default to an empty array.
-      keywords: Array.isArray(cat.keywords) ? cat.keywords : [],
-    })
-  );
-
-  if (__DEV__) {
-    console.log("📦 fetchCategories →", categoriesArray.length, "categories");
-  }
-  return categoriesArray;
-}
-
 export async function fetchSubcategories(
   categoryId: string
 ): Promise<Subcategory[]> {
@@ -187,6 +242,7 @@ export async function fetchSubcategories(
     subcategories: Subcategory[];
   }>("/subcategories", qp);
   return subcategories;
+
 }
 
 /* ------------------------------------------------------------------

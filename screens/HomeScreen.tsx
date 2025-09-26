@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useOnboarding } from '../hooks/use-onboarding';
 import { useLocation } from '../hooks/use-location';
 import { useTranslatedText } from '../components/TranslatedText';
-import { fetchCategories } from '../api/resourceApi';
+import { fetchCategories, fetchResourcesByMainCategory } from '../api/resourceApi';
 
 import CategoryGrid from '../components/CategoryGrid';
 import CategoryGridSkeleton from '../components/CategoryGridSkeleton';
@@ -93,20 +93,30 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
   // 3️⃣ HANDLE TILE PRESS – store selection + navigate
   // -----------------------------------------------------------------
   const handleCategoryPress = (categoryId: string, categoryName: string) => {
-    // Resolve the icon for the selected category (optional)
     const icon = getCategoryIcon(categoryId) ?? undefined;
-
-    setSelectedCategoryId(categoryId);
+    setSelectedCategoryId(categoryId); // triggers query if used in queryKey
     navigation?.navigate?.("ResourceList", {
-      // The list screen expects a `keyword` – we use the human‑readable name
       keyword: categoryName,
       zipCode,
-      // The following fields are optional but now type‑safe thanks to AppNavigator
       categoryId,
       categoryName,
       categoryIcon: icon,
     });
   };
+  
+  // Fetch resources for the selected main category
+  const {
+    data: mainCategoryResources = [],
+    isLoading: loadingMainCategoryResources,
+    error: mainCategoryError,
+  } = useQuery({
+    queryKey: ['main-category-resources', selectedCategoryId, zipCode],
+    queryFn: () =>
+      selectedCategoryId
+        ? fetchResourcesByMainCategory(selectedCategoryId, zipCode)
+        : Promise.resolve({ items: [], total: 0, hasMore: false }),
+    enabled: Boolean(selectedCategoryId),
+  });
 
   // -----------------------------------------------------------------
   // 4️⃣ SEARCH HANDLER
