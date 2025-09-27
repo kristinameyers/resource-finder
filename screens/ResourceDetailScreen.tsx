@@ -95,7 +95,9 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
   const formattedAddress = getFormattedAddress(resourceDetails.address);
 
   return (
+
     <ScrollView style={styles.container}>
+      {renderHeader()}
       {/* Header Section */}
       <View style={styles.section}>
         <Text style={styles.title}>
