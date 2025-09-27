@@ -1,4 +1,3 @@
-// ResourceListScreen.tsx
 import React from "react";
 import {
   View,
@@ -14,6 +13,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   fetchResourcesByMainCategory,
   fetchResourcesBySubcategory,
+  storeResourceForDetailView,  // Add this import
+  getResourceUniqueId,         // Add this import
 } from "../api/resourceApi";
 import type { Resource } from "../types/shared-schema";
 import type { HomeStackParamList } from "../navigation/AppNavigator";
@@ -29,9 +30,18 @@ function ResourceCard({
 }) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
-      <Text style={styles.title}>{resource.name}</Text>
-      {resource.organizationName && (
-        <Text style={styles.sub}>{resource.organizationName}</Text>
+      <Text style={styles.title}>
+        {resource.nameServiceAtLocation || resource.nameService || "Unknown Service"}
+      </Text>
+      {resource.nameOrganization && (
+        <Text style={styles.sub}>{resource.nameOrganization}</Text>
+      )}
+      {resource.address && (
+        <Text style={styles.address}>
+          {resource.address.streetAddress && `${resource.address.streetAddress}, `}
+          {resource.address.city && `${resource.address.city}, `}
+          {resource.address.stateProvince} {resource.address.postalCode}
+        </Text>
       )}
     </TouchableOpacity>
   );
@@ -39,9 +49,26 @@ function ResourceCard({
 
 export default function ResourceListScreen() {
   const navigation = useNavigation();
+  const { params } = useRoute<ResourceListRouteProp>();
   const {
-    params: { keyword, zipCode = "", isSubcategory = false },
-  } = useRoute<ResourceListRouteProp>();
+    keyword,
+    zipCode,
+    isSubcategory = false,
+  } = params || {};
+
+  // Defensive validation against missing or bad keyword param
+  if (
+    typeof keyword !== "string" ||
+    !keyword.trim()
+  ) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.error}>
+          Invalid or missing category. Please go back and select a valid category or subcategory.
+        </Text>
+      </View>
+    );
+  }
 
   const PAGE_SIZE = 20;
   type ResourcePage = {
@@ -64,11 +91,11 @@ export default function ResourceListScreen() {
     queryKey: ["resources", keyword, zipCode, isSubcategory],
     queryFn: async ({ pageParam }) => {
       const skip = typeof pageParam === "number" ? pageParam : 0;
-      // Decide between main category and subcategory logic:
       if (isSubcategory) {
         return await fetchResourcesBySubcategory(keyword, zipCode, skip, PAGE_SIZE);
       }
-      return await fetchResourcesByMainCategory(keyword, zipCode, skip, PAGE_SIZE);
+      // Main category handler - single argument
+      return await fetchResourcesByMainCategory(keyword);
     },
     getNextPageParam: (lastPage, allPages) => {
       if (!lastPage.hasMore) return undefined;
@@ -79,6 +106,7 @@ export default function ResourceListScreen() {
       return nextSkip;
     },
     initialPageParam: 0,
+    retry: 2,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -93,16 +121,46 @@ export default function ResourceListScreen() {
   };
 
   const renderItem = ({ item }: { item: Resource }) => (
-    <ResourceCard
-      resource={item}
-      onPress={() => {
-        // navigation.navigate('ResourceDetail', { resourceId: item.id });
-        console.log("Selected resource:", item.id);
-      }}
-    />
-  );
+  <ResourceCard
+    resource={item}
+    onPress={async () => {
+      const resourceId = getResourceUniqueId(item);
+      if (resourceId) {
+        try {
+          // Store the resource for the detail screen
+          await storeResourceForDetailView(item);
+          console.log(`📦 Stored resource ${resourceId} for detail view`);
+          
+          // @ts-ignore - Navigation typing
+          navigation.navigate("ResourceDetail", { resourceId: String(resourceId) });
+        } catch (error) {
+          console.error('Error storing resource:', error);
+          // Still navigate even if storage fails
+          // @ts-ignore - Navigation typing
+          navigation.navigate("ResourceDetail", { resourceId: String(resourceId) });
+        }
+      } else {
+        console.warn('No valid resource ID found for item:', item);
+      }
+    }}
+  />
+);
 
-  const keyExtractor = (item: Resource) => item.id;
+  const keyExtractor = (item: Resource, index: number) => {
+    // Use idServiceAtLocation as primary key (matches 211 API response)
+    if (item.idServiceAtLocation) {
+      return String(item.idServiceAtLocation);
+    }
+    // Fallback to other ID fields
+    if (item.idService) {
+      return String(item.idService);
+    }
+    if (item.id) {
+      return String(item.id);
+    }
+    // Last resort: use index to ensure uniqueness
+    return `resource-${index}`;
+  };
 
   // UI states (loading, error, empty)
   if (isLoading) {
@@ -130,7 +188,7 @@ export default function ResourceListScreen() {
   if (flatResources.length === 0) {
     return (
       <View style={styles.center}>
-        <Text style={styles.info}>No results found for “{keyword}”.</Text>
+        <Text style={styles.info}>No results found for "{keyword}".</Text>
       </View>
     );
   }
@@ -207,6 +265,12 @@ const styles = StyleSheet.create({
   sub: {
     fontSize: 14,
     color: "#555",
+    marginBottom: 2,
+  },
+  address: {
+    fontSize: 12,
+    color: "#777",
+    fontStyle: "italic",
   },
   footerSpinner: {
     paddingVertical: 16,

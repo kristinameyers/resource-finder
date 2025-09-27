@@ -1,5 +1,6 @@
 // resourceApi.ts
 import * as Location from "expo-location";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Resource,
   Category,
@@ -13,82 +14,89 @@ import {
   getCategoryIcon,
 } from "../taxonomy";
 
-/* --------------------------------------------------------------
-   ENVIRONMENT
-   -------------------------------------------------------------- */
+/* ENVIRONMENT */
 const API_KEY = process.env.EXPO_PUBLIC_NATIONAL_211_API_KEY ?? "";
 const BASE_URL = process.env.EXPO_PUBLIC_NATIONAL_211_API_URL ?? "https://api.211.org/resources/v2";
 
-/* SANTA BARBARA CITY NAME CONSTANT */
-const SANTA_BARBARA_TEXT = "Santa Barbara";
+/* SANTA BARBARA COUNTY CONSTANT */
+const SANTA_BARBARA_COUNTY = "santa barbara county";
 
-/* --------------------------------------------------------------
-   Helper – build a clean URL (adds trailing slash, removes double slashes)
-   -------------------------------------------------------------- */
+/* ASYNC STORAGE KEYS */
+const STORAGE_KEYS = {
+  RECENT_211_RESOURCES: 'recent211Resources',
+  CACHED_CATEGORIES: 'cached211Categories',
+  CACHED_SUBCATEGORIES: 'cached211Subcategories',
+} as const;
+
+/* Helper – build a clean URL */
 function buildUrl(path: string) {
   const cleanBase = BASE_URL.replace(/\/+$/, "");
   const cleanPath = path.replace(/^\/+/, "");
   return `${cleanBase}/${cleanPath}`;
 }
 
-/* ------------------ MINIMAL PARAM SUPPORT FOR MAIN CATEGORIES ------------------ */
+/* LOCATION PARAMS */
 function buildLocationParams(): {
   location: string;
-  locationMode: "Within";
 } {
   return {
-    location: SANTA_BARBARA_TEXT,
-    locationMode: "Within",
+    location: SANTA_BARBARA_COUNTY,
   };
 }
 
-// LEGACY, more complex locationParams builder (keep as comments for restoration)
-/*
-function buildLocationParams(
-  zipCode?: string
-): {
-  location: string;
-  locationMode: "postalcode" | "within";
-  distance?: number;
-  orderByDistance?: "true" | "false";
-} {
-  const isZip = zipCode && zipCode.trim() !== "";
-  if (isZip) {
-    return {
-      location: zipCode!,
-      locationMode: "postalcode",
-      distance: 50,
-      orderByDistance: "true",
-    };
-  } else {
-    return {
-      location: SANTA_BARBARA_TEXT,
-      locationMode: "within",
-    };
-  }
-}
-*/
-
-/* --------------------------------------------------------------
-   NATIVE FETCH USING URL + searchParams.append (GET)
-   -------------------------------------------------------------- */
-async function national211Get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+/* ENHANCED FETCH USING HEADERS FOR SEARCH PARAMS */
+async function national211Get<T>(
+  path: string, 
+  queryParams?: Record<string, string | undefined>,
+  searchHeaders?: Record<string, string | undefined>
+): Promise<T> {
   const urlObj = new URL(buildUrl(path));
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
+  
+  // Add query parameters
+  if (queryParams) {
+    Object.entries(queryParams).forEach(([key, value]) => {
       if (typeof value !== "undefined" && value !== null) {
         urlObj.searchParams.append(key, value);
       }
     });
   }
+  
   const url = urlObj.toString();
+  
+  // Build headers - combine standard headers with search headers
   const headers: Record<string, string> = {
     "Api-Key": API_KEY,
-    "Accept": "application/json"
+    "Accept": "application/json",
+    "Cache-Control": "no-cache"
   };
+  
+  // Add search-specific headers
+  if (searchHeaders) {
+    Object.entries(searchHeaders).forEach(([key, value]) => {
+      if (typeof value !== "undefined" && value !== null) {
+        headers[key] = value;
+      }
+    });
+  }
+  
   console.log("Fetch GET request:", url, headers);
-  const res = await fetch(url, { method: "GET", headers });
+
+  let res: Response;
+  try {
+    res = await fetch(url, { method: "GET", headers });
+  } catch (networkError: any) {
+    console.error("Network error during fetch:", networkError);
+    throw new Error("Network error while reaching National 211 API");
+  }
+  
   console.log("🔎 Response status:", res.status);
+
+  // Handle 404 as empty results
+  if (res.status === 404) {
+    console.log("🔎 No resources found for query parameters");
+    return { resources: [], results: [], total: 0, count: 0 } as T;
+  }
+
   if (!res.ok) {
     let msg = "";
     try {
@@ -99,21 +107,22 @@ async function national211Get<T>(path: string, params?: Record<string, string | 
     }
     throw new Error(`National 211 API error: [${res.status}] ${msg || res.statusText}`);
   }
-  const data = await res.json();
+
+  let data: T;
+  try {
+    data = await res.json();
+  } catch (parseError: any) {
+    throw new Error("Failed to parse API response as JSON");
+  }
+  
   if (__DEV__) {
     console.log("🔎 GET", url, "→", res.status);
-    console.log("🔎 Raw data:", data);
   }
-  if (data === null || typeof data !== "object") {
-    throw new Error("Malformed API response – expected an object");
-  }
+  
   return data;
 }
 
-/* ------------------------------------------------------------------
-   TAXONOMY MAP – generated from the static sub‑category list.
-   ------------------------------------------------------------------ */
-export const TAXONOMY_MAP: Record<string, string> = (() => {
+/* TAXONOMY MAP */
 export const TAXONOMY_MAP: Record<string, string> = (() => {
   const map: Record<string, string> = {};
   Object.values(SUBCATEGORIES).forEach((subArr) => {
@@ -126,9 +135,71 @@ export const TAXONOMY_MAP: Record<string, string> = (() => {
   return map;
 })();
 
-/* ------------------------------------------------------------------
-   FETCH CATEGORIES – **STATIC** – use the taxonomy JSON.
-   ------------------------------------------------------------------ */
+/* Core ResourcePage interface */
+export interface ResourcePage {
+  items: Resource[];
+  total: number;
+  hasMore: boolean;
+}
+
+/* ASYNC STORAGE UTILITIES */
+export async function storeResourceForDetailView(resource: Resource): Promise<void> {
+  try {
+    const existingData = await AsyncStorage.getItem(STORAGE_KEYS.RECENT_211_RESOURCES);
+    const resources = existingData ? JSON.parse(existingData) : [];
+    
+    const resourceId = resource.idServiceAtLocation || resource.idService || resource.id;
+    
+    // Remove existing resource with same ID
+    const filteredResources = resources.filter((r: Resource) => {
+      const existingId = r.idServiceAtLocation || r.idService || r.id;
+      return existingId !== resourceId;
+    });
+    
+    // Add to beginning
+    filteredResources.unshift(resource);
+    
+    // Keep only last 100 resources to prevent storage bloat
+    const limitedResources = filteredResources.slice(0, 100);
+    await AsyncStorage.setItem(STORAGE_KEYS.RECENT_211_RESOURCES, JSON.stringify(limitedResources));
+    
+    console.log(`📦 Stored resource ${resourceId} for detail view`);
+  } catch (error) {
+    console.error('Error storing resource for detail view:', error);
+  }
+}
+
+/* FETCH RESOURCE BY ID (from cache or API) */
+export async function fetchResourceById(resourceId: string): Promise<Resource | null> {
+  console.log(`🔍 Fetching resource by ID: ${resourceId}`);
+  
+  // First try AsyncStorage for recently viewed resources
+  try {
+    const storedResources = await AsyncStorage.getItem(STORAGE_KEYS.RECENT_211_RESOURCES);
+    if (storedResources) {
+      const resourcesArr: Resource[] = JSON.parse(storedResources);
+      const foundResource = resourcesArr.find((r: Resource) => 
+        r.idServiceAtLocation === resourceId || 
+        r.idService === resourceId || 
+        r.id === resourceId
+      );
+      
+      if (foundResource) {
+        console.log(`✅ Found resource ${resourceId} in storage`);
+        return foundResource;
+      }
+    }
+  } catch (error) {
+    console.error('Error reading resource from AsyncStorage:', error);
+  }
+
+  // If not found in storage and no individual resource detail API is available,
+  // we return null. The 211 National API doesn't seem to have individual resource endpoints.
+  console.log(`❌ Resource ${resourceId} not found in storage and no detail API available`);
+  return null;
+}
+
+/* FETCH CATEGORIES – STATIC */
 export async function fetchCategories(): Promise<Category[]> {
   const categoriesArray: Category[] = Object.entries(MAIN_CATEGORIES).map(
     ([id, cat]) => ({
@@ -144,82 +215,177 @@ export async function fetchCategories(): Promise<Category[]> {
   return categoriesArray;
 }
 
-/* ------------- MINIMAL MAIN CATEGORY FETCH FOR TESTING ----------- */
+/* FETCH SUBCATEGORIES */
+export async function fetchSubcategories(categoryId: string): Promise<Subcategory[]> {
+  if (categoryId === 'all') {
+    // Return all subcategories from all categories
+    const allSubcategories: Subcategory[] = [];
+    Object.entries(SUBCATEGORIES).forEach(([catId, subcats]) => {
+      subcats.forEach(sub => {
+        allSubcategories.push({
+          id: sub.id || `${catId}-${sub.name}`,
+          name: sub.name,
+          categoryId: catId,
+          taxonomyCode: sub.taxonomyCode,
+        });
+      });
+    });
+    return allSubcategories;
+  }
+
+  // Return subcategories for specific category
+  const categorySubcats = SUBCATEGORIES[categoryId] || [];
+  return categorySubcats.map(sub => ({
+    id: sub.id || `${categoryId}-${sub.name}`,
+    name: sub.name,
+    categoryId: categoryId,
+    taxonomyCode: sub.taxonomyCode,
+  }));
+}
+
+/* MAIN CATEGORY FETCH - Uses keywordIsTaxonomyTerm: true */
 export async function fetchResourcesByMainCategory(
-  categoryName: string
+  categoryName: string,
+  skip = 0,
+  size = 20
 ): Promise<ResourcePage> {
   console.log('fetchResourcesByMainCategory called!');
   const locationParams = buildLocationParams();
-  const params: Record<string, string | undefined> = {
+  
+  // Query parameters
+  const queryParams: Record<string, string | undefined> = {
     keywords: categoryName.trim().toLowerCase(),
     location: locationParams.location,
-    locationMode: locationParams.locationMode,
+    skip: String(skip),
+    size: String(size),
   };
-  console.log('Actual request params:', params);
-  const data = await national211Get<{ resources: Resource[]; total?: number }>("/search/keyword", params);
-  if (!Array.isArray(data.resources)) {
-    throw new Error("Malformed API response – `resources` is not an array");
+  
+  // Search parameters as headers
+  const searchHeaders: Record<string, string | undefined> = {
+    "searchMode": "All",
+    "locationMode": "Within",
+    "keywordIsTaxonomyCode": "false",
+    "keywordIsTaxonomyTerm": "true", // TRUE for main categories
+  };
+  
+  console.log('Main category request params:', queryParams);
+  console.log('Main category search headers:', searchHeaders);
+  
+  const data = await national211Get<{ results: Resource[]; count?: number; total?: number }>(
+    "/search/keyword", 
+    queryParams, 
+    searchHeaders
+  );
+  
+  // Handle response structure (API returns "results" and "count")
+  if (!data || !data.results) {
+    return { items: [], total: 0, hasMore: false };
   }
-  const total = typeof data.total === "number" ? data.total : data.resources.length;
-  const hasMore = total > 0;
-  return { items: data.resources, total, hasMore };
+  
+  if (!Array.isArray(data.results)) {
+    throw new Error("Malformed API response – `results` is not an array");
+  }
+  
+  const total = typeof data.count === "number" ? data.count : data.results.length;
+  const hasMore = data.results.length >= size; // More data available if we got a full page
+  return { items: data.results, total, hasMore };
 }
 
-/* Core ResourcePage interface */
-export interface ResourcePage {
-  items: Resource[];
-  total: number;
-  hasMore: boolean;
-}
-
-/* --------- LEGACY ADVANCED SUBCATEGORY AND SUPPORT (restored as needed) ---------- */
+/* SUBCATEGORY FETCH - Uses keywordIsTaxonomyCode: true */
 export async function fetchResourcesBySubcategory(
   subcatName: string,
   zipCode?: string,
   skip = 0,
-  size = 10
+  size = 20
 ): Promise<ResourcePage> {
   const taxonomyCode = TAXONOMY_MAP[subcatName];
   const isTaxonomy = Boolean(taxonomyCode);
-  //const locationParams = buildLocationParams(zipCode); // For advanced param support
-  // For minimal test, just use Santa Barbara city params:
   const locationParams = buildLocationParams();
-  const params: Record<string, string | undefined> = {
+  
+  // Query parameters
+  const queryParams: Record<string, string | undefined> = {
     keywords: isTaxonomy ? taxonomyCode! : subcatName.trim().toLowerCase(),
-    keywordIsTaxonomyCode: isTaxonomy ? "true" : "false",
-    location: locationParams.location,
-    locationMode: locationParams.locationMode,
-    // If you later want size & skip, convert with String():
-    // size: size !== undefined ? String(size) : undefined,
-    // skip: skip !== undefined ? String(skip) : undefined,
-    //searchMode: "All",
+    location: zipCode?.trim() || locationParams.location,
+    skip: String(skip),
+    size: String(size),
   };
-  console.log('Actual subcategory request params:', params);
-  const data = await national211Get<{ resources: Resource[]; total?: number }>("/search/keyword", params);
-  if (!Array.isArray(data.resources)) {
-    throw new Error("Malformed API response – `resources` is not an array");
+  
+  // Search parameters as headers
+  const searchHeaders: Record<string, string | undefined> = {
+    "searchMode": "All",
+    "locationMode": "Within",
+    "keywordIsTaxonomyCode": isTaxonomy ? "true" : "false", // TRUE for subcategories when using taxonomy code
+    "keywordIsTaxonomyTerm": "false",
+  };
+  
+  console.log('Subcategory request params:', queryParams);
+  console.log('Subcategory search headers:', searchHeaders);
+  
+  const data = await national211Get<{ results: Resource[]; count?: number; total?: number }>(
+    "/search/keyword", 
+    queryParams, 
+    searchHeaders
+  );
+  
+  if (!data || !data.results) {
+    return { items: [], total: 0, hasMore: false };
   }
-  const total = typeof data.total === "number" ? data.total : data.resources.length;
-  const hasMore = total > 0;
+  
+  if (!Array.isArray(data.results)) {
+    throw new Error("Malformed API response – `results` is not an array");
+  }
+  
+  const total = typeof data.count === "number" ? data.count : data.results.length;
+  const hasMore = data.results.length >= size;
   return {
-    items: data.resources,
+    items: data.results,
     total,
     hasMore,
   };
 }
 
-/* FETCH SUBCATEGORIES */
-export async function fetchSubcategories(
-  categoryId: string
-): Promise<Subcategory[]> {
-  const params: Record<string, string | undefined> = { categoryId };
-  const { subcategories } = await national211Get<{ subcategories: Subcategory[] }>("/subcategories", params);
-  return subcategories;
+/* RESOURCE DETAILS HELPER FUNCTIONS */
+export function getResourcePhoneNumber(resource: Resource): string | null {
+  if (resource.phoneNumbers?.main) return resource.phoneNumbers.main;
+  if (resource.phone) return resource.phone;
+  return null;
 }
 
-/* ------------------------------------------------------------------
-   GEOLOCATION – thin wrapper around expo-location
-   ------------------------------------------------------------------ */
+export function getResourceFormattedAddress(resource: Resource): string | null {
+  if (resource.address) {
+    const addr = resource.address;
+    return [
+      addr.streetAddress,
+      addr.city,
+      addr.stateProvince,
+      addr.postalCode
+    ].filter(Boolean).join(', ');
+  }
+  if (resource.location) return resource.location;
+  return null;
+}
+
+export function getResourceDisplayName(resource: Resource): string {
+  return resource.nameServiceAtLocation || 
+         resource.nameService || 
+         resource.name || 
+         'Unknown Service';
+}
+
+export function getResourceDescription(resource: Resource): string {
+  return resource.descriptionService || 
+         resource.description || 
+         'No description available';
+}
+
+export function getResourceUniqueId(resource: Resource): string | null {
+  return resource.idServiceAtLocation || 
+         resource.idService || 
+         resource.id || 
+         null;
+}
+
+/* GEOLOCATION */
 export async function getCurrentLocation(): Promise<{
   latitude: number;
   longitude: number;
@@ -234,9 +400,7 @@ export async function getCurrentLocation(): Promise<{
   };
 }
 
-/* ------------------------------------------------------------------
-   Haversine utility (client‑side distance calc)
-   ------------------------------------------------------------------ */
+/* Haversine utility */
 export function haversineDistance(
   lat1: number,
   lon1: number,
@@ -245,7 +409,6 @@ export function haversineDistance(
   unit: "mi" | "km" = "mi"
 ): number {
   const toRad = (v: number) => (v * Math.PI) / 180;
-  const R = unit === "mi" ? 3959 : 6371;
   const R = unit === "mi" ? 3959 : 6371;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -258,3 +421,39 @@ export function haversineDistance(
   return R * c;
 }
 
+/* CLEAR STORAGE (for debugging/cleanup) */
+export async function clearResourceStorage(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEYS.RECENT_211_RESOURCES);
+    console.log('📦 Cleared resource storage');
+  } catch (error) {
+    console.error('Error clearing resource storage:', error);
+  }
+}
+
+/* GET STORAGE STATS (for debugging) */
+export async function getStorageStats(): Promise<{
+  resourceCount: number;
+  storageSize: string;
+}> {
+  try {
+    const storedResources = await AsyncStorage.getItem(STORAGE_KEYS.RECENT_211_RESOURCES);
+    if (storedResources) {
+      const resources = JSON.parse(storedResources);
+      const sizeInBytes = new Blob([storedResources]).size;
+      const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+      
+      return {
+        resourceCount: resources.length,
+        storageSize: `${sizeInKB} KB`,
+      };
+    }
+  } catch (error) {
+    console.error('Error getting storage stats:', error);
+  }
+  
+  return {
+    resourceCount: 0,
+    storageSize: '0 KB',
+  };
+}
