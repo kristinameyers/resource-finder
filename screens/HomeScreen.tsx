@@ -94,7 +94,7 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
   // -----------------------------------------------------------------
   const handleCategoryPress = (categoryId: string, categoryName: string) => {
     const icon = getCategoryIcon(categoryId) ?? undefined;
-    setSelectedCategoryId(categoryId); // triggers query if used in queryKey
+    setSelectedCategoryId(categoryName); // Pass plain name, not taxonomy code/ID!
     navigation?.navigate?.("ResourceList", {
       keyword: categoryName,
       zipCode,

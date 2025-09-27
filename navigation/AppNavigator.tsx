@@ -26,6 +26,7 @@ export type HomeStackParamList = {
     categoryId?: string;      // optional – useful if you need the raw id later
     categoryName?: string;    // optional – same as `keyword` but kept for clarity
     categoryIcon?: string;    // optional – the icon name you want to show on the list header
+    isSubcategory?: boolean; 
   };
   ResourceDetail: { resourceId: string };
 };

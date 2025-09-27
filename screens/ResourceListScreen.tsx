@@ -1,4 +1,4 @@
-// src/screens/ResourceListScreen.tsx
+// ResourceListScreen.tsx
 import React from "react";
 import {
   View,
@@ -9,24 +9,17 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import {
-  useInfiniteQuery
-} from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import {
+  fetchResourcesByMainCategory,
   fetchResourcesBySubcategory,
 } from "../api/resourceApi";
 import type { Resource } from "../types/shared-schema";
 import type { HomeStackParamList } from "../navigation/AppNavigator";
 
-/* --------------------------------------------------------------
-   Route param typing – matches the stack navigator definition
-   -------------------------------------------------------------- */
 type ResourceListRouteProp = RouteProp<HomeStackParamList, "ResourceList">;
 
-/* --------------------------------------------------------------
-   Simple card component – replace with your own UI if desired
-   -------------------------------------------------------------- */
 function ResourceCard({
   resource,
   onPress,
@@ -37,81 +30,62 @@ function ResourceCard({
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Text style={styles.title}>{resource.name}</Text>
-      {/* The Resource type now includes `organizationName` */
-      resource.organizationName && (
+      {resource.organizationName && (
         <Text style={styles.sub}>{resource.organizationName}</Text>
       )}
     </TouchableOpacity>
   );
 }
 
-/* --------------------------------------------------------------
-   Main screen component
-   -------------------------------------------------------------- */
 export default function ResourceListScreen() {
   const navigation = useNavigation();
   const {
-    params: { keyword, zipCode = "" },
+    params: { keyword, zipCode = "", isSubcategory = false },
   } = useRoute<ResourceListRouteProp>();
 
-  // --------------------------------------------------------------
-  // 1️⃣ Infinite‑scroll query (20 items per page)
-  // --------------------------------------------------------------
   const PAGE_SIZE = 20;
-
-  // Define the shape of a single page returned by the API
   type ResourcePage = {
     items: Resource[];
     total: number;
     hasMore: boolean;
   };
 
+  // Unified queryFn based on isSubcategory param
   const {
-  data,
-  isLoading,
-  isError,
-  error,
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
-  refetch,
-} = useInfiniteQuery<ResourcePage, Error>({
-  queryKey: ["resources", keyword, zipCode],
-  // Accept context, extract and cast pageParam:
-  queryFn: async ({ pageParam }) => {
-    const skip = typeof pageParam === "number" ? pageParam : 0;
-    return await fetchResourcesBySubcategory(
-      keyword,
-      zipCode,
-      skip,
-      PAGE_SIZE
-    );
-  },
-    // Compute the next offset (`skip`) based on how many items we already have
-    getNextPageParam: (lastPage, allPages) => {
-    if (!lastPage.hasMore) return undefined;
-    const nextSkip = allPages.reduce(
-      (sum, pg) => sum + pg.items.length,
-      0
-    );
-    return nextSkip; // number → matches the pageParam type
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery<ResourcePage, Error>({
+    queryKey: ["resources", keyword, zipCode, isSubcategory],
+    queryFn: async ({ pageParam }) => {
+      const skip = typeof pageParam === "number" ? pageParam : 0;
+      // Decide between main category and subcategory logic:
+      if (isSubcategory) {
+        return await fetchResourcesBySubcategory(keyword, zipCode, skip, PAGE_SIZE);
+      }
+      return await fetchResourcesByMainCategory(keyword, zipCode, skip, PAGE_SIZE);
     },
-    // TanStack v5 requires an explicit initial page param
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.hasMore) return undefined;
+      const nextSkip = allPages.reduce(
+        (sum, pg) => sum + pg.items.length,
+        0
+      );
+      return nextSkip;
+    },
     initialPageParam: 0,
-    // Keep data fresh while the screen is focused
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // --------------------------------------------------------------
-  // 2️⃣ Flatten paginated pages into a single array for FlatList
-  // --------------------------------------------------------------
   const flatResources: Resource[] = data?.pages?.flatMap(
     (pg: ResourcePage) => pg.items
   ) ?? [];
 
-  // --------------------------------------------------------------
-  // 3️⃣ Handlers
-  // --------------------------------------------------------------
   const loadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -122,7 +96,6 @@ export default function ResourceListScreen() {
     <ResourceCard
       resource={item}
       onPress={() => {
-        // If you have a detail screen, navigate to it here:
         // navigation.navigate('ResourceDetail', { resourceId: item.id });
         console.log("Selected resource:", item.id);
       }}
@@ -131,9 +104,7 @@ export default function ResourceListScreen() {
 
   const keyExtractor = (item: Resource) => item.id;
 
-  // --------------------------------------------------------------
-  // 4️⃣ UI states (loading, error, empty)
-  // --------------------------------------------------------------
+  // UI states (loading, error, empty)
   if (isLoading) {
     return (
       <View style={styles.center}>
@@ -164,9 +135,7 @@ export default function ResourceListScreen() {
     );
   }
 
-  // --------------------------------------------------------------
-  // 5️⃣ Main list UI
-  // --------------------------------------------------------------
+  // Main list UI
   return (
     <FlatList
       data={flatResources}
@@ -186,9 +155,6 @@ export default function ResourceListScreen() {
   );
 }
 
-/* --------------------------------------------------------------
-   Styles
-   -------------------------------------------------------------- */
 const styles = StyleSheet.create({
   center: {
     flex: 1,

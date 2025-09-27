@@ -1,14 +1,11 @@
-// src/api/resourceApi.ts
-import axios from "axios";
+// resourceApi.ts
 import * as Location from "expo-location";
-
 import {
   Resource,
   Category,
   Subcategory,
   Location as Loc,
 } from "../types/shared-schema";
-
 import {
   MAIN_CATEGORIES,
   SUBCATEGORIES,
@@ -20,59 +17,104 @@ import {
    ENVIRONMENT
    -------------------------------------------------------------- */
 const API_KEY = process.env.EXPO_PUBLIC_NATIONAL_211_API_KEY ?? "";
-const BASE_URL =
-  process.env.EXPO_PUBLIC_NATIONAL_211_API_URL ??
-  "https://api.211.org/resources/v2";
+const BASE_URL = process.env.EXPO_PUBLIC_NATIONAL_211_API_URL ?? "https://api.211.org/resources/v2";
+
+/* SANTA BARBARA CITY NAME CONSTANT */
+const SANTA_BARBARA_TEXT = "Santa Barbara";
 
 /* --------------------------------------------------------------
    Helper – build a clean URL (adds trailing slash, removes double slashes)
    -------------------------------------------------------------- */
-function buildUrl(path: string, params?: URLSearchParams): string {
+function buildUrl(path: string) {
   const cleanBase = BASE_URL.replace(/\/+$/, "");
   const cleanPath = path.replace(/^\/+/, "");
-  const url = `${cleanBase}/${cleanPath}`;
-  return params && params.toString() ? `${url}?${params}` : url;
+  return `${cleanBase}/${cleanPath}`;
 }
 
-/* --------------------------------------------------------------
-   Unified GET – logs (dev only), normalises errors, validates JSON
-   -------------------------------------------------------------- */
-async function httpGet<T>(path: string, params?: URLSearchParams): Promise<T> {
-  const url = buildUrl(path, params);
-  const headers: Record<string, string> = {};
+/* ------------------ MINIMAL PARAM SUPPORT FOR MAIN CATEGORIES ------------------ */
+function buildLocationParams(): {
+  location: string;
+  locationMode: "Within";
+} {
+  return {
+    location: SANTA_BARBARA_TEXT,
+    locationMode: "Within",
+  };
+}
 
-  if (API_KEY) headers["Api-Key"] = API_KEY;
-console.log('Axios GET request:', { url, headers });
-  try {
-    const resp = await axios.get<T>(url, { headers });
-
-    // Debug‑only logging (won’t appear in production builds)
-    if (__DEV__) {
-      console.log("🔎 GET", url, "→", resp.status);
-      console.log("🔎 Raw data:", resp.data);
-    }
-
-    // Basic runtime guard – ensures we got an object back
-    if (resp.data === null || typeof resp.data !== "object") {
-      throw new Error("Malformed API response – expected an object");
-    }
-
-    return resp.data;
-  } catch (err: any) {
-    if (err.response) {
-      const { status, data } = err.response;
-      throw new Error(`HTTP ${status}: ${data?.message ?? err.message}`);
-    }
-    throw new Error(`Network error: ${err.message}`);
+// LEGACY, more complex locationParams builder (keep as comments for restoration)
+/*
+function buildLocationParams(
+  zipCode?: string
+): {
+  location: string;
+  locationMode: "postalcode" | "within";
+  distance?: number;
+  orderByDistance?: "true" | "false";
+} {
+  const isZip = zipCode && zipCode.trim() !== "";
+  if (isZip) {
+    return {
+      location: zipCode!,
+      locationMode: "postalcode",
+      distance: 50,
+      orderByDistance: "true",
+    };
+  } else {
+    return {
+      location: SANTA_BARBARA_TEXT,
+      locationMode: "within",
+    };
   }
+}
+*/
+
+/* --------------------------------------------------------------
+   NATIVE FETCH USING URL + searchParams.append (GET)
+   -------------------------------------------------------------- */
+async function national211Get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+  const urlObj = new URL(buildUrl(path));
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (typeof value !== "undefined" && value !== null) {
+        urlObj.searchParams.append(key, value);
+      }
+    });
+  }
+  const url = urlObj.toString();
+  const headers: Record<string, string> = {
+    "Api-Key": API_KEY,
+    "Accept": "application/json"
+  };
+  console.log("Fetch GET request:", url, headers);
+  const res = await fetch(url, { method: "GET", headers });
+  console.log("🔎 Response status:", res.status);
+  if (!res.ok) {
+    let msg = "";
+    try {
+      const json = await res.json();
+      msg = JSON.stringify(json);
+    } catch {
+      msg = await res.text();
+    }
+    throw new Error(`National 211 API error: [${res.status}] ${msg || res.statusText}`);
+  }
+  const data = await res.json();
+  if (__DEV__) {
+    console.log("🔎 GET", url, "→", res.status);
+    console.log("🔎 Raw data:", data);
+  }
+  if (data === null || typeof data !== "object") {
+    throw new Error("Malformed API response – expected an object");
+  }
+  return data;
 }
 
 /* ------------------------------------------------------------------
    TAXONOMY MAP – generated from the static sub‑category list.
    ------------------------------------------------------------------ */
-   export const TAXONOMY_MAP: Record<string, string> = (() => {
+export const TAXONOMY_MAP: Record<string, string> = (() => {
   const map: Record<string, string> = {};
-  // Walk every sub‑category and store its taxonomyCode keyed by the *display name*
   Object.values(SUBCATEGORIES).forEach((subArr) => {
     subArr.forEach((sub) => {
       if (sub.name && sub.taxonomyCode) {
@@ -95,137 +137,69 @@ export async function fetchCategories(): Promise<Category[]> {
       keywords: Array.isArray(cat.keywords) ? cat.keywords : [],
     })
   );
-
   if (__DEV__) {
     console.log("📦 fetchCategories →", categoriesArray.length, "categories");
   }
-
   return categoriesArray;
 }
 
-// fetchResourcesByMainCategory – for HomeScreen icon clicks (just plain keyword search)
+/* ------------- MINIMAL MAIN CATEGORY FETCH FOR TESTING ----------- */
 export async function fetchResourcesByMainCategory(
-  categoryName: string,
-  zipCode?: string,
-  skip = 0,
-  size = 20
+  categoryName: string
 ): Promise<ResourcePage> {
-  console.log('fetchResourcesByMainCategory called!'); // ← move INSIDE the function
-
-  // Format keyword for API (lowercase, trim)
-  const keywordParam = categoryName.trim().toLowerCase();
-
-  const qp = new URLSearchParams();
-  qp.append("keywords", keywordParam);
-  qp.append("keywordIsTaxonomyCode", "false");
-  //qp.append("searchMode", "All");
-
-  // Location logic
-  if (zipCode) {
-    qp.append("location", zipCode);
-    qp.append("locationMode", "postalcode");
-    //qp.append("distance", "100");
-    //qp.append("orderByDistance", "true");
-  } else {
-    qp.append("location", "Santa Barbara");
-    qp.append("locationMode", "city");
-    //qp.append("orderByDistance", "false");
-  }
-
-  //qp.append("size", size.toString());
-  //qp.append("skip", skip.toString());
-
-  // <<< PLACE console.logs HERE to see input BEFORE API call >>>
-  console.log('🔎 keywords:', keywordParam);
-  //console.log('🔎 keywordIsTaxonomyCode:', "false");
-  console.log('🔎 location:', zipCode || 'Santa Barbara');
-  console.log('🔎 locationMode:', zipCode ? 'postalcode' : 'city');
-  console.log('Actual request:', buildUrl('/search/keyword', qp));
-
-  const data = await httpGet<{ resources: Resource[]; total?: number }>("/search/keyword", qp);
-
+  console.log('fetchResourcesByMainCategory called!');
+  const locationParams = buildLocationParams();
+  const params: Record<string, string | undefined> = {
+    keywords: categoryName.trim().toLowerCase(),
+    location: locationParams.location,
+    locationMode: locationParams.locationMode,
+  };
+  console.log('Actual request params:', params);
+  const data = await national211Get<{ resources: Resource[]; total?: number }>("/search/keyword", params);
   if (!Array.isArray(data.resources)) {
     throw new Error("Malformed API response – `resources` is not an array");
   }
-
   const total = typeof data.total === "number" ? data.total : data.resources.length;
-  const hasMore = skip + size < total;
-
+  const hasMore = total > 0;
   return { items: data.resources, total, hasMore };
 }
 
-/* ------------------------------------------------------------------
-   FETCH RESOURCES – core function used by the infinite‑scroll list
-   ------------------------------------------------------------------ */
+/* Core ResourcePage interface */
 export interface ResourcePage {
   items: Resource[];
   total: number;
   hasMore: boolean;
 }
-/**
- * Fetch a page of resources for a given **sub‑category** (or plain keyword).
- *
- * @param subcatName   Human‑readable sub‑category name (e.g. "Food Pantries")
- * @param zipCode      Optional 5‑digit ZIP (if omitted we fall back to county)
- * @param skip         Pagination offset (must be a multiple of `size`)
- * @param size         Page size (default 20, max 100)
- */
+
+/* --------- LEGACY ADVANCED SUBCATEGORY AND SUPPORT (restored as needed) ---------- */
 export async function fetchResourcesBySubcategory(
   subcatName: string,
   zipCode?: string,
   skip = 0,
   size = 20
 ): Promise<ResourcePage> {
-  // --------------------------------------------------------------
-  // 1️⃣ Determine whether we have a taxonomy code or a plain keyword
-  // --------------------------------------------------------------
   const taxonomyCode = TAXONOMY_MAP[subcatName];
   const isTaxonomy = Boolean(taxonomyCode);
-
-  // IMPORTANT: the 211 API expects **lower‑case** keywords when
-  // `keywordIsTaxonomyCode` is false.
-  const keywordParam = isTaxonomy
-    ? taxonomyCode!                         // already the exact code
-    : subcatName.trim().toLowerCase();     // normalise plain keywords
-
-  // --------------------------------------------------------------
-  // 2️⃣ Build query parameters according to the spec you gave
-  // --------------------------------------------------------------
-  const qp = new URLSearchParams();
-  qp.append("keywords", keywordParam);
-  qp.append("keywordIsTaxonomyCode", isTaxonomy ? "true" : "false");
-  qp.append("searchMode", "All"); // strict match per spec
-
-  // Location handling
-  if (zipCode) {
-    qp.append("location", zipCode);
-    qp.append("distance", "100"); // fixed radius for zip‑code searches
-    qp.append("orderByDistance", "true");
-  } else {
-    qp.append("location", "Santa Barbara, California");
-    qp.append("orderByDistance", "false");
-  }
-
-  qp.append("size", size.toString());
-  qp.append("skip", skip.toString());
-
-  // --------------------------------------------------------------
-  // 3️⃣ Call the unified 211 endpoint
-  // --------------------------------------------------------------
-  const data = await httpGet<{
-    resources: Resource[];
-    total?: number;
-  }>("/search/keyword", qp);
-
-  // Defensive shape check – the runtime guard in httpGet already ensured an object,
-  // but we double‑check the array shape.
+  //const locationParams = buildLocationParams(zipCode); // For advanced param support
+  // For minimal test, just use Santa Barbara city params:
+  const locationParams = buildLocationParams();
+  const params: Record<string, string | undefined> = {
+    keywords: isTaxonomy ? taxonomyCode! : subcatName.trim().toLowerCase(),
+    keywordIsTaxonomyCode: isTaxonomy ? "true" : "false",
+    location: locationParams.location,
+    locationMode: locationParams.locationMode,
+    // If you later want size & skip, convert with String():
+    // size: size !== undefined ? String(size) : undefined,
+    // skip: skip !== undefined ? String(skip) : undefined,
+    //searchMode: "All",
+  };
+  console.log('Actual subcategory request params:', params);
+  const data = await national211Get<{ resources: Resource[]; total?: number }>("/search/keyword", params);
   if (!Array.isArray(data.resources)) {
     throw new Error("Malformed API response – `resources` is not an array");
   }
-
   const total = typeof data.total === "number" ? data.total : data.resources.length;
-  const hasMore = skip + size < total;
-
+  const hasMore = total > 0;
   return {
     items: data.resources,
     total,
@@ -233,41 +207,25 @@ export async function fetchResourcesBySubcategory(
   };
 }
 
+/* FETCH SUBCATEGORIES */
 export async function fetchSubcategories(
   categoryId: string
 ): Promise<Subcategory[]> {
-  const qp = new URLSearchParams();
-  qp.append("categoryId", categoryId);
-  const { subcategories } = await httpGet<{
-    subcategories: Subcategory[];
-  }>("/subcategories", qp);
+  const params: Record<string, string | undefined> = { categoryId };
+  const { subcategories } = await national211Get<{ subcategories: Subcategory[] }>("/subcategories", params);
   return subcategories;
-
 }
 
 /* ------------------------------------------------------------------
    GEOLOCATION – thin wrapper around expo-location
    ------------------------------------------------------------------ */
-/**
- * Get the device’s current GPS coordinates.
- * Works with all Expo SDKs – the PermissionStatus enum already
- * contains the GRANTED value, so we don’t need a string comparison.
- */
 export async function getCurrentLocation(): Promise<{
   latitude: number;
   longitude: number;
 }> {
-  // Request foreground location permission
   const { status } = await Location.requestForegroundPermissionsAsync();
-
-  // The enum value for “granted” is Location.PermissionStatus.GRANTED
   const granted = status === Location.PermissionStatus.GRANTED;
-
-  if (!granted) {
-    throw new Error("Location permission not granted");
-  }
-
-  // Permission granted – fetch the actual coordinates
+  if (!granted) throw new Error("Location permission not granted");
   const loc = await Location.getCurrentPositionAsync({});
   return {
     latitude: loc.coords.latitude,
@@ -276,7 +234,7 @@ export async function getCurrentLocation(): Promise<{
 }
 
 /* ------------------------------------------------------------------
-   Haversine utility (optional, client‑side distance calc)
+   Haversine utility (client‑side distance calc)
    ------------------------------------------------------------------ */
 export function haversineDistance(
   lat1: number,
@@ -286,8 +244,7 @@ export function haversineDistance(
   unit: "mi" | "km" = "mi"
 ): number {
   const toRad = (v: number) => (v * Math.PI) / 180;
-  const R = unit === "mi" ? 3959 : 6371; // Earth radius
-
+  const R = unit === "mi" ? 3959 : 6371;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
