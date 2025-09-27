@@ -385,6 +385,80 @@ export function getResourceUniqueId(resource: Resource): string | null {
          null;
 }
 
+/* SERVICE AT LOCATION DETAILS INTERFACE */
+export interface ServiceAtLocationDetails {
+  organizationName?: string;
+  serviceName?: string;
+  locationName?: string;
+  serviceDescription?: string;
+  serviceHoursText?: string;
+  website?: string;
+  address?: {
+    streetAddress?: string;
+    city?: string;
+    stateProvince?: string;
+    postalCode?: string;
+    country?: string;
+    latitude?: string;
+    longitude?: string;
+  };
+  servicePhones?: Array<{
+    number?: string;
+    type?: string;
+    extension?: string;
+  }>;
+  fees?: string;
+  applicationProcess?: string;
+  eligibility?: string;
+  documentsRequired?: string;
+  languagesOffered?: string[];
+  disabilitiesAccess?: string;
+}
+
+/* FETCH SERVICE AT LOCATION DETAILS */
+export async function fetchServiceAtLocationDetails(serviceAtLocationId: string): Promise<ServiceAtLocationDetails | null> {
+  console.log(`🔍 Fetching service at location details for ID: ${serviceAtLocationId}`);
+  
+  try {
+    const data = await national211Get<ServiceAtLocationDetails>(
+      `/query/service-at-location-details/${serviceAtLocationId}`
+    );
+    
+    console.log(`✅ Successfully fetched details for service at location ${serviceAtLocationId}`);
+    return data;
+  } catch (error) {
+    console.error(`❌ Failed to fetch service at location details for ${serviceAtLocationId}:`, error);
+    return null;
+  }
+}
+
+/* HTML UTILITY FUNCTIONS */
+export function stripHtmlTags(htmlString: string | undefined | null): string {
+  if (!htmlString) return '';
+  
+  // Remove HTML tags using regex
+  const strippedString = htmlString
+    .replace(/<[^>]*>/g, '') // Remove all HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace &nbsp; with regular space
+    .replace(/&amp;/g, '&')  // Replace &amp; with &
+    .replace(/&lt;/g, '<')   // Replace &lt; with <
+    .replace(/&gt;/g, '>')   // Replace &gt; with >
+    .replace(/&quot;/g, '"') // Replace &quot; with "
+    .replace(/&#x27;/g, "'") // Replace &#x27; with '
+    .replace(/&#x2F;/g, '/') // Replace &#x2F; with /
+    .replace(/\s+/g, ' ')    // Replace multiple spaces with single space
+    .trim();                 // Remove leading/trailing whitespace
+  
+  return strippedString;
+}
+
+/* ENHANCED DESCRIPTION HELPER */
+export function getResourceCleanDescription(resource: ServiceAtLocationDetails): string {
+  const rawDescription = resource.serviceDescription || 'No description available';
+  return stripHtmlTags(rawDescription);
+}
+
+
 /* GEOLOCATION */
 export async function getCurrentLocation(): Promise<{
   latitude: number;

@@ -94,6 +94,46 @@ export interface Resource {
   distanceMiles?: number;
 }
 
+/* ------------------------------------------------------------------
+   2️⃣  Service At Location Details (from the new endpoint)
+   ------------------------------------------------------------------ */
+
+/** Service phone number with type and extension support */
+export interface ServicePhone {
+  number?: string;
+  type?: string;
+  extension?: string;
+}
+
+/** Address structure for service at location details */
+export interface ServiceAddress {
+  streetAddress?: string;
+  city?: string;
+  stateProvince?: string;
+  postalCode?: string;
+  country?: string;
+  latitude?: string;
+  longitude?: string;
+}
+
+/** Complete service at location details from the API endpoint */
+export interface ServiceAtLocationDetails {
+  organizationName?: string;
+  serviceName?: string;
+  locationName?: string;
+  serviceDescription?: string;
+  serviceHoursText?: string;
+  website?: string;
+  address?: ServiceAddress;
+  servicePhones?: ServicePhone[];
+  fees?: string;
+  applicationProcess?: string;
+  eligibility?: string;
+  documentsRequired?: string;
+  languagesOffered?: string[];
+  disabilitiesAccess?: string;
+}
+
 /** Top‑level category (shown in the grid) */
 export interface Category {
   id: string;
@@ -158,39 +198,67 @@ export interface InsertUser {
 }
 
 /* ------------------------------------------------------------------
-   2️⃣  DTOs used by the detailed resource endpoint
+   3️⃣  Legacy DTOs (for backward compatibility)
    ------------------------------------------------------------------ */
 export interface ServiceAtLocationDto {
   /** Human‑readable name of the service */
   serviceName?: string;
   /** Legacy field kept for backward compatibility */
   serviceAtLocationName?: string;
-  // Add any extra fields you need here (description, phone, etc.)
-  // description?: string;
-  // phone?: string;
-  // …
 }
 
 /** The shape returned by the "resource details" API call */
 export interface ResourceDetail {
   /** The display name that the UI shows */
   serviceName: string;
-  // Add every property you map in `getResourceDetail`
-  // description?: string;
-  // phone?: string;
-  // website?: string;
-  // …
 }
 
 /* ------------------------------------------------------------------
-   3️⃣  Miscellaneous exported types
+   4️⃣  Miscellaneous exported types
    ------------------------------------------------------------------ */
 export type MainCategory = Category;
 
 /* ------------------------------------------------------------------
-   4️⃣  Zod schema for runtime validation (keeps in sync with
-       the TypeScript interface above)
+   5️⃣  Zod schemas for runtime validation
    ------------------------------------------------------------------ */
+
+/** Service phone validation schema */
+export const servicePhoneSchema = z.object({
+  number: z.string().optional(),
+  type: z.string().optional(),
+  extension: z.string().optional(),
+});
+
+/** Service address validation schema */
+export const serviceAddressSchema = z.object({
+  streetAddress: z.string().optional(),
+  city: z.string().optional(),
+  stateProvince: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
+});
+
+/** Service at location details validation schema */
+export const serviceAtLocationDetailsSchema = z.object({
+  organizationName: z.string().optional(),
+  serviceName: z.string().optional(),
+  locationName: z.string().optional(),
+  serviceDescription: z.string().optional(),
+  serviceHoursText: z.string().optional(),
+  website: z.string().optional(),
+  address: serviceAddressSchema.optional(),
+  servicePhones: z.array(servicePhoneSchema).optional(),
+  fees: z.string().optional(),
+  applicationProcess: z.string().optional(),
+  eligibility: z.string().optional(),
+  documentsRequired: z.string().optional(),
+  languagesOffered: z.array(z.string()).optional(),
+  disabilitiesAccess: z.string().optional(),
+});
+
+/** Main resource validation schema */
 export const resourceSchema = z.object({
   // Legacy fields
   id: z.string().optional(),
@@ -281,9 +349,6 @@ export const resourceSchema = z.object({
   distanceMiles: z.number().optional(),
 });
 
-/* ------------------------------------------------------------------
-   5️⃣  Additional schemas for categories and subcategories
-   ------------------------------------------------------------------ */
 export const categorySchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -314,6 +379,77 @@ export const locationSchema = z.object({
 });
 
 /* ------------------------------------------------------------------
-   6️⃣  Temporary placeholder for the users table (if needed)
+   6️⃣  API Response Types
+   ------------------------------------------------------------------ */
+
+/** Standard API response wrapper */
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  message?: string;
+  status?: number;
+}
+
+/** Resource search response */
+export interface ResourceSearchResponse {
+  results: Resource[];
+  count: number;
+  total?: number;
+  facets?: Record<string, any>;
+}
+
+/** Resource page for infinite queries */
+export interface ResourcePage {
+  items: Resource[];
+  total: number;
+  hasMore: boolean;
+}
+
+/* ------------------------------------------------------------------
+   7️⃣  Utility Types
+   ------------------------------------------------------------------ */
+
+/** Extract the unique ID from a resource */
+export type ResourceId = string;
+
+/** Phone number types supported by the API */
+export type PhoneType = 'main' | 'fax' | 'tty' | 'crisis' | 'toll-free' | 'hotline';
+
+/** Location mode for searches */
+export type LocationMode = 'within' | 'serving' | 'near';
+
+/** Search mode for queries */
+export type SearchMode = 'All' | 'Keyword' | 'Taxonomy';
+
+/* ------------------------------------------------------------------
+   8️⃣  Error Types
+   ------------------------------------------------------------------ */
+
+/** API error response */
+export interface ApiError {
+  message: string;
+  status: number;
+  code?: string;
+  details?: Record<string, any>;
+}
+
+/** Network error wrapper */
+export class NetworkError extends Error {
+  constructor(message: string, public status?: number) {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+/** Validation error wrapper */
+export class ValidationError extends Error {
+  constructor(message: string, public field?: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+/* ------------------------------------------------------------------
+   9️⃣  Temporary placeholder for the users table (if needed)
    ------------------------------------------------------------------ */
 export const users = {} as any;

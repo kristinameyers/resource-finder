@@ -1,68 +1,58 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, ActivityIndicator, SafeAreaView } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText';
 import { 
-  fetchResourceById,
-  fetchCategories,
-  fetchSubcategories,
-  getResourcePhoneNumber,
-  getResourceFormattedAddress,
-  getResourceDisplayName,
-  getResourceDescription,
+  fetchServiceAtLocationDetails,
+  ServiceAtLocationDetails,
+  stripHtmlTags,
 } from '../api/resourceApi';
-import { Resource, Category, Subcategory } from '../types/shared-schema';
 
 export default function ResourceDetailScreen({ route, navigation }: any) {
-  const { resourceId } = route.params; // Changed from 'id' to 'resourceId'
+  const { resourceId } = route.params; // This should be the serviceAtLocationId
 
-  // Translation hooks
+  // Translation hooks (only the ones actually used)
+  const { text: backText } = useTranslatedText('Back');
   const { text: resourceDetailText } = useTranslatedText('Resource Details');
   const { text: callText } = useTranslatedText('Call');
   const { text: websiteText } = useTranslatedText('Visit Website');
-  const { text: categoryText } = useTranslatedText('Category');
-  const { text: subcategoryText } = useTranslatedText('Subcategory');
   const { text: descriptionText } = useTranslatedText('Description');
-  const { text: phoneText } = useTranslatedText('Phone');
   const { text: eligibilityText } = useTranslatedText('Eligibility');
   const { text: accessibilityText } = useTranslatedText('Accessibility');
   const { text: languagesText } = useTranslatedText('Languages');
   const { text: addressText } = useTranslatedText('Address');
   const { text: hoursText } = useTranslatedText('Hours');
   const { text: loadingText } = useTranslatedText('Loading...');
-  const { text: noDataText } = useTranslatedText('No data available');
-  const { text: organizationText } = useTranslatedText('Organization');
-  const { text: serviceAreasText } = useTranslatedText('Service Areas');
-  const { text: dataSourceText } = useTranslatedText('Data Source');
+  const { text: feesText } = useTranslatedText('Fees');
+  const { text: applicationProcessText } = useTranslatedText('Application Process');
+  const { text: documentsRequiredText } = useTranslatedText('Documents Required');
 
-  const [resource, setResource] = useState<Resource | null>(null);
-
-  // Fetch resource from AsyncStorage cache
-  const resourceQuery = useQuery({
-    queryKey: ['211resource', resourceId],
-    queryFn: () => fetchResourceById(resourceId),
+  // Fetch service at location details using the new endpoint
+  const detailsQuery = useQuery({
+    queryKey: ['serviceAtLocationDetails', resourceId],
+    queryFn: () => fetchServiceAtLocationDetails(resourceId),
     enabled: !!resourceId
   });
 
-  // Fetch categories and subcategories for display
-  const categoriesQuery = useQuery({
-    queryKey: ['categories'],
-    queryFn: fetchCategories
-  });
+  const resourceDetails = detailsQuery.data;
 
-  const subcategoriesQuery = useQuery({
-    queryKey: ['subcategories'],
-    queryFn: () => fetchSubcategories('all')
-  });
+// Custom header component
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => navigation.goBack()}
+      >
+        <MaterialIcons name="arrow-back" size={24} color="#005191" />
+        <Text style={styles.backButtonText}>{backText}</Text>
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>{resourceDetailText}</Text>
+      <View style={styles.headerRight} />
+    </View>
+  );
 
-  useEffect(() => {
-    if (resourceQuery.data) {
-      setResource(resourceQuery.data);
-    }
-  }, [resourceQuery.data]);
-
-  if (resourceQuery.isLoading || categoriesQuery.isLoading || subcategoriesQuery.isLoading) {
+  if (detailsQuery.isLoading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#005191" />
@@ -71,89 +61,108 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
     );
   }
 
-  if (!resource) {
+  if (detailsQuery.isError || !resourceDetails) {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.noDataText}>Resource details not available</Text>
         <Text style={styles.debugText}>Resource ID: {resourceId}</Text>
         <Text style={styles.debugText}>
-          This resource may not be cached. Please go back and select it again from the list.
+          Unable to load resource details. Please try again.
         </Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.goBackButton}>
           <MaterialIcons name="arrow-back" size={20} color="#005191" />
           <Text style={{ color: '#005191', marginLeft: 8 }}>Back to List</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => detailsQuery.refetch()} style={styles.retryButton}>
+          <MaterialIcons name="refresh" size={20} color="#005191" />
+          <Text style={{ color: '#005191', marginLeft: 8 }}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  // Extract data using helper functions
-  const displayName = getResourceDisplayName(resource);
-  const description = getResourceDescription(resource);
-  const phoneNumber = getResourcePhoneNumber(resource);
-  const formattedAddress = getResourceFormattedAddress(resource);
+  // Helper function to format address
+  const getFormattedAddress = (address: ServiceAtLocationDetails['address']): string | null => {
+    if (!address) return null;
+    return [
+      address.streetAddress,
+      address.city,
+      address.stateProvince,
+      address.postalCode
+    ].filter(Boolean).join(', ');
+  };
 
-  // Get category/subcategory info (if applicable for 211 resources)
-  const category = categoriesQuery.data?.find((c: Category) => c.id === resource.categoryId);
-  const subcategory = subcategoriesQuery.data?.find((sc: Subcategory) => sc.id === resource.subcategoryId);
+  const formattedAddress = getFormattedAddress(resourceDetails.address);
 
   return (
     <ScrollView style={styles.container}>
       {/* Header Section */}
       <View style={styles.section}>
-        <Text style={styles.title}>{displayName}</Text>
+        <Text style={styles.title}>
+          {resourceDetails.serviceName || 'Service Details'}
+        </Text>
         
         {/* Organization */}
-        {resource.nameOrganization && (
-          <Text style={styles.organizationText}>{resource.nameOrganization}</Text>
+        {resourceDetails.organizationName && (
+          <Text style={styles.organizationText}>{resourceDetails.organizationName}</Text>
         )}
 
-        {/* Taxonomy/Category Tags */}
-        {resource.taxonomy && resource.taxonomy.length > 0 && (
-          <View style={styles.badgeRow}>
-            {resource.taxonomy.slice(0, 3).map((tax, index) => (
-              <Text key={index} style={styles.categoryBadge}>
-                {tax.taxonomyTermLevel2 || tax.taxonomyTerm}
-              </Text>
-            ))}
-          </View>
+        {/* Location */}
+        {resourceDetails.locationName && (
+          <Text style={styles.locationText}>{resourceDetails.locationName}</Text>
         )}
-
-        {/* Legacy category/subcategory badges (for backward compatibility) */}
-        <View style={styles.badgeRow}>
-          {category && <Text style={styles.categoryBadge}>{category.name}</Text>}
-          {subcategory && <Text style={styles.subcategoryBadge}>{subcategory.name}</Text>}
-        </View>
 
         {/* Description */}
-        <Text style={styles.label}>{descriptionText}</Text>
-        <Text style={styles.text}>{description}</Text>
+        {resourceDetails.serviceDescription && (
+          <>
+            <Text style={styles.label}>{descriptionText}</Text>
+            <Text style={styles.text}>{stripHtmlTags(resourceDetails.serviceDescription)}</Text>
+          </>
+        )}
       </View>
 
       {/* Contact Information */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Contact Information</Text>
         
-        {phoneNumber && (
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => Linking.openURL(`tel:${phoneNumber.replace(/[^\d]/g, '')}`)}
-          >
-            <Ionicons name="call-outline" size={20} color="#005191" />
-            <Text style={styles.actionLabel}>{callText}: {phoneNumber}</Text>
-          </TouchableOpacity>
+        {/* Phone Numbers */}
+        {resourceDetails.servicePhones && resourceDetails.servicePhones.length > 0 && (
+          resourceDetails.servicePhones.map((phone, index) => {
+            if (!phone.number) return null;
+            
+            const phoneDisplay = phone.extension 
+              ? `${phone.number} ext. ${phone.extension}`
+              : phone.number;
+            
+            const phoneType = phone.type ? ` (${phone.type})` : '';
+            
+            return (
+              <TouchableOpacity
+                key={index}
+                style={styles.actionRow}
+                onPress={() => Linking.openURL(`tel:${phone.number?.replace(/[^\d]/g, '')}`)}
+              >
+                <Ionicons name="call-outline" size={20} color="#005191" />
+                <Text style={styles.actionLabel}>
+                  {callText}: {phoneDisplay}{phoneType}
+                </Text>
+              </TouchableOpacity>
+            );
+          })
         )}
 
-        {resource.url && (
+        {/* Website */}
+        {resourceDetails.website && (
           <TouchableOpacity
             style={styles.actionRow}
-            onPress={() => Linking.openURL(resource.url!)}
+            onPress={() => Linking.openURL(resourceDetails.website!)}
           >
             <Ionicons name="globe-outline" size={20} color="#005191" />
             <Text style={styles.actionLabel}>{websiteText}</Text>
           </TouchableOpacity>
         )}
 
+        {/* Address */}
         {formattedAddress && (
           <TouchableOpacity
             style={styles.actionRow}
@@ -167,98 +176,84 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
         )}
       </View>
 
-      {/* Service Areas */}
-      {resource.serviceAreas && resource.serviceAreas.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.label}>{serviceAreasText}</Text>
-          <View style={styles.badgeRow}>
-            {resource.serviceAreas.map((area, index) => (
-              <Text key={index} style={styles.languageBadge}>
-                {area.value}
-              </Text>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Additional Information */}
+      {/* Service Information */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Additional Information</Text>
+        <Text style={styles.sectionTitle}>Service Information</Text>
         
-        {resource.hoursOfOperation && (
+        {/* Hours */}
+        {resourceDetails.serviceHoursText && (
           <>
             <Text style={styles.label}>{hoursText}</Text>
-            <Text style={styles.text}>{resource.hoursOfOperation}</Text>
+            <Text style={styles.text}>{resourceDetails.serviceHoursText}</Text>
           </>
         )}
 
-        {resource.applicationProcess && (
+        {/* Fees */}
+        {resourceDetails.fees && (
           <>
-            <Text style={styles.label}>Application Process</Text>
-            <Text style={styles.text}>{resource.applicationProcess}</Text>
+            <Text style={styles.label}>{feesText}</Text>
+            <Text style={styles.text}>{resourceDetails.fees}</Text>
           </>
         )}
 
-        {resource.fees && (
+        {/* Eligibility */}
+        {resourceDetails.eligibility && (
           <>
-            <Text style={styles.label}>Fees</Text>
-            <Text style={styles.text}>{resource.fees}</Text>
+            <Text style={styles.label}>{eligibilityText}</Text>
+            <Text style={styles.text}>{resourceDetails.eligibility}</Text>
           </>
         )}
 
-        {resource.documents && (
+        {/* Application Process */}
+        {resourceDetails.applicationProcess && (
           <>
-            <Text style={styles.label}>Required Documents</Text>
-            <Text style={styles.text}>{resource.documents}</Text>
+            <Text style={styles.label}>{applicationProcessText}</Text>
+            <Text style={styles.text}>{resourceDetails.applicationProcess}</Text>
           </>
         )}
 
-        {resource.accessibility && (
+        {/* Documents Required */}
+        {resourceDetails.documentsRequired && (
+          <>
+            <Text style={styles.label}>{documentsRequiredText}</Text>
+            <Text style={styles.text}>{resourceDetails.documentsRequired}</Text>
+          </>
+        )}
+      </View>
+
+      {/* Accessibility & Languages */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Accessibility & Languages</Text>
+        
+        {/* Disabilities Access */}
+        {resourceDetails.disabilitiesAccess && (
           <>
             <Text style={styles.label}>{accessibilityText}</Text>
-            <Text style={styles.text}>{resource.accessibility}</Text>
+            <Text style={styles.text}>{resourceDetails.disabilitiesAccess}</Text>
           </>
         )}
 
-        {resource.languages && resource.languages.length > 0 && (
+        {/* Languages Offered */}
+        {resourceDetails.languagesOffered && resourceDetails.languagesOffered.length > 0 && (
           <>
             <Text style={styles.label}>{languagesText}</Text>
             <View style={styles.badgeRow}>
-              {resource.languages.map(lang => (
-                <Text key={lang} style={styles.languageBadge}>{lang}</Text>
-              ))}
-            </View>
-          </>
-        )}
-
-        {resource.additionalLanguages && resource.additionalLanguages.length > 0 && (
-          <>
-            <Text style={styles.label}>Additional Languages</Text>
-            <View style={styles.badgeRow}>
-              {resource.additionalLanguages.map(lang => (
-                <Text key={lang} style={styles.languageBadge}>{lang}</Text>
+              {resourceDetails.languagesOffered.map((lang, index) => (
+                <Text key={index} style={styles.languageBadge}>{lang}</Text>
               ))}
             </View>
           </>
         )}
       </View>
 
-      {/* Data Source */}
-      {resource.dataOwnerDisplayName && (
-        <View style={styles.section}>
-          <Text style={styles.label}>{dataSourceText}</Text>
-          <Text style={styles.text}>{resource.dataOwnerDisplayName}</Text>
-        </View>
-      )}
-
       {/* Debug Information (only in development) */}
       {__DEV__ && (
         <View style={styles.section}>
           <Text style={styles.label}>Debug Info</Text>
-          <Text style={styles.debugText}>ID: {resource.idServiceAtLocation || resource.id}</Text>
-          <Text style={styles.debugText}>Organization ID: {resource.idOrganization}</Text>
-          <Text style={styles.debugText}>Service ID: {resource.idService}</Text>
-          <Text style={styles.debugText}>Location ID: {resource.idLocation}</Text>
+          <Text style={styles.debugText}>Service At Location ID: {resourceId}</Text>
+          <Text style={styles.debugText}>Organization: {resourceDetails.organizationName || 'N/A'}</Text>
+          <Text style={styles.debugText}>Service: {resourceDetails.serviceName || 'N/A'}</Text>
+          <Text style={styles.debugText}>Location: {resourceDetails.locationName || 'N/A'}</Text>
         </View>
       )}
     </ScrollView>
@@ -269,6 +264,46 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: '#f5f5f5' 
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#005191',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerRight: {
+    width: 60, // Same width as back button to center the title
   },
   centerContainer: { 
     flex: 1, 
@@ -316,6 +351,12 @@ const styles = StyleSheet.create({
   organizationText: { 
     fontSize: 16, 
     color: '#666', 
+    marginBottom: 8, 
+    fontWeight: '500' 
+  },
+  locationText: { 
+    fontSize: 14, 
+    color: '#888', 
     marginBottom: 12, 
     fontStyle: 'italic' 
   },
@@ -328,23 +369,8 @@ const styles = StyleSheet.create({
   badgeRow: { 
     flexDirection: 'row', 
     flexWrap: 'wrap', 
-    marginBottom: 12, 
+    marginTop: 8, 
     gap: 6 
-  },
-  categoryBadge: { 
-    padding: 6, 
-    backgroundColor: '#e0e7ef', 
-    borderRadius: 4, 
-    color: '#005191', 
-    fontSize: 12,
-    fontWeight: '500' 
-  },
-  subcategoryBadge: { 
-    padding: 6, 
-    backgroundColor: '#e9eef4', 
-    borderRadius: 4, 
-    color: '#007aff',
-    fontSize: 12 
   },
   languageBadge: { 
     paddingHorizontal: 8, 
@@ -358,7 +384,7 @@ const styles = StyleSheet.create({
     fontSize: 15, 
     fontWeight: '600', 
     marginTop: 12, 
-    marginBottom: 4, 
+    marginBottom: 6, 
     color: '#222' 
   },
   text: { 
@@ -387,6 +413,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: '#f0f0f0',
+    borderRadius: 8 
+  },
+  retryButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#e8f4f8',
     borderRadius: 8 
   },
 });
