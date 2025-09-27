@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -6,20 +6,100 @@ import {
   ActivityIndicator,
   FlatList,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  InfiniteData,
+  QueryFunctionContext,
+} from "@tanstack/react-query";
+import { MaterialIcons } from "@expo/vector-icons";
 
 import {
   fetchResourcesByMainCategory,
   fetchResourcesBySubcategory,
-  storeResourceForDetailView,  // Add this import
-  getResourceUniqueId,         // Add this import
+  storeResourceForDetailView,
+  getResourceUniqueId,
+  ResourcePage,
 } from "../api/resourceApi";
 import type { Resource } from "../types/shared-schema";
 import type { HomeStackParamList } from "../navigation/AppNavigator";
+import { SUBCATEGORIES } from "../taxonomy/officialTaxonomy";
 
 type ResourceListRouteProp = RouteProp<HomeStackParamList, "ResourceList">;
+
+function SubcategoryDropdown({
+  categoryKeyword,
+  selectedSubcategory,
+  onSelectSubcategory,
+}: {
+  categoryKeyword: string;
+  selectedSubcategory: string | null;
+  onSelectSubcategory: (name: string | null) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const subs = SUBCATEGORIES[categoryKeyword] || [];
+  if (!subs.length) return null;
+
+  return (
+    <View style={styles.dropdownContainer}>
+      <TouchableOpacity
+        style={styles.dropdownButton}
+        onPress={() => setIsOpen((o) => !o)}
+      >
+        <Text style={styles.dropdownButtonText}>
+          {selectedSubcategory || "All Subcategories"}
+        </Text>
+        <MaterialIcons
+          name={isOpen ? "expand-less" : "expand-more"}
+          size={24}
+          color="#005191"
+        />
+      </TouchableOpacity>
+      {isOpen && (
+        <ScrollView style={styles.dropdownList}>
+          <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => {
+              onSelectSubcategory(null);
+              setIsOpen(false);
+            }}
+          >
+            <Text
+              style={[
+                styles.dropdownItemText,
+                !selectedSubcategory && styles.dropdownItemSelected,
+              ]}
+            >
+              All Subcategories
+            </Text>
+          </TouchableOpacity>
+          {subs.map((sub) => (
+            <TouchableOpacity
+              key={sub.id}
+              style={styles.dropdownItem}
+              onPress={() => {
+                onSelectSubcategory(sub.name);
+                setIsOpen(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.dropdownItemText,
+                  selectedSubcategory === sub.name &&
+                    styles.dropdownItemSelected,
+                ]}
+              >
+                {sub.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
 
 function ResourceCard({
   resource,
@@ -31,15 +111,19 @@ function ResourceCard({
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Text style={styles.title}>
-        {resource.nameServiceAtLocation || resource.nameService || "Unknown Service"}
+        {resource.nameServiceAtLocation || resource.nameService || "Unknown"}
       </Text>
       {resource.nameOrganization && (
         <Text style={styles.sub}>{resource.nameOrganization}</Text>
       )}
       {resource.address && (
         <Text style={styles.address}>
-          {resource.address.streetAddress && `${resource.address.streetAddress}, `}
-          {resource.address.city && `${resource.address.city}, `}
+          {resource.address.streetAddress
+            ? resource.address.streetAddress + ", "
+            : ""}
+          {resource.address.city
+            ? resource.address.city + ", "
+            : ""}
           {resource.address.stateProvince} {resource.address.postalCode}
         </Text>
       )}
@@ -48,36 +132,23 @@ function ResourceCard({
 }
 
 export default function ResourceListScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { params } = useRoute<ResourceListRouteProp>();
-  const {
-    keyword,
-    zipCode,
-    isSubcategory = false,
-  } = params || {};
-
-  // Defensive validation against missing or bad keyword param
-  if (
-    typeof keyword !== "string" ||
-    !keyword.trim()
-  ) {
+  const { keyword, zipCode, isSubcategory = false } = params || {};
+  if (!keyword?.trim()) {
     return (
       <View style={styles.center}>
         <Text style={styles.error}>
-          Invalid or missing category. Please go back and select a valid category or subcategory.
+          Invalid category. Go back and select a valid one.
         </Text>
       </View>
     );
   }
 
+  const [subcat, setSubcat] = useState<string | null>(null);
   const PAGE_SIZE = 20;
-  type ResourcePage = {
-    items: Resource[];
-    total: number;
-    hasMore: boolean;
-  };
+  const queryKey = ["resources", keyword, zipCode, subcat] as const;
 
-  // Unified queryFn based on isSubcategory param
   const {
     data,
     isLoading,
@@ -87,193 +158,130 @@ export default function ResourceListScreen() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useInfiniteQuery<ResourcePage, Error>({
-    queryKey: ["resources", keyword, zipCode, isSubcategory],
-    queryFn: async ({ pageParam }) => {
-      const skip = typeof pageParam === "number" ? pageParam : 0;
-      if (isSubcategory) {
-        return await fetchResourcesBySubcategory(keyword, zipCode, skip, PAGE_SIZE);
-      }
-      // Main category handler - single argument
-      return await fetchResourcesByMainCategory(keyword);
+  } = useInfiniteQuery<
+    ResourcePage,
+    Error,
+    InfiniteData<ResourcePage>,
+    typeof queryKey
+  >({
+    queryKey,
+    queryFn: async (ctx: QueryFunctionContext<typeof queryKey, unknown>) => {
+      const page = (ctx.pageParam as number) ?? 0;
+      if (subcat)
+        return fetchResourcesBySubcategory(subcat, zipCode, page, PAGE_SIZE);
+      if (isSubcategory)
+        return fetchResourcesBySubcategory(
+          keyword,
+          zipCode,
+          page,
+          PAGE_SIZE
+        );
+      return fetchResourcesByMainCategory(keyword, page, PAGE_SIZE);
     },
-    getNextPageParam: (lastPage, allPages) => {
-      if (!lastPage.hasMore) return undefined;
-      const nextSkip = allPages.reduce(
-        (sum, pg) => sum + pg.items.length,
-        0
-      );
-      return nextSkip;
-    },
+    getNextPageParam: (last, pages) =>
+      last.hasMore ? pages.reduce((s, p) => s + p.items.length, 0) : undefined,
     initialPageParam: 0,
     retry: 2,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 300_000,
   });
 
-  const flatResources: Resource[] = data?.pages?.flatMap(
-    (pg: ResourcePage) => pg.items
-  ) ?? [];
+  const resources = useMemo(() => {
+    const all = data?.pages.flatMap((p) => p.items) ?? [];
+    return all.filter(
+      (r, i, a) =>
+        a.findIndex((x) => getResourceUniqueId(x) === getResourceUniqueId(r)) ===
+        i
+    );
+  }, [data]);
 
   const loadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   };
 
-  const renderItem = ({ item }: { item: Resource }) => (
-  <ResourceCard
-    resource={item}
-    onPress={async () => {
-      const resourceId = getResourceUniqueId(item);
-      if (resourceId) {
-        try {
-          // Store the resource for the detail screen
-          await storeResourceForDetailView(item);
-          console.log(`📦 Stored resource ${resourceId} for detail view`);
-          
-          // @ts-ignore - Navigation typing
-          navigation.navigate("ResourceDetail", { resourceId: String(resourceId) });
-        } catch (error) {
-          console.error('Error storing resource:', error);
-          // Still navigate even if storage fails
-          // @ts-ignore - Navigation typing
-          navigation.navigate("ResourceDetail", { resourceId: String(resourceId) });
-        }
-      } else {
-        console.warn('No valid resource ID found for item:', item);
-      }
-    }}
-  />
-);
-
-  const keyExtractor = (item: Resource, index: number) => {
-    // Use idServiceAtLocation as primary key (matches 211 API response)
-    if (item.idServiceAtLocation) {
-      return String(item.idServiceAtLocation);
-    }
-    // Fallback to other ID fields
-    if (item.idService) {
-      return String(item.idService);
-    }
-    if (item.id) {
-      return String(item.id);
-    }
-    // Last resort: use index to ensure uniqueness
-    return `resource-${index}`;
-  };
-
-  // UI states (loading, error, empty)
   if (isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
-        <Text style={styles.info}>Loading resources…</Text>
+        <Text style={styles.info}>Loading…</Text>
       </View>
     );
   }
-
   if (isError) {
     return (
       <View style={styles.center}>
-        <Text style={styles.error}>
-          ❌ {error?.message ?? "Failed to load resources."}
-        </Text>
+        <Text style={styles.error}>❌ {error.message}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-          <Text style={styles.retryText}>Try again</Text>
+          <Text style={styles.retryText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  if (flatResources.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.info}>No results found for "{keyword}".</Text>
-      </View>
-    );
-  }
-
-  // Main list UI
   return (
-    <FlatList
-      data={flatResources}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      contentContainerStyle={styles.listContainer}
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.2}
-      ListFooterComponent={
-        isFetchingNextPage ? (
-          <View style={styles.footerSpinner}>
-            <ActivityIndicator size="small" />
-          </View>
-        ) : null
-      }
-    />
+    <View style={styles.container}>
+      <SubcategoryDropdown
+        categoryKeyword={keyword.toLowerCase()}
+        selectedSubcategory={subcat}
+        onSelectSubcategory={setSubcat}
+      />
+      <FlatList
+        data={resources}
+        renderItem={({ item }) => (
+          <ResourceCard
+            resource={item}
+            onPress={async () => {
+              const id = getResourceUniqueId(item);
+              if (!id) return;
+              await storeResourceForDetailView(item);
+              navigation.navigate("ResourceDetail", { resourceId: id });
+            }}
+          />
+        )}
+        keyExtractor={(item, i) =>
+          getResourceUniqueId(item) || `res-${i}`
+        }
+        contentContainerStyle={styles.list}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.2}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator style={styles.footer} />
+          ) : null
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  list: { paddingBottom: 12 },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
-  info: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#555",
-    textAlign: "center",
-  },
-  error: {
-    marginBottom: 12,
-    fontSize: 16,
-    color: "#c00",
-    textAlign: "center",
-  },
-  retryBtn: {
-    backgroundColor: "#005191",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-  },
-  retryText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  listContainer: {
-    padding: 12,
-  },
+  info: { marginTop: 12, color: "#555" },
+  error: { color: "#c00", marginBottom: 12 },
+  retryBtn: { backgroundColor: "#005191", padding: 8, borderRadius: 6 },
+  retryText: { color: "#fff", fontWeight: "600" },
+  dropdownContainer: { backgroundColor: "white", padding: 12, borderBottomWidth: 1, borderBottomColor: "#ddd" },
+  dropdownButton: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  dropdownButtonText: { fontSize: 16, color: "#333" },
+  dropdownList: { maxHeight: 300, marginTop: 8 },
+  dropdownItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: "#eee" },
+  dropdownItemText: { fontSize: 16 },
+  dropdownItemSelected: { color: "#005191", fontWeight: "600" },
   card: {
     backgroundColor: "#fff",
     borderRadius: 8,
     padding: 14,
-    marginBottom: 12,
+    margin: 16,
     elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
-  title: {
-    fontSize: 17,
-    fontWeight: "600",
-    marginBottom: 4,
-    color: "#222",
-  },
-  sub: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 2,
-  },
-  address: {
-    fontSize: 12,
-    color: "#777",
-    fontStyle: "italic",
-  },
-  footerSpinner: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
+  title: { fontSize: 17, fontWeight: "600", color: "#222" },
+  sub: { fontSize: 14, color: "#555", marginBottom: 4 },
+  address: { fontSize: 12, color: "#777", fontStyle: "italic" },
+  footer: { padding: 16 },
 });

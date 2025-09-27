@@ -25,7 +25,7 @@ import {
 import {
   MAIN_CATEGORIES,
   getSubcategoriesForCategory,
-} from "../api/officialTaxonomy";
+} from "../taxonomy/officialTaxonomy";
 
 import { calculateDistanceBetweenZipCodes, getCoordinatesForZip } from "./distance";
 
