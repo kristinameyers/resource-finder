@@ -1,9 +1,7 @@
 {
   "housing": [
-    { "id": "housing", "name": "Housing", "taxonomyCode": "BH-1800.8500", "categoryId": "housing" },
     { "id": "domestic-violence-shelters", "name": "Domestic Violence Shelters", "taxonomyCode": "BH-1800.1500-100", "categoryId": "housing" },
     { "id": "homeless-shelters", "name": "Homeless Shelters", "taxonomyCode": "BH-1800.8500", "categoryId": "housing" },
-    { "id": "maternity-homes", "name": "Maternity Homes", "taxonomyCode": "LJ-5000.5000", "categoryId": "housing" },
     { "id": "senior-housing", "name": "Senior Housing", "taxonomyCode": "BH-8500.8000", "categoryId": "housing" },
     { "id": "sexual-assault-shelters", "name": "Sexual Assault Shelters", "taxonomyCode": "BH-1800.1500-800", "categoryId": "housing" },
     { "id": "supervised-living-older-youth", "name": "Supervised Living for Older Youth", "taxonomyCode": "PH-6300.8000", "categoryId": "housing" },
@@ -16,7 +14,6 @@
     { "id": "section-8-voucher", "name": "Section 8 Voucher / Housing Authority", "taxonomyCode": "BH-8300.3000", "categoryId": "housing" },
     { "id": "bathing-facilities", "name": "Bathing Facilities", "taxonomyCode": "BH-1800.3500", "categoryId": "housing" },
     { "id": "temporary-mailing-address", "name": "Temporary Mailing Address", "taxonomyCode": "BM-6500.6500-850", "categoryId": "housing" },
-    { "id": "meals", "name": "Meals", "taxonomyCode": "BD-5000", "categoryId": "housing" },
     { "id": "animal-shelters", "name": "Animal Shelters", "taxonomyCode": "PD-7600.0600", "categoryId": "housing" }
   ],
 
@@ -229,13 +226,10 @@
     { "id": "energy-efficient", "name": "Energy Efficient Home Improvement Assistance", "taxonomyCode": "BV-8900.9300-180", "categoryId": "utilities" }
   ],
   "food": [
-    { "id": "food", "name": "Food", "taxonomyCode": "BD-5000", "categoryId": "food" },
-    { "id": "meals", "name": "Hot Meals", "taxonomyCode": "BD-5000", "categoryId": "food" },
+    { "id": "meals", "name": "Hot Meals", "taxonomyCode": "BD-5000.3500", "categoryId": "food" },
     { "id": "food-pantries", "name": "Food Pantries", "taxonomyCode": "BD-1800.2000", "categoryId": "food" },
     { "id": "calfresh", "name": "CalFresh (Food Stamps)", "taxonomyCode": "NL-6000.2000", "categoryId": "food" },
     { "id": "wic", "name": "Women, Infants, & Children (WIC)", "taxonomyCode": "NL-6000.9500", "categoryId": "food" },
-    { "id": "senior-nutrition", "name": "Senior Nutrition Programs", "taxonomyCode": "BD-5000.8000", "categoryId": "food" },
-    { "id": "school-meals", "name": "School Meal Programs", "taxonomyCode": "BD-1800.7500", "categoryId": "food" },
     { "id": "emergency-food", "name": "Emergency Food Assistance", "taxonomyCode": "BD-1800.2000", "categoryId": "food" },
     { "id": "home-delivery-meals", "name": "Home Delivery Meals", "taxonomyCode": "BD-5000.3500", "categoryId": "food" },
     { "id": "pet-food", "name": "Pet Food", "taxonomyCode": "PD-6250.6600", "categoryId": "food" }

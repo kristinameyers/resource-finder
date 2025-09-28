@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -9,7 +10,7 @@ import {
 } from '../api/resourceApi';
 
 export default function ResourceDetailScreen({ route, navigation }: any) {
-  const { resourceId } = route.params; // This should be the serviceAtLocationId
+  const { resourceId, backToList } = route.params;
 
   // Translation hooks (only the ones actually used)
   const { text: backText } = useTranslatedText('Back');
@@ -36,12 +37,18 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
 
   const resourceDetails = detailsQuery.data;
 
-// Custom header component
+  // Custom header component
   const renderHeader = () => (
     <View style={styles.header}>
       <TouchableOpacity 
         style={styles.backButton} 
-        onPress={() => navigation.goBack()}
+        onPress={() => {
+          if (backToList) {
+            navigation.navigate('ResourceList', backToList);
+          } else {
+            navigation.goBack();
+          }
+        }}
       >
         <MaterialIcons name="arrow-back" size={24} color="#005191" />
         <Text style={styles.backButtonText}>{backText}</Text>
@@ -53,29 +60,31 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
 
   if (detailsQuery.isLoading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#005191" />
-        <Text style={styles.loadingText}>{loadingText}</Text>
+      <View style={styles.container}>
+        {renderHeader()}
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#005191" />
+          <Text style={styles.loadingText}>{loadingText}</Text>
+        </View>
       </View>
     );
   }
 
   if (detailsQuery.isError || !resourceDetails) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.noDataText}>Resource details not available</Text>
-        <Text style={styles.debugText}>Resource ID: {resourceId}</Text>
-        <Text style={styles.debugText}>
-          Unable to load resource details. Please try again.
-        </Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.goBackButton}>
-          <MaterialIcons name="arrow-back" size={20} color="#005191" />
-          <Text style={{ color: '#005191', marginLeft: 8 }}>Back to List</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => detailsQuery.refetch()} style={styles.retryButton}>
-          <MaterialIcons name="refresh" size={20} color="#005191" />
-          <Text style={{ color: '#005191', marginLeft: 8 }}>Retry</Text>
-        </TouchableOpacity>
+      <View style={styles.container}>
+        {renderHeader()}
+        <View style={styles.centerContainer}>
+          <Text style={styles.noDataText}>Resource details not available</Text>
+          <Text style={styles.debugText}>Resource ID: {resourceId}</Text>
+          <Text style={styles.debugText}>
+            Unable to load resource details. Please try again.
+          </Text>
+          <TouchableOpacity onPress={() => detailsQuery.refetch()} style={styles.retryButton}>
+            <MaterialIcons name="refresh" size={20} color="#005191" />
+            <Text style={{ color: '#005191', marginLeft: 8 }}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -94,170 +103,174 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
   const formattedAddress = getFormattedAddress(resourceDetails.address);
 
   return (
-
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {renderHeader()}
-      {/* Header Section */}
-      <View style={styles.section}>
-        <Text style={styles.title}>
-          {resourceDetails.serviceName || 'Service Details'}
-        </Text>
-        
-        {/* Organization */}
-        {resourceDetails.organizationName && (
-          <Text style={styles.organizationText}>{resourceDetails.organizationName}</Text>
-        )}
-
-        {/* Location */}
-        {resourceDetails.locationName && (
-          <Text style={styles.locationText}>{resourceDetails.locationName}</Text>
-        )}
-
-        {/* Description */}
-        {resourceDetails.serviceDescription && (
-          <>
-            <Text style={styles.label}>{descriptionText}</Text>
-            <Text style={styles.text}>{stripHtmlTags(resourceDetails.serviceDescription)}</Text>
-          </>
-        )}
-      </View>
-
-      {/* Contact Information */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Contact Information</Text>
-        
-        {/* Phone Numbers */}
-        {resourceDetails.servicePhones && resourceDetails.servicePhones.length > 0 && (
-          resourceDetails.servicePhones.map((phone, index) => {
-            if (!phone.number) return null;
-            
-            const phoneDisplay = phone.extension 
-              ? `${phone.number} ext. ${phone.extension}`
-              : phone.number;
-            
-            const phoneType = phone.type ? ` (${phone.type})` : '';
-            
-            return (
-              <TouchableOpacity
-                key={index}
-                style={styles.actionRow}
-                onPress={() => Linking.openURL(`tel:${phone.number?.replace(/[^\d]/g, '')}`)}
-              >
-                <Ionicons name="call-outline" size={20} color="#005191" />
-                <Text style={styles.actionLabel}>
-                  {callText}: {phoneDisplay}{phoneType}
-                </Text>
-              </TouchableOpacity>
-            );
-          })
-        )}
-
-        {/* Website */}
-        {resourceDetails.website && (
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => Linking.openURL(resourceDetails.website!)}
-          >
-            <Ionicons name="globe-outline" size={20} color="#005191" />
-            <Text style={styles.actionLabel}>{websiteText}</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Address */}
-        {formattedAddress && (
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() =>
-              Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(formattedAddress)}`)
-            }
-          >
-            <Ionicons name="location-outline" size={20} color="#005191" />
-            <Text style={styles.actionLabel}>{addressText}: {formattedAddress}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Service Information */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Service Information</Text>
-        
-        {/* Hours */}
-        {resourceDetails.serviceHoursText && (
-          <>
-            <Text style={styles.label}>{hoursText}</Text>
-            <Text style={styles.text}>{resourceDetails.serviceHoursText}</Text>
-          </>
-        )}
-
-        {/* Fees */}
-        {resourceDetails.fees && (
-          <>
-            <Text style={styles.label}>{feesText}</Text>
-            <Text style={styles.text}>{resourceDetails.fees}</Text>
-          </>
-        )}
-
-        {/* Eligibility */}
-        {resourceDetails.eligibility && (
-          <>
-            <Text style={styles.label}>{eligibilityText}</Text>
-            <Text style={styles.text}>{resourceDetails.eligibility}</Text>
-          </>
-        )}
-
-        {/* Application Process */}
-        {resourceDetails.applicationProcess && (
-          <>
-            <Text style={styles.label}>{applicationProcessText}</Text>
-            <Text style={styles.text}>{resourceDetails.applicationProcess}</Text>
-          </>
-        )}
-
-        {/* Documents Required */}
-        {resourceDetails.documentsRequired && (
-          <>
-            <Text style={styles.label}>{documentsRequiredText}</Text>
-            <Text style={styles.text}>{resourceDetails.documentsRequired}</Text>
-          </>
-        )}
-      </View>
-
-      {/* Accessibility & Languages */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Accessibility & Languages</Text>
-        
-        {/* Disabilities Access */}
-        {resourceDetails.disabilitiesAccess && (
-          <>
-            <Text style={styles.label}>{accessibilityText}</Text>
-            <Text style={styles.text}>{resourceDetails.disabilitiesAccess}</Text>
-          </>
-        )}
-
-        {/* Languages Offered */}
-        {resourceDetails.languagesOffered && resourceDetails.languagesOffered.length > 0 && (
-          <>
-            <Text style={styles.label}>{languagesText}</Text>
-            <View style={styles.badgeRow}>
-              {resourceDetails.languagesOffered.map((lang, index) => (
-                <Text key={index} style={styles.languageBadge}>{lang}</Text>
-              ))}
-            </View>
-          </>
-        )}
-      </View>
-
-      {/* Debug Information (only in development) */}
-      {__DEV__ && (
+      <ScrollView style={styles.scrollContainer}>
+        {/* Header Section */}
         <View style={styles.section}>
-          <Text style={styles.label}>Debug Info</Text>
-          <Text style={styles.debugText}>Service At Location ID: {resourceId}</Text>
-          <Text style={styles.debugText}>Organization: {resourceDetails.organizationName || 'N/A'}</Text>
-          <Text style={styles.debugText}>Service: {resourceDetails.serviceName || 'N/A'}</Text>
-          <Text style={styles.debugText}>Location: {resourceDetails.locationName || 'N/A'}</Text>
+          <Text style={styles.title}>
+            {resourceDetails.serviceName || 'Service Details'}
+          </Text>
+          
+          {/* Organization */}
+          {resourceDetails.organizationName && (
+            <Text style={styles.organizationText}>{resourceDetails.organizationName}</Text>
+          )}
+
+          {/* Location */}
+          {resourceDetails.locationName && (
+            <Text style={styles.locationText}>{resourceDetails.locationName}</Text>
+          )}
+
+          {/* Description */}
+          {resourceDetails.serviceDescription && (
+            <>
+              <Text style={styles.label}>{descriptionText}</Text>
+              <Text style={styles.text}>{stripHtmlTags(resourceDetails.serviceDescription)}</Text>
+            </>
+          )}
         </View>
-      )}
-    </ScrollView>
+
+        {/* Contact Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Contact Information</Text>
+          
+          {/* Phone Numbers */}
+          {resourceDetails.servicePhones && resourceDetails.servicePhones.length > 0 && (
+            resourceDetails.servicePhones.map((phone, index) => {
+              if (!phone.number) return null;
+              
+              const phoneDisplay = phone.extension 
+                ? `${phone.number} ext. ${phone.extension}`
+                : phone.number;
+              
+              const phoneType = phone.type ? ` (${phone.type})` : '';
+              
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.actionRow}
+                  onPress={() => Linking.openURL(`tel:${phone.number?.replace(/[^\d]/g, '')}`)}
+                >
+                  <Ionicons name="call-outline" size={20} color="#005191" />
+                  <Text style={styles.actionLabel}>
+                    {callText}: {phoneDisplay}{phoneType}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })
+          )}
+
+          {/* Website */}
+          {resourceDetails.website && (
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => Linking.openURL(resourceDetails.website!)}
+            >
+              <Ionicons name="globe-outline" size={20} color="#005191" />
+              <Text style={styles.actionLabel}>{websiteText}</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Address */}
+          {formattedAddress && (
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() =>
+                Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(formattedAddress)}`)
+              }
+            >
+              <Ionicons name="location-outline" size={20} color="#005191" />
+              <Text style={styles.actionLabel}>{addressText}: {formattedAddress}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Service Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Service Information</Text>
+          
+          {/* Hours */}
+          {resourceDetails.serviceHoursText && (
+            <>
+              <Text style={styles.label}>{hoursText}</Text>
+              <Text style={styles.text}>{resourceDetails.serviceHoursText}</Text>
+            </>
+          )}
+
+          {/* Fees */}
+          {resourceDetails.fees && (
+            <>
+              <Text style={styles.label}>{feesText}</Text>
+              <Text style={styles.text}>{resourceDetails.fees}</Text>
+            </>
+          )}
+
+          {/* Eligibility */}
+          {resourceDetails.eligibility && (
+            <>
+              <Text style={styles.label}>{eligibilityText}</Text>
+              <Text style={styles.text}>{resourceDetails.eligibility}</Text>
+            </>
+          )}
+
+          {/* Application Process */}
+          {resourceDetails.applicationProcess && (
+            <>
+              <Text style={styles.label}>{applicationProcessText}</Text>
+              <Text style={styles.text}>{resourceDetails.applicationProcess}</Text>
+            </>
+          )}
+
+          {/* Documents Required */}
+          {resourceDetails.documentsRequired && (
+            <>
+              <Text style={styles.label}>{documentsRequiredText}</Text>
+              <Text style={styles.text}>{resourceDetails.documentsRequired}</Text>
+            </>
+          )}
+        </View>
+
+        {/* Accessibility & Languages */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Accessibility & Languages</Text>
+          
+          {/* Disabilities Access */}
+          {resourceDetails.disabilitiesAccess && (
+            <>
+              <Text style={styles.label}>{accessibilityText}</Text>
+              <Text style={styles.text}>{resourceDetails.disabilitiesAccess}</Text>
+            </>
+          )}
+
+          {/* Languages Offered */}
+          {resourceDetails.languagesOffered && resourceDetails.languagesOffered.length > 0 && (
+            <>
+              <Text style={styles.label}>{languagesText}</Text>
+              <View style={styles.badgeRow}>
+                {resourceDetails.languagesOffered.map((lang, index) => (
+                  <Text key={index} style={styles.languageBadge}>{lang}</Text>
+                ))}
+              </View>
+            </>
+          )}
+        </View>
+
+        {/* Debug Information (only in development) */}
+        {__DEV__ && (
+          <View style={styles.section}>
+            <Text style={styles.label}>Debug Info</Text>
+            <Text style={styles.debugText}>Service At Location ID: {resourceId}</Text>
+            <Text style={styles.debugText}>Organization: {resourceDetails.organizationName || 'N/A'}</Text>
+            <Text style={styles.debugText}>Service: {resourceDetails.serviceName || 'N/A'}</Text>
+            <Text style={styles.debugText}>Location: {resourceDetails.locationName || 'N/A'}</Text>
+            {backToList && (
+              <Text style={styles.debugText}>Back params: {JSON.stringify(backToList, null, 2)}</Text>
+            )}
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
