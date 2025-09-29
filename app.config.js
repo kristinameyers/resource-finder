@@ -3,6 +3,7 @@ export default {
     name: "Santa Barbara 211",
     slug: "sb211",
     version: "1.0.0",
+    owner: "sb211",
     orientation: "portrait",
     icon: "./assets/images/sb211-icon.png",
     userInterfaceStyle: "light",
@@ -31,13 +32,13 @@ export default {
     web: {
       favicon: "./assets/images/favicon.png"
     },
-    extra: {
-      eas: {
-        projectId: "988aaa2e-2fa4-431d-8b6c-36aebc120953"
-      }
-    },
     plugins: [
       "expo-font"
-    ]
+    ],
+    extra: {
+      eas: {
+        projectId: "b75ac5b2-6971-45ec-859f-ad0b65644a77"
+      }
+    }
   }
 };
