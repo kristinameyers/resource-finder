@@ -1,7 +1,7 @@
 export default {
   expo: {
     name: "Santa Barbara 211",
-    slug: "sb211",
+    slug: "resource-finder",
     version: "1.0.0",
     owner: "sb211",
     orientation: "portrait",
@@ -35,10 +35,6 @@ export default {
     plugins: [
       "expo-font"
     ],
-    extra: {
-      eas: {
-        projectId: "b75ac5b2-6971-45ec-859f-ad0b65644a77"
-      }
-    }
+    
   }
 };
