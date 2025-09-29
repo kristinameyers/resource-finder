@@ -2,7 +2,6 @@ import type { Resource, Category, Vote, InsertResource, InsertCategory, InsertVo
 
 // Storage interface for the application
 export interface IStorage {
-  // Resource methods
   getResources(): Promise<Resource[]>;
   getResource(id: string): Promise<Resource | null>;
   createResource(resource: InsertResource): Promise<Resource>;
@@ -11,14 +10,12 @@ export interface IStorage {
   searchResources(query: string): Promise<Resource[]>;
   getResourcesByCategory(category: string): Promise<Resource[]>;
 
-  // Category methods
   getCategories(): Promise<Category[]>;
   getCategory(id: string): Promise<Category | null>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | null>;
   deleteCategory(id: string): Promise<boolean>;
 
-  // Vote methods
   getVotesForResource(resourceId: string): Promise<Vote[]>;
   createVote(vote: InsertVote): Promise<Vote>;
   getUserVote(resourceId: string, sessionId: string): Promise<Vote | null>;
@@ -35,7 +32,6 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
-    // Seed some default categories
     this.categories = [
       {
         id: 'cat-1',
@@ -67,7 +63,6 @@ export class MemStorage implements IStorage {
       },
     ];
 
-    // Seed some sample resources
     this.resources = [
       {
         id: 'res-1',
@@ -111,6 +106,7 @@ export class MemStorage implements IStorage {
       id: `res-${Date.now()}`,
       ...resource,
       createdAt: new Date(),
+      isActive: true,
     };
     this.resources.push(newResource);
     return newResource;
@@ -119,7 +115,6 @@ export class MemStorage implements IStorage {
   async updateResource(id: string, resource: Partial<InsertResource>): Promise<Resource | null> {
     const index = this.resources.findIndex(r => r.id === id);
     if (index === -1) return null;
-    
     this.resources[index] = { ...this.resources[index], ...resource };
     return this.resources[index];
   }
@@ -127,18 +122,18 @@ export class MemStorage implements IStorage {
   async deleteResource(id: string): Promise<boolean> {
     const index = this.resources.findIndex(r => r.id === id);
     if (index === -1) return false;
-    
     this.resources[index].isActive = false;
     return true;
   }
 
   async searchResources(query: string): Promise<Resource[]> {
-    const lowercaseQuery = query.toLowerCase();
-    return this.resources.filter(r => 
-      r.isActive && (
-        r.name.toLowerCase().includes(lowercaseQuery) ||
-        r.description?.toLowerCase().includes(lowercaseQuery) ||
-        r.category.toLowerCase().includes(lowercaseQuery)
+    const lq = query.toLowerCase();
+    return this.resources.filter(r =>
+      r.isActive &&
+      (
+        r.name.toLowerCase().includes(lq) ||
+        (r.description?.toLowerCase().includes(lq) ?? false) ||
+        r.category.toLowerCase().includes(lq)
       )
     );
   }
@@ -159,6 +154,7 @@ export class MemStorage implements IStorage {
     const newCategory: Category = {
       id: `cat-${Date.now()}`,
       ...category,
+      isActive: true,
     };
     this.categories.push(newCategory);
     return newCategory;
@@ -167,7 +163,6 @@ export class MemStorage implements IStorage {
   async updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | null> {
     const index = this.categories.findIndex(c => c.id === id);
     if (index === -1) return null;
-    
     this.categories[index] = { ...this.categories[index], ...category };
     return this.categories[index];
   }
@@ -175,7 +170,6 @@ export class MemStorage implements IStorage {
   async deleteCategory(id: string): Promise<boolean> {
     const index = this.categories.findIndex(c => c.id === id);
     if (index === -1) return false;
-    
     this.categories[index].isActive = false;
     return true;
   }
@@ -185,14 +179,11 @@ export class MemStorage implements IStorage {
   }
 
   async createVote(vote: InsertVote): Promise<Vote> {
-    // Check if user already voted
-    const existingVote = await this.getUserVote(vote.resourceId, vote.sessionId);
-    if (existingVote) {
-      // Update existing vote
-      existingVote.vote = vote.vote;
-      return existingVote;
+    const existing = await this.getUserVote(vote.resourceId, vote.sessionId);
+    if (existing) {
+      existing.vote = vote.vote;
+      return existing;
     }
-
     const newVote: Vote = {
       id: `vote-${Date.now()}`,
       ...vote,
@@ -206,3 +197,5 @@ export class MemStorage implements IStorage {
     return this.votes.find(v => v.resourceId === resourceId && v.sessionId === sessionId) || null;
   }
 }
+
+export const storage = new MemStorage();

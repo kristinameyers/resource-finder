@@ -226,13 +226,13 @@
     { "id": "energy-efficient", "name": "Energy Efficient Home Improvement Assistance", "taxonomyCode": "BV-8900.9300-180", "categoryId": "utilities" }
   ],
   "food": [
-    { "id": "meals", "name": "Hot Meals", "taxonomyCode": "BD-5000.3500", "categoryId": "food" },
-    { "id": "food-pantries", "name": "Food Pantries", "taxonomyCode": "BD-1800.2000", "categoryId": "food" },
     { "id": "calfresh", "name": "CalFresh (Food Stamps)", "taxonomyCode": "NL-6000.2000", "categoryId": "food" },
-    { "id": "wic", "name": "Women, Infants, & Children (WIC)", "taxonomyCode": "NL-6000.9500", "categoryId": "food" },
-    { "id": "emergency-food", "name": "Emergency Food Assistance", "taxonomyCode": "BD-1800.2000", "categoryId": "food" },
+    { "id": "food-pantries", "name": "Groceries", "taxonomyCode": "BD-1800.2000", "categoryId": "food" },
+    { "id": "meals", "name": "Hot Meals", "taxonomyCode": "BD-5000.3500", "categoryId": "food" },
     { "id": "home-delivery-meals", "name": "Home Delivery Meals", "taxonomyCode": "BD-5000.3500", "categoryId": "food" },
-    { "id": "pet-food", "name": "Pet Food", "taxonomyCode": "PD-6250.6600", "categoryId": "food" }
+    { "id": "pet-food", "name": "Pet Food", "taxonomyCode": "PD-6250.6600", "categoryId": "food" },
+    { "id": "emergency-food", "name": "Post Disaster Food Services", "taxonomyCode": "BD-1800.2000", "categoryId": "food" },
+    { "id": "wic", "name": "Women, Infants, & Children (WIC)", "taxonomyCode": "NL-6000.9500", "categoryId": "food" }
   ],
     "hygiene-household": [
     { "id": "hygiene-household", "name": "Hygiene & Household", "taxonomyCode": "BM", "categoryId": "hygiene-household" },

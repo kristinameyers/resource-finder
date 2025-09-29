@@ -1,18 +1,38 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Linking, ActivityIndicator } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+  ActivityIndicator,
+} from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText';
-import { 
+import {
   fetchServiceAtLocationDetails,
   ServiceAtLocationDetails,
   stripHtmlTags,
 } from '../api/resourceApi';
 
-export default function ResourceDetailScreen({ route, navigation }: any) {
+type ResourceDetailScreenProps = {
+  route: {
+    params: {
+      resourceId: string;
+      backToList?: Record<string, any>;
+    };
+  };
+  navigation: any;
+};
+
+export default function ResourceDetailScreen({
+  route,
+  navigation,
+}: ResourceDetailScreenProps) {
   const { resourceId, backToList } = route.params;
 
-  // Translation hooks (only the ones actually used)
   const { text: backText } = useTranslatedText('Back');
   const { text: resourceDetailText } = useTranslatedText('Resource Details');
   const { text: callText } = useTranslatedText('Call');
@@ -28,20 +48,31 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
   const { text: applicationProcessText } = useTranslatedText('Application Process');
   const { text: documentsRequiredText } = useTranslatedText('Documents Required');
 
-  // Fetch service at location details using the new endpoint
-  const detailsQuery = useQuery({
+  const {
+    data: resourceDetails,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<ServiceAtLocationDetails | null>({
     queryKey: ['serviceAtLocationDetails', resourceId],
     queryFn: () => fetchServiceAtLocationDetails(resourceId),
-    enabled: !!resourceId
+    enabled: !!resourceId,
   });
 
-  const resourceDetails = detailsQuery.data;
+  useEffect(() => {
+    if (resourceDetails) {
+      console.log('Loaded resource details:', {
+        id: resourceId,
+        name: resourceDetails.serviceName,
+        org: resourceDetails.organizationName,
+      });
+    }
+  }, [resourceDetails, resourceId]);
 
-  // Custom header component
   const renderHeader = () => (
     <View style={styles.header}>
-      <TouchableOpacity 
-        style={styles.backButton} 
+      <TouchableOpacity
+        style={styles.backButton}
         onPress={() => {
           if (backToList) {
             navigation.navigate('ResourceList', backToList);
@@ -58,7 +89,7 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
     </View>
   );
 
-  if (detailsQuery.isLoading) {
+  if (isLoading) {
     return (
       <View style={styles.container}>
         {renderHeader()}
@@ -70,98 +101,88 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
     );
   }
 
-  if (detailsQuery.isError || !resourceDetails) {
+  if (isError || !resourceDetails) {
     return (
       <View style={styles.container}>
         {renderHeader()}
         <View style={styles.centerContainer}>
           <Text style={styles.noDataText}>Resource details not available</Text>
           <Text style={styles.debugText}>Resource ID: {resourceId}</Text>
-          <Text style={styles.debugText}>
-            Unable to load resource details. Please try again.
-          </Text>
-          <TouchableOpacity onPress={() => detailsQuery.refetch()} style={styles.retryButton}>
+          <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
             <MaterialIcons name="refresh" size={20} color="#005191" />
-            <Text style={{ color: '#005191', marginLeft: 8 }}>Retry</Text>
+            <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
 
-  // Helper function to format address
-  const getFormattedAddress = (address: ServiceAtLocationDetails['address']): string | null => {
-    if (!address) return null;
-    return [
-      address.streetAddress,
-      address.city,
-      address.stateProvince,
-      address.postalCode
-    ].filter(Boolean).join(', ');
-  };
-
-  const formattedAddress = getFormattedAddress(resourceDetails.address);
+  const formattedAddress = resourceDetails.address
+    ? [
+        resourceDetails.address.streetAddress,
+        resourceDetails.address.city,
+        resourceDetails.address.stateProvince,
+        resourceDetails.address.postalCode,
+      ]
+        .filter(Boolean)
+        .join(', ')
+    : null;
 
   return (
     <View style={styles.container}>
       {renderHeader()}
       <ScrollView style={styles.scrollContainer}>
-        {/* Header Section */}
         <View style={styles.section}>
           <Text style={styles.title}>
             {resourceDetails.serviceName || 'Service Details'}
           </Text>
-          
-          {/* Organization */}
           {resourceDetails.organizationName && (
-            <Text style={styles.organizationText}>{resourceDetails.organizationName}</Text>
+            <Text style={styles.organizationText}>
+              {resourceDetails.organizationName}
+            </Text>
           )}
-
-          {/* Location */}
           {resourceDetails.locationName && (
-            <Text style={styles.locationText}>{resourceDetails.locationName}</Text>
+            <Text style={styles.locationText}>
+              {resourceDetails.locationName}
+            </Text>
           )}
-
-          {/* Description */}
           {resourceDetails.serviceDescription && (
             <>
               <Text style={styles.label}>{descriptionText}</Text>
-              <Text style={styles.text}>{stripHtmlTags(resourceDetails.serviceDescription)}</Text>
+              <Text style={styles.text}>
+                {stripHtmlTags(resourceDetails.serviceDescription)}
+              </Text>
             </>
           )}
         </View>
 
-        {/* Contact Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact Information</Text>
-          
-          {/* Phone Numbers */}
-          {resourceDetails.servicePhones && resourceDetails.servicePhones.length > 0 && (
-            resourceDetails.servicePhones.map((phone, index) => {
-              if (!phone.number) return null;
-              
-              const phoneDisplay = phone.extension 
-                ? `${phone.number} ext. ${phone.extension}`
-                : phone.number;
-              
-              const phoneType = phone.type ? ` (${phone.type})` : '';
+          {resourceDetails.servicePhones?.map(
+            (
+              phone: { number?: string; extension?: string; type?: string },
+              idx: number
+            ) => {
+              const phoneNumber = phone.number;
+              if (!phoneNumber) return null;
               
               return (
                 <TouchableOpacity
-                  key={index}
+                  key={idx}
                   style={styles.actionRow}
-                  onPress={() => Linking.openURL(`tel:${phone.number?.replace(/[^\d]/g, '')}`)}
+                  onPress={() =>
+                    Linking.openURL(`tel:${phoneNumber.replace(/\D/g, '')}`)
+                  }
                 >
                   <Ionicons name="call-outline" size={20} color="#005191" />
                   <Text style={styles.actionLabel}>
-                    {callText}: {phoneDisplay}{phoneType}
+                    {callText}: {phoneNumber}
+                    {phone.extension ? ` ext. ${phone.extension}` : ''}
                   </Text>
                 </TouchableOpacity>
               );
-            })
+            }
           )}
-
-          {/* Website */}
           {resourceDetails.website && (
             <TouchableOpacity
               style={styles.actionRow}
@@ -171,271 +192,188 @@ export default function ResourceDetailScreen({ route, navigation }: any) {
               <Text style={styles.actionLabel}>{websiteText}</Text>
             </TouchableOpacity>
           )}
-
-          {/* Address */}
           {formattedAddress && (
             <TouchableOpacity
               style={styles.actionRow}
               onPress={() =>
-                Linking.openURL(`https://maps.apple.com/?q=${encodeURIComponent(formattedAddress)}`)
+                Linking.openURL(
+                  `https://maps.apple.com/?q=${encodeURIComponent(
+                    formattedAddress
+                  )}`
+                )
               }
             >
               <Ionicons name="location-outline" size={20} color="#005191" />
-              <Text style={styles.actionLabel}>{addressText}: {formattedAddress}</Text>
+              <Text style={styles.actionLabel}>
+                {addressText}: {formattedAddress}
+              </Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Service Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Service Information</Text>
-          
-          {/* Hours */}
           {resourceDetails.serviceHoursText && (
             <>
               <Text style={styles.label}>{hoursText}</Text>
-              <Text style={styles.text}>{resourceDetails.serviceHoursText}</Text>
+              <Text style={styles.text}>
+                {resourceDetails.serviceHoursText}
+              </Text>
             </>
           )}
-
-          {/* Fees */}
           {resourceDetails.fees && (
             <>
               <Text style={styles.label}>{feesText}</Text>
               <Text style={styles.text}>{resourceDetails.fees}</Text>
             </>
           )}
-
-          {/* Eligibility */}
           {resourceDetails.eligibility && (
             <>
               <Text style={styles.label}>{eligibilityText}</Text>
               <Text style={styles.text}>{resourceDetails.eligibility}</Text>
             </>
           )}
-
-          {/* Application Process */}
           {resourceDetails.applicationProcess && (
             <>
-              <Text style={styles.label}>{applicationProcessText}</Text>
-              <Text style={styles.text}>{resourceDetails.applicationProcess}</Text>
+              <Text style={styles.label}>
+                {applicationProcessText}
+              </Text>
+              <Text style={styles.text}>
+                {resourceDetails.applicationProcess}
+              </Text>
             </>
           )}
-
-          {/* Documents Required */}
           {resourceDetails.documentsRequired && (
             <>
-              <Text style={styles.label}>{documentsRequiredText}</Text>
-              <Text style={styles.text}>{resourceDetails.documentsRequired}</Text>
+              <Text style={styles.label}>
+                {documentsRequiredText}
+              </Text>
+              <Text style={styles.text}>
+                {resourceDetails.documentsRequired}
+              </Text>
             </>
           )}
         </View>
 
-        {/* Accessibility & Languages */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Accessibility & Languages</Text>
-          
-          {/* Disabilities Access */}
+          <Text style={styles.sectionTitle}>
+            Accessibility & Languages
+          </Text>
           {resourceDetails.disabilitiesAccess && (
             <>
               <Text style={styles.label}>{accessibilityText}</Text>
-              <Text style={styles.text}>{resourceDetails.disabilitiesAccess}</Text>
+              <Text style={styles.text}>
+                {resourceDetails.disabilitiesAccess}
+              </Text>
             </>
           )}
-
-          {/* Languages Offered */}
-          {resourceDetails.languagesOffered && resourceDetails.languagesOffered.length > 0 && (
+          {Array.isArray(resourceDetails.languagesOffered) &&
+            resourceDetails.languagesOffered.length > 0 && (
             <>
               <Text style={styles.label}>{languagesText}</Text>
               <View style={styles.badgeRow}>
-                {resourceDetails.languagesOffered.map((lang, index) => (
-                  <Text key={index} style={styles.languageBadge}>{lang}</Text>
-                ))}
+                {resourceDetails.languagesOffered.map(
+                  (lang: string, i: number) => (
+                    <Text key={i} style={styles.languageBadge}>
+                      {lang}
+                    </Text>
+                  )
+                )}
               </View>
             </>
           )}
         </View>
-
-        {/* Debug Information (only in development) */}
-        {__DEV__ && (
-          <View style={styles.section}>
-            <Text style={styles.label}>Debug Info</Text>
-            <Text style={styles.debugText}>Service At Location ID: {resourceId}</Text>
-            <Text style={styles.debugText}>Organization: {resourceDetails.organizationName || 'N/A'}</Text>
-            <Text style={styles.debugText}>Service: {resourceDetails.serviceName || 'N/A'}</Text>
-            <Text style={styles.debugText}>Location: {resourceDetails.locationName || 'N/A'}</Text>
-            {backToList && (
-              <Text style={styles.debugText}>Back params: {JSON.stringify(backToList, null, 2)}</Text>
-            )}
-          </View>
-        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#f5f5f5' 
-  },
-  scrollContainer: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scrollContainer: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 12,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#005191',
-    marginLeft: 4,
-    fontWeight: '500',
-  },
+  backButton: { flexDirection: 'row', alignItems: 'center' },
+  backButtonText: { marginLeft: 4, color: '#005191', fontSize: 16 },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    textAlign: 'center',
     flex: 1,
-  },
-  headerRight: {
-    width: 60, // Same width as back button to center the title
-  },
-  centerContainer: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    padding: 24 
-  },
-  noDataText: { 
-    fontSize: 18, 
-    color: '#333', 
-    marginBottom: 16, 
     textAlign: 'center',
-    fontWeight: '600' 
   },
-  debugText: { 
-    fontSize: 14, 
-    color: '#666', 
-    marginBottom: 8, 
+  headerRight: { width: 60 },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  noDataText: {
+    fontSize: 18,
+    color: '#333',
+    marginBottom: 16,
     textAlign: 'center',
-    fontStyle: 'italic' 
   },
-  loadingText: { 
-    fontSize: 16, 
-    color: '#005191', 
-    marginTop: 10 
+  debugText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  section: { 
-    margin: 16, 
-    padding: 16, 
-    backgroundColor: 'white', 
-    borderRadius: 8, 
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  loadingText: { fontSize: 16, color: '#005191', marginTop: 10 },
+  section: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: 'white',
+    borderRadius: 8,
   },
-  title: { 
-    fontSize: 22, 
-    fontWeight: 'bold', 
-    marginBottom: 8, 
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
     color: '#005191',
-    lineHeight: 28 
   },
-  organizationText: { 
-    fontSize: 16, 
-    color: '#666', 
-    marginBottom: 8, 
-    fontWeight: '500' 
-  },
-  locationText: { 
-    fontSize: 14, 
-    color: '#888', 
-    marginBottom: 12, 
-    fontStyle: 'italic' 
-  },
+  organizationText: { fontSize: 16, color: '#666', marginBottom: 8 },
+  locationText: { fontSize: 14, color: '#888', marginBottom: 12 },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#005191',
     marginBottom: 12,
   },
-  badgeRow: { 
-    flexDirection: 'row', 
-    flexWrap: 'wrap', 
-    marginTop: 8, 
-    gap: 6 
+  label: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 6,
   },
-  languageBadge: { 
-    paddingHorizontal: 8, 
-    paddingVertical: 4, 
-    backgroundColor: '#f0f0f0', 
-    borderRadius: 4, 
-    fontSize: 12,
-    color: '#333' 
-  },
-  label: { 
-    fontSize: 15, 
-    fontWeight: '600', 
-    marginTop: 12, 
-    marginBottom: 6, 
-    color: '#222' 
-  },
-  text: { 
-    fontSize: 14, 
-    color: '#333', 
+  text: {
+    fontSize: 14,
+    color: '#333',
     lineHeight: 20,
-    marginBottom: 8 
+    marginBottom: 8,
   },
-  actionRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginTop: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 4 
-  },
-  actionLabel: { 
-    fontSize: 15, 
-    marginLeft: 8, 
-    color: '#007aff',
-    flex: 1 
-  },
-  goBackButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginTop: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+  actionRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+  actionLabel: { fontSize: 15, marginLeft: 8, color: '#007aff', flex: 1 },
+  retryButton: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+  retryText: { color: '#005191', marginLeft: 8 },
+  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
+  languageBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     backgroundColor: '#f0f0f0',
-    borderRadius: 8 
-  },
-  retryButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginTop: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#e8f4f8',
-    borderRadius: 8 
+    borderRadius: 4,
+    fontSize: 12,
+    color: '#333',
+    marginRight: 6,
+    marginBottom: 6,
   },
 });

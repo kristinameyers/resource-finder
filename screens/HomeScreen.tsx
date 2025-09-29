@@ -1,7 +1,4 @@
-// ------------------------------------------------------------
-// File:  HomeScreen.tsx
-// ------------------------------------------------------------
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   ScrollView,
   View,
@@ -10,6 +7,7 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  Keyboard,
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,19 +17,14 @@ import { useLocation } from '../hooks/use-location';
 import { useTranslatedText } from '../components/TranslatedText';
 import { fetchCategories, fetchResourcesByMainCategory } from '../api/resourceApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 import CategoryGrid from '../components/CategoryGrid';
 import CategoryGridSkeleton from '../components/CategoryGridSkeleton';
 
 import type { Category } from '../types/shared-schema';
 import type { NavigationProp } from '@react-navigation/native';
-
-/* --------------------------------------------------------------
-   TAXONOMY HELPERS – NOTE THE IMPORT PATH
-   -------------------------------------------------------------- */
-import {
-  getCategoryIcon,
-} from '../taxonomy';
+import { getCategoryIcon } from '../taxonomy';
 
 const new211Logo = require('../assets/images/new-211-logo.png');
 const SAVED_ZIP = 'saved_zip_code';
@@ -46,8 +39,8 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
   const { text: footerText } = useTranslatedText('Resource Finder') || { text: 'Resource Finder' };
   const { text: footerSubtext } = useTranslatedText('Find local resources and services') || { text: 'Find local resources and services' };
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [zipCode, setZipCode] = useState('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [zipCode, setZipCode] = useState<string>('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   const {
@@ -57,7 +50,12 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     clearLocation,
   } = useLocation?.() || {};
 
-  // Load saved ZIP on mount
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedCategoryId(null);
+    }, [])
+  );
+
   useEffect(() => {
     AsyncStorage.getItem(SAVED_ZIP).then(saved => {
       if (saved) {
@@ -67,102 +65,117 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     });
   }, [setLocationByZipCode]);
 
-  // Save current ZIP
-  const handleSaveZip = async () => {
-    try {
-      await AsyncStorage.setItem(SAVED_ZIP, zipCode);
-    } catch (e) {
-      console.error('Failed saving ZIP', e);
-    }
-  };
+  const handleSaveZip = useCallback(async () => {
+  // Dismiss the on-screen keyboard
+  Keyboard.dismiss();
 
-  // 1️⃣ FETCH CATEGORIES
+  try {
+    await AsyncStorage.setItem(SAVED_ZIP, zipCode);
+  } catch (e) {
+    console.error('Failed saving ZIP', e);
+  }
+}, [zipCode]);
+
+
+  // 👇 Define handleClearZip and handleZipChange here 👇
+
+  const handleClearZip = useCallback(async () => {
+    setZipCode('');
+    clearLocation?.();
+    try {
+      await AsyncStorage.removeItem(SAVED_ZIP);
+      console.log('✅ Cleared saved zip code');
+    } catch (e) {
+      console.error('Failed clearing saved ZIP', e);
+    }
+  }, [clearLocation]);
+
+  const handleZipChange = useCallback(
+    (zip: string) => {
+      setZipCode(zip);
+      setLocationByZipCode?.(zip);
+    },
+    [setLocationByZipCode]
+  );
+  // 👆 End handler definitions 👆
+
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: fetchCategories,
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
   });
 
-  // 2️⃣ SORT FAVORITES
   const sortedCategories = useMemo(() => {
     if (!preferences?.favoriteCategories?.length) return categories;
-
-    const fav = categories.filter(c => preferences.favoriteCategories.includes(c.id));
-    const other = categories.filter(c => !preferences.favoriteCategories.includes(c.id));
-
+    const favoriteIds = preferences.favoriteCategories.map(String);
+    const fav = categories.filter(c => favoriteIds.includes(String(c.id)));
+    const other = categories.filter(c => !favoriteIds.includes(String(c.id)));
     fav.sort(
       (a, b) =>
-        preferences.favoriteCategories.indexOf(a.id) -
-        preferences.favoriteCategories.indexOf(b.id)
+        favoriteIds.indexOf(String(a.id)) -
+        favoriteIds.indexOf(String(b.id))
     );
-
     return [...fav, ...other];
   }, [categories, preferences]);
 
-  // 3️⃣ CATEGORY PRESS
-  const handleCategoryPress = (categoryId: string, categoryName: string) => {
-    const icon = getCategoryIcon(categoryId) || undefined;
-    setSelectedCategoryId(categoryName);
-    navigation.navigate("ResourceList", {
-      keyword: categoryName,
-      zipCode,
-      categoryId,
-      categoryName,
-      categoryIcon: icon,
-    });
-  };
+  const handleCategoryPress = useCallback(
+    (categoryIdRaw: string | number, categoryName: string) => {
+      const categoryId = String(categoryIdRaw);
+      const icon = getCategoryIcon(categoryId) || undefined;
+      setSelectedCategoryId(categoryId);
+      navigation.navigate("ResourceList", {
+        keyword: categoryName,
+        zipCode,
+        categoryId,
+        categoryName,
+        categoryIcon: icon,
+      });
+    },
+    [navigation, zipCode]
+  );
 
-  // FETCH MAIN CATEGORY RESOURCES
   const {
     data: mainCategoryResources = { items: [], total: 0, hasMore: false },
     isLoading: loadingMainCategoryResources,
     error: mainCategoryError,
   } = useQuery({
     queryKey: ['main-category-resources', selectedCategoryId, zipCode],
-    queryFn: () =>
-      selectedCategoryId
-        ? fetchResourcesByMainCategory(selectedCategoryId, 0, 20)
-        : Promise.resolve({ items: [], total: 0, hasMore: false }),
+    queryFn: () => {
+      if (!selectedCategoryId) return Promise.resolve({ items: [], total: 0, hasMore: false });
+      return fetchResourcesByMainCategory(
+        selectedCategoryId,
+        zipCode,
+        0,
+        20
+      );
+    },
     enabled: Boolean(selectedCategoryId),
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 30,
   });
 
-  // 4️⃣ SEARCH
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (searchQuery.trim()) {
       navigation.navigate('ResourceList', {
         keyword: searchQuery.trim(),
         zipCode,
       });
     }
-  };
+  }, [navigation, searchQuery, zipCode]);
 
-  // 5️⃣ LOCATION
-  const handleUseLocation = async () => {
+  const handleUseLocation = useCallback(async () => {
     await requestCurrentLocation?.();
-  };
+  }, [requestCurrentLocation]);
 
-  const handleZipChange = (zip: string) => {
-    setZipCode(zip);
-    setLocationByZipCode?.(zip);
-  };
-
-  const handleClear = () => {
-    setSelectedCategoryId(null);
-    setSearchQuery('');
-    clearLocation?.();
-    setZipCode('');
-  };
-
-  // RENDER
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView keyboardShouldPersistTaps="handled">
         <Image source={new211Logo} style={styles.logo} />
         <View style={styles.header}>
           <Text style={styles.title}>Santa Barbara 211</Text>
           <Text style={styles.subtitle}>{footerSubtext}</Text>
         </View>
-
-        {/* SEARCH */}
         <View style={styles.searchSection}>
           <View style={styles.searchBar}>
             <Ionicons name="search" size={24} color="#666666" />
@@ -176,8 +189,6 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
               returnKeyType="search"
             />
           </View>
-
-          {/* ZIP + SAVE */}
           <View style={styles.locationBar}>
             <Ionicons name="location" size={24} color="#666666" />
             <TextInput
@@ -188,20 +199,25 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
               onChangeText={handleZipChange}
               keyboardType="numeric"
               maxLength={5}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
             />
+            {zipCode ? (
+              <TouchableOpacity style={styles.clearButton} onPress={handleClearZip}>
+                <Text style={styles.clearButtonText}>Clear</Text>
+              </TouchableOpacity>
+            ) : null}
             <TouchableOpacity style={styles.saveButton} onPress={handleSaveZip}>
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* CATEGORY GRID */}
         <View style={styles.categoriesSection}>
           {loadingCategories ? (
             <CategoryGridSkeleton />
           ) : (
             <CategoryGrid
-              categories={sortedCategories.map(cat => ({
+              categories={sortedCategories.map((cat: Category) => ({
                 ...cat,
                 icon: getCategoryIcon(cat.id) || undefined,
               }))}
@@ -210,8 +226,6 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
             />
           )}
         </View>
-
-        {/* FOOTER */}
         <View style={styles.footer}>
           <Text>
             {footerText} © {new Date().getFullYear()} | {footerSubtext}
@@ -243,6 +257,8 @@ const styles = StyleSheet.create({
   locationInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#333333' },
   saveButton: { marginLeft: 12, backgroundColor: '#005191', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
   saveButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
+  clearButton: { marginLeft: 8, backgroundColor: '#dc3545', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  clearButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
   categoriesSection: { padding: 15 },
   footer: { padding: 16, alignItems: 'center' },
 });

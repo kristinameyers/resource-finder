@@ -10,8 +10,7 @@ import {
 import {
   MAIN_CATEGORIES,
   SUBCATEGORIES,
-  resolveCategory,
-  getCategoryIcon,
+
 } from "../taxonomy";
 
 /* ENVIRONMENT */
@@ -43,6 +42,20 @@ function buildLocationParams(): {
     location: SANTA_BARBARA_COUNTY,
   };
 }
+
+// 👇 ADD THE GEOGRAPHIC VALIDATION HERE 👇
+/* GEOGRAPHIC VALIDATION */
+const SANTA_BARBARA_COUNTY_ZIPS = [
+  '93101', '93102', '93103', '93105', '93106', '93107', '93108', '93109', '93110', 
+  '93111', '93116', '93117', '93118', '93120', '93121', '93130', '93140', '93150', 
+  '93160', '93190', '93199', '93254', '93427', '93429', '93436', '93437', '93441', 
+  '93454', '93455', '93458', '93460', '93463', '93464'
+];
+
+function isZipInServiceArea(zipCode: string): boolean {
+  return SANTA_BARBARA_COUNTY_ZIPS.includes(zipCode.trim());
+}
+// 👆 GEOGRAPHIC VALIDATION ENDS HERE 👆
 
 /* ENHANCED FETCH USING HEADERS FOR SEARCH PARAMS */
 async function national211Get<T>(
@@ -246,16 +259,29 @@ export async function fetchSubcategories(categoryId: string): Promise<Subcategor
 /* MAIN CATEGORY FETCH - Uses keywordIsTaxonomyTerm: true */
 export async function fetchResourcesByMainCategory(
   categoryName: string,
+  zipCode?: string,
   skip = 0,
   size = 20
 ): Promise<ResourcePage> {
-  console.log('fetchResourcesByMainCategory called!');
+  console.log('fetchResourcesByMainCategory called with:', { categoryName, zipCode, skip, size });
   const locationParams = buildLocationParams();
+  
+  // Determine location: use zip only if it's in service area, otherwise use county
+  let location = locationParams.location; // default to county
+  
+  if (zipCode && /^[0-9]{5}$/.test(zipCode.trim())) {
+    if (isZipInServiceArea(zipCode.trim())) {
+      location = zipCode.trim();
+      console.log(`✅ Using zip code ${zipCode} (within service area)`);
+    } else {
+      console.log(`⚠️ Zip code ${zipCode} is outside service area, using county instead`);
+    }
+  }
   
   // Query parameters
   const queryParams: Record<string, string | undefined> = {
     keywords: categoryName.trim().toLowerCase(),
-    location: locationParams.location,
+    location: location,
     skip: String(skip),
     size: String(size),
   };
@@ -298,14 +324,27 @@ export async function fetchResourcesBySubcategory(
   skip = 0,
   size = 20
 ): Promise<ResourcePage> {
+  console.log('fetchResourcesBySubcategory called with:', { subcatName, zipCode, skip, size });
   const taxonomyCode = TAXONOMY_MAP[subcatName];
   const isTaxonomy = Boolean(taxonomyCode);
   const locationParams = buildLocationParams();
   
+  // Determine location: use zip only if it's in service area, otherwise use county
+  let location = locationParams.location; // default to county
+  
+  if (zipCode && /^[0-9]{5}$/.test(zipCode.trim())) {
+    if (isZipInServiceArea(zipCode.trim())) {
+      location = zipCode.trim();
+      console.log(`✅ Using zip code ${zipCode} (within service area)`);
+    } else {
+      console.log(`⚠️ Zip code ${zipCode} is outside service area, using county instead`);
+    }
+  }
+  
   // Query parameters
   const queryParams: Record<string, string | undefined> = {
     keywords: isTaxonomy ? taxonomyCode! : subcatName.trim().toLowerCase(),
-    location: zipCode?.trim() || locationParams.location,
+    location: location,
     skip: String(skip),
     size: String(size),
   };
@@ -314,7 +353,7 @@ export async function fetchResourcesBySubcategory(
   const searchHeaders: Record<string, string | undefined> = {
     "searchMode": "All",
     "locationMode": "Within",
-    "keywordIsTaxonomyCode": isTaxonomy ? "true" : "false", // TRUE for subcategories when using taxonomy code
+    "keywordIsTaxonomyCode": isTaxonomy ? "true" : "false",
     "keywordIsTaxonomyTerm": "false",
   };
   
@@ -365,6 +404,59 @@ export function getResourceFormattedAddress(resource: Resource): string | null {
   return null;
 }
 
+// Add before the function definition
+export async function fetchServiceAtLocationDetails(
+  serviceAtLocationId: string
+): Promise<ServiceAtLocationDetails | null> {
+  try {
+    return await national211Get<ServiceAtLocationDetails>(
+      `/query/service-at-location-details/${serviceAtLocationId}`
+    );
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// Add before the interface definition
+export interface ServiceAtLocationDetails {
+  organizationName?: string;
+  serviceName?: string;
+  locationName?: string;
+  serviceDescription?: string;
+  serviceHoursText?: string;
+  website?: string;
+  address?: {
+    streetAddress?: string;
+    city?: string;
+    stateProvince?: string;
+    postalCode?: string;
+    latitude?: string;
+    longitude?: string;
+  };
+  servicePhones?: Array<{
+    number?: string;
+    type?: string;
+    extension?: string;
+  }>;
+  fees?: string;
+  applicationProcess?: string;
+  eligibility?: string;
+  documentsRequired?: string;
+  languagesOffered?: string[];
+  disabilitiesAccess?: string;
+}
+
+// Add before the function definition
+export function stripHtmlTags(html?: string | null): string {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .trim();
+}
+
 export function getResourceDisplayName(resource: Resource): string {
   return resource.nameServiceAtLocation || 
          resource.nameService || 
@@ -384,80 +476,6 @@ export function getResourceUniqueId(resource: Resource): string | null {
          resource.id || 
          null;
 }
-
-/* SERVICE AT LOCATION DETAILS INTERFACE */
-export interface ServiceAtLocationDetails {
-  organizationName?: string;
-  serviceName?: string;
-  locationName?: string;
-  serviceDescription?: string;
-  serviceHoursText?: string;
-  website?: string;
-  address?: {
-    streetAddress?: string;
-    city?: string;
-    stateProvince?: string;
-    postalCode?: string;
-    country?: string;
-    latitude?: string;
-    longitude?: string;
-  };
-  servicePhones?: Array<{
-    number?: string;
-    type?: string;
-    extension?: string;
-  }>;
-  fees?: string;
-  applicationProcess?: string;
-  eligibility?: string;
-  documentsRequired?: string;
-  languagesOffered?: string[];
-  disabilitiesAccess?: string;
-}
-
-/* FETCH SERVICE AT LOCATION DETAILS */
-export async function fetchServiceAtLocationDetails(serviceAtLocationId: string): Promise<ServiceAtLocationDetails | null> {
-  console.log(`🔍 Fetching service at location details for ID: ${serviceAtLocationId}`);
-  
-  try {
-    const data = await national211Get<ServiceAtLocationDetails>(
-      `/query/service-at-location-details/${serviceAtLocationId}`
-    );
-    
-    console.log(`✅ Successfully fetched details for service at location ${serviceAtLocationId}`);
-    return data;
-  } catch (error) {
-    console.error(`❌ Failed to fetch service at location details for ${serviceAtLocationId}:`, error);
-    return null;
-  }
-}
-
-/* HTML UTILITY FUNCTIONS */
-export function stripHtmlTags(htmlString: string | undefined | null): string {
-  if (!htmlString) return '';
-  
-  // Remove HTML tags using regex
-  const strippedString = htmlString
-    .replace(/<[^>]*>/g, '') // Remove all HTML tags
-    .replace(/&nbsp;/g, ' ') // Replace &nbsp; with regular space
-    .replace(/&amp;/g, '&')  // Replace &amp; with &
-    .replace(/&lt;/g, '<')   // Replace &lt; with <
-    .replace(/&gt;/g, '>')   // Replace &gt; with >
-    .replace(/&quot;/g, '"') // Replace &quot; with "
-    .replace(/&#x27;/g, "'") // Replace &#x27; with '
-    .replace(/&#x2F;/g, '/') // Replace &#x2F; with /
-    .replace(/\s+/g, ' ')    // Replace multiple spaces with single space
-    .trim();                 // Remove leading/trailing whitespace
-  
-  return strippedString;
-}
-
-/* ENHANCED DESCRIPTION HELPER */
-export function getResourceCleanDescription(resource: ServiceAtLocationDetails): string {
-  const rawDescription = resource.serviceDescription || 'No description available';
-  return stripHtmlTags(rawDescription);
-}
-
 
 /* GEOLOCATION */
 export async function getCurrentLocation(): Promise<{
