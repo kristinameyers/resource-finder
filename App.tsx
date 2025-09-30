@@ -20,14 +20,32 @@ import { SplashScreen } from "./screens/SplashScreen";
 // Removed: import { OnboardingFlow } from "./components/onboarding/OnboardingFlow"; 
 import Toaster from "./components/ui/Toaster";
 
+// Define the structure of the data passed from the ResourceListScreen
+// This matches the structure needed for navigating back to the list
+export type ResourceListBackParams = {
+  keyword: string; 
+  zipCode: string; 
+  isSubcategory: boolean;
+  selectedSubcategory: string | null;
+};
+
 // Drawer param types - only serializable data!
 export type DrawerParamList = {
   Home: undefined;
   SearchCategory: undefined;
   SearchKeyword: undefined;
   UpdateLocation: undefined;
-  ResourceList: { category?: string; keyword?: string };
-  ResourceDetail: { id: string };
+  ResourceList: { 
+    category?: string; 
+    keyword?: string;
+    zipCode?: string;
+    isSubcategory?: boolean;
+    selectedSubcategory?: string | null;
+  };
+  ResourceDetail: { 
+    id: string; 
+    backToList: ResourceListBackParams; 
+  };
   Favorites: undefined;
   About: undefined;
   Settings: undefined;

@@ -18,10 +18,27 @@ import {
   stripHtmlTags,
 } from '../api/resourceApi';
 
+// Define the structure of the data passed from the ResourceListScreen
+export type ResourceListBackParams = {
+  keyword: string; // The main search keyword/category name
+  zipCode: string; // The ZIP code used for sorting/filtering
+  isSubcategory: boolean;
+  selectedSubcategory: string | null;
+};
+
 // DrawerParamList must match your navigation setup (with NO function params)
 export type DrawerParamList = {
-  ResourceList: { category?: string; keyword?: string };
-  ResourceDetail: { id: string };
+  ResourceList: { 
+    category?: string; 
+    keyword?: string;
+    zipCode?: string; // <--- ADDED
+    isSubcategory?: boolean; // <--- ADDED
+    selectedSubcategory?: string | null; // <--- ADDED
+  };
+  ResourceDetail: {
+    id: string;
+    backToList: ResourceListBackParams; // <-- Now includes the backToList object
+  };
 };
 
 type ResourceDetailScreenProps = DrawerScreenProps<DrawerParamList, 'ResourceDetail'>;
@@ -30,7 +47,7 @@ export default function ResourceDetailScreen({
   route,
   navigation,
 }: ResourceDetailScreenProps) {
-  const { id } = route.params;
+  const { id, backToList } = route.params;
 
   const { text: backText } = useTranslatedText('Back');
   const { text: resourceDetailText } = useTranslatedText('Resource Details');
@@ -72,7 +89,16 @@ export default function ResourceDetailScreen({
     <View style={styles.header}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.goBack()}
+        onPress={() => 
+          navigation.navigate('ResourceList', {
+            // Pass the keyword that was used to generate the list
+            keyword: backToList.selectedSubcategory || backToList.keyword,
+            // Pass the ZIP code used for the list
+            zipCode: backToList.zipCode,
+            // Use the correct flag to tell the list screen what kind of search to run
+            isSubcategory: Boolean(backToList.selectedSubcategory) || backToList.isSubcategory,
+          })
+        }
       >
         <MaterialIcons name="arrow-back" size={24} color="#005191" />
         <Text style={styles.backButtonText}>{backText}</Text>

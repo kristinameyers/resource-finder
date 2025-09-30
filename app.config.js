@@ -9,7 +9,7 @@ module.exports = ({ config }) => {
       version: "1.0.0",
       owner: "sb211",
       orientation: "portrait",
-      icon: "./assets/images/sb211-icon.png",
+      icon: "./assets/images/icon.png",
       userInterfaceStyle: "light",
       splash: {
         image: "./assets/images/new-211-logo.png",
@@ -28,17 +28,17 @@ module.exports = ({ config }) => {
       },
       android: {
         package: "com.appbundle.sb211",
-        versionCode: 1,
+        versionCode: 3,
         "permissions": [
           "ACCESS_FINE_LOCATION"
         ],
         adaptiveIcon: {
-          foregroundImage: "./assets/images/react-logo.png",
+          foregroundImage: "./assets/images/icon.png",
           backgroundColor: "#FFFFFF"
         }
       },
       web: {
-        favicon: "./assets/images/favicon.png"
+        favicon: "./assets/images/icon.png"
       },
       plugins: [
         "expo-font"
