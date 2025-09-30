@@ -3,7 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "jsx": "react-native",
+    "jsx": "react-jsx",
     "lib": [
       "dom",
       "dom.iterable",

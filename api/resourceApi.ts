@@ -3,7 +3,6 @@ import * as Location from "expo-location";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Resource,
-  ResourcePage,
   Category,
   Subcategory,
   Location as Loc,
@@ -12,6 +11,14 @@ import {
   MAIN_CATEGORIES,
   SUBCATEGORIES,
 } from "../taxonomy";
+
+export interface ResourcePage {
+  items: Resource[];
+  total: number;
+  hasMore: boolean;
+  usedCountyInstead?: boolean;
+  error?: string;
+}
 
 /* ENVIRONMENT */
 const API_KEY = process.env.EXPO_PUBLIC_NATIONAL_211_API_KEY ?? "";
@@ -441,37 +448,45 @@ export function getResourceFormattedAddress(resource: Resource): string | null {
 export async function fetchServiceAtLocationDetails(
   serviceAtLocationId: string
 ): Promise<ServiceAtLocationDetails | null> {
+  console.log(`🔍 Starting detail fetch for ID: ${serviceAtLocationId}`);
+  
+  // 1. Fetch the resource from AsyncStorage cache (always useful as a fallback)
+  const cachedResource = await fetchResourceById(serviceAtLocationId);
+  
+  let result: ServiceAtLocationDetails | null = null;
+  
+  // 2. Attempt the API call for full, fresh details.
+  // We use this try/catch structure to handle an API failure gracefully.
   try {
-    // 1. Fetch the resource from AsyncStorage cache (stored when the user saw the list)
-    const cachedResource = await fetchResourceById(serviceAtLocationId);
-
-    if (cachedResource) {
-      // 2. The Resource type from the list should be compatible with the detail interface.
-      // We rely on type assertion here. Since the list often contains the same fields 
-      // as the detail (just fewer), this is a common workaround.
-      console.log(`✅ Displaying details for ${serviceAtLocationId} from local cache.`);
-      return cachedResource as unknown as ServiceAtLocationDetails;
-    }
-    
-    // 3. Fallback: If not found in cache, attempt the API (This is often where the error was)
-    // IMPORTANT: If the detail API is confirmed to be working/available:
-    try {
-        const detailData = await national211Get<ServiceAtLocationDetails>(
-            `/query/service-at-location-details/${serviceAtLocationId}`
-        );
-        console.log(`✅ Displaying details for ${serviceAtLocationId} from detail API.`);
-        return detailData;
-    } catch (apiError) {
-        // If the direct API fails, we log it, but the main cache check has failed too.
-        console.warn(`⚠️ API detail fetch failed for ${serviceAtLocationId}. Relying on cache/failing gracefully.`);
-        console.error(apiError);
-        return null; // Return null if both cache and API fail
-    }
-    
-  } catch (e) {
-    console.error('Final catch block error in fetchServiceAtLocationDetails:', e);
-    return null;
+      // IMPORTANT: This API call is critical for getting the full details.
+      const detailData = await national211Get<ServiceAtLocationDetails>(
+          `/query/service-at-location-details/${serviceAtLocationId}`
+      );
+      
+      // 3. API Success: Use fresh, detailed data
+      console.log(`✅ API call success for ${serviceAtLocationId}.`);
+      result = detailData;
+      
+  } catch (apiError) {
+      // 4. API Failure: Log the warning.
+      console.warn(`⚠️ API detail fetch failed for ${serviceAtLocationId}.`);
+      console.error(apiError);
+      
+      // If the API fails, fall back to the cached (list) resource.
+      if (cachedResource) {
+          console.log(`📦 Falling back to local cache for ${serviceAtLocationId}.`);
+          result = cachedResource as unknown as ServiceAtLocationDetails;
+      }
   }
+  
+  // 5. If we have a cached resource from the start (API was not attempted/failed), return it.
+  if (!result && cachedResource) {
+      console.log(`✅ Displaying details for ${serviceAtLocationId} from local cache.`);
+      result = cachedResource as unknown as ServiceAtLocationDetails;
+  }
+
+  // If both API and cache failed (or cache was empty), return null.
+  return result;
 }
 
 // Add before the interface definition
