@@ -1,9 +1,8 @@
-// app.config.js - CORRECT VERSION
+// app.config.js - CORRECTED VERSION
 
 module.exports = ({ config }) => {
   return {
     ...config,
-    // The main 'expo' object contains all your static configuration
     expo: {
       name: "Santa Barbara 211",
       slug: "resource-finder",
@@ -45,10 +44,14 @@ module.exports = ({ config }) => {
         "expo-font"
       ],
       
-      // ✅ Insert the 'extra' block here, inside the main 'expo' object
+      // ✅ CONSOLIDATED 'extra' BLOCK
       extra: {
-        // You can safely use 'eas' here, as the spread operator isn't needed
-        // when defining the whole 'extra' block.
+        // 1. KEEP: The API URL (public information)
+        EXPO_PUBLIC_NATIONAL_211_API_URL: process.env.EXPO_PUBLIC_NATIONAL_211_API_URL,
+
+        // 2. REMOVE: EXPO_PUBLIC_NATIONAL_211_API_KEY (it's now handled securely via EAS Secrets and eas.json)
+        
+        // 3. KEEP: The EAS project ID configuration
         eas: {
           projectId: "b75ac5b2-6971-45ec-859f-ad0b65644a77" 
         }

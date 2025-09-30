@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// App contexts and onboarding
+// App contexts
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
-import { useOnboarding } from "./hooks/use-onboarding";
+// Removed: import { useOnboarding } from "./hooks/use-onboarding"; 
+
 import HomeScreen from "./screens/HomeScreen";
 import SearchCategoryScreen from "./screens/SearchCategoryScreen";
 import SearchKeywordScreen from "./screens/SearchKeywordScreen";
@@ -16,7 +17,7 @@ import FavoritesScreen from "./screens/FavoritesScreen";
 import AboutScreen from "./screens/AboutScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import { SplashScreen } from "./screens/SplashScreen";
-import { OnboardingFlow } from "./components/onboarding/OnboardingFlow";
+// Removed: import { OnboardingFlow } from "./components/onboarding/OnboardingFlow"; 
 import Toaster from "./components/ui/Toaster";
 
 // Drawer param types - only serializable data!
@@ -37,9 +38,10 @@ const queryClient = new QueryClient();
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const { hasCompletedOnboarding, completeOnboarding } = useOnboarding();
+  // Removed: const { hasCompletedOnboarding, completeOnboarding } = useOnboarding(); 
 
   useEffect(() => {
+    // Only manage the initial splash screen timeout
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
@@ -50,9 +52,8 @@ export default function App() {
         <LanguageProvider>
           {isLoading ? (
             <SplashScreen isVisible={true} />
-          ) : !hasCompletedOnboarding ? (
-            <OnboardingFlow onComplete={completeOnboarding} />
           ) : (
+            // The main content now loads immediately after the splash screen
             <>
               <NavigationContainer>
                 <Drawer.Navigator initialRouteName="Home" screenOptions={{ headerShown: true }}>
@@ -61,12 +62,11 @@ export default function App() {
                   <Drawer.Screen name="SearchKeyword" component={SearchKeywordScreen} options={{ title: "Search Keyword" }} />
                   <Drawer.Screen name="UpdateLocation" component={UpdateLocationScreen} options={{ title: "Update Location" }} />
                   <Drawer.Screen name="ResourceList" component={ResourceListScreen} options={{ title: "Resources List" }} />
-                  {/* Use render prop here so you can pass extra props if needed */}
-                      <Drawer.Screen
-                        name="ResourceDetail"
-                        component={ResourceDetailScreen}
-                        options={{ title: "Resource Detail" }}
-                      />
+                  <Drawer.Screen
+                    name="ResourceDetail"
+                    component={ResourceDetailScreen}
+                    options={{ title: "Resource Detail" }}
+                  />
                   <Drawer.Screen name="Favorites" component={FavoritesScreen} options={{ title: "Favorites" }} />
                   <Drawer.Screen name="About" component={AboutScreen} options={{ title: "About" }} />
                   <Drawer.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
