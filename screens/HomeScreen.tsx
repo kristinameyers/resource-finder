@@ -8,9 +8,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   Keyboard,
-  SafeAreaView,
+  SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons'; // Import for error icon
 import { useQuery } from '@tanstack/react-query';
 import { useOnboarding } from '../hooks/use-onboarding';
 import { useLocation } from '../hooks/use-location';
@@ -22,12 +23,21 @@ import { useFocusEffect } from '@react-navigation/native';
 import CategoryGrid from '../components/CategoryGrid';
 import CategoryGridSkeleton from '../components/CategoryGridSkeleton';
 
-import type { Category } from '../types/shared-schema';
+import type { Category, ResourcePage } from '../types/shared-schema';
 import type { NavigationProp } from '@react-navigation/native';
 import { getCategoryIcon } from '../taxonomy';
 
 const new211Logo = require('../assets/images/new-211-logo.png');
 const SAVED_ZIP = 'saved_zip_code';
+
+// GEOGRAPHIC VALIDATION
+const SANTA_BARBARA_COUNTY_ZIPS = [
+  '93101', '93102', '93103', '93105', '93106', '93107', '93108', '93109', '93110',
+  '93111', '93116', '93117', '93118', '93120', '93121', '93130', '93140', '93150',
+  '93160', '93190', '93199', '93254', '93427', '93429', '93436', '93437', '93441',
+  '93454', '93455', '93458', '93460', '93463', '93464', '92092', '93465', '93483',
+  '93486', '93487', '93488', '93490'
+];
 
 type HomeScreenNavProp = {
   navigation: NavigationProp<any>;
@@ -39,9 +49,10 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
   const { text: footerText } = useTranslatedText('Resource Finder') || { text: 'Resource Finder' };
   const { text: footerSubtext } = useTranslatedText('Find local resources and services') || { text: 'Find local resources and services' };
 
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [zipCode, setZipCode] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [zipCode, setZipCode] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [zipTouched, setZipTouched] = useState(false); // Track user-initiated zip validation
 
   const {
     locationState,
@@ -63,41 +74,46 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
         setLocationByZipCode?.(saved);
       }
     });
-  }, [setLocationByZipCode]);
+  }, []);
 
   const handleSaveZip = useCallback(async () => {
-  // Dismiss the on-screen keyboard
-  Keyboard.dismiss();
-
-  try {
-    await AsyncStorage.setItem(SAVED_ZIP, zipCode);
-  } catch (e) {
-    console.error('Failed saving ZIP', e);
-  }
-}, [zipCode]);
-
-
-  // 👇 Define handleClearZip and handleZipChange here 👇
+    setZipTouched(true); // Mark that user wants zip validated
+    Keyboard.dismiss();
+    try {
+      await AsyncStorage.setItem(SAVED_ZIP, zipCode);
+    } catch (e) {
+      console.error('Failed saving ZIP', e);
+    }
+  }, [zipCode]);
 
   const handleClearZip = useCallback(async () => {
     setZipCode('');
+    setZipTouched(false);
     clearLocation?.();
     try {
       await AsyncStorage.removeItem(SAVED_ZIP);
       console.log('✅ Cleared saved zip code');
     } catch (e) {
-      console.error('Failed clearing saved ZIP', e);
+      console.error('Failed clearing ZIP', e);
     }
   }, [clearLocation]);
 
   const handleZipChange = useCallback(
     (zip: string) => {
       setZipCode(zip);
-      setLocationByZipCode?.(zip);
+      setZipTouched(false); // Reset touch state on manual change
+      if (zip.length === 5) {
+        setLocationByZipCode?.(zip);
+      }
     },
     [setLocationByZipCode]
   );
-  // 👆 End handler definitions 👆
+
+  const handleStartNewSearch = useCallback(async () => {
+    setZipCode('');
+    setZipTouched(false);
+    await AsyncStorage.removeItem(SAVED_ZIP);
+  }, []);
 
   const { data: categories = [], isLoading: loadingCategories } = useQuery<Category[]>({
     queryKey: ['categories'],
@@ -139,7 +155,7 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     data: mainCategoryResources = { items: [], total: 0, hasMore: false },
     isLoading: loadingMainCategoryResources,
     error: mainCategoryError,
-  } = useQuery({
+  } = useQuery<ResourcePage>({
     queryKey: ['main-category-resources', selectedCategoryId, zipCode],
     queryFn: () => {
       if (!selectedCategoryId) return Promise.resolve({ items: [], total: 0, hasMore: false });
@@ -168,6 +184,23 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     await requestCurrentLocation?.();
   }, [requestCurrentLocation]);
 
+  // --- ZIP CODE VALIDATION: placed after hooks, before main return ---
+  if (zipTouched && zipCode.length === 5 && !SANTA_BARBARA_COUNTY_ZIPS.includes(zipCode)) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <View style={styles.iconCircle}>
+          <MaterialIcons name="error-outline" size={54} color="#c00" />
+        </View>
+        <Text style={styles.errorTitle}>Out of Service Area</Text>
+        <Text style={styles.error}>That zip code is out of our service range</Text>
+        <TouchableOpacity style={styles.retryBtn} onPress={handleStartNewSearch}>
+          <Text style={styles.retryText}>Start New Search</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  // --- MAIN RENDER ---
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView keyboardShouldPersistTaps="handled">
@@ -238,6 +271,40 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 32,
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#ffe5e5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#c00',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  errorTitle: {
+    fontSize: 20,
+    color: "#c00",
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 9,
+  },
+  error: {
+    color: "#c00",
+    fontSize: 17,
+    textAlign: "center",
+    marginBottom: 10,
+  },
   logo: { width: 160, height: 80, margin: 8, resizeMode: 'contain', alignSelf: 'center' },
   header: { backgroundColor: '#005191', padding: 15, alignItems: 'center' },
   title: { fontSize: 22, fontWeight: 'bold', color: 'white' },
@@ -261,4 +328,17 @@ const styles = StyleSheet.create({
   clearButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
   categoriesSection: { padding: 15 },
   footer: { padding: 16, alignItems: 'center' },
+  retryBtn: {
+    marginTop: 22,
+    backgroundColor: "#005191",
+    paddingHorizontal: 22,
+    paddingVertical: 14,
+    borderRadius: 7,
+    shadowColor: '#005191',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.13,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  retryText: { color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.2 },
 });

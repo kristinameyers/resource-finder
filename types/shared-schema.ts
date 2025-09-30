@@ -403,6 +403,10 @@ export interface ResourcePage {
   items: Resource[];
   total: number;
   hasMore: boolean;
+  /** True if the backend switched to county-based fallback (ZIP out of area) */
+  usedCountyInstead?: boolean;
+  /** Error message for out-of-area or query issues */
+  error?: string;
 }
 
 /* ------------------------------------------------------------------

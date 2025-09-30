@@ -13,9 +13,9 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
-  TextInput,
   Keyboard,
 } from "react-native";
+import ZipOutOfServiceScreen from '../components/ZipOutOfServiceScreen';
 import {
   useRoute,
   RouteProp,
@@ -24,7 +24,6 @@ import {
 } from "@react-navigation/native";
 import {
   useInfiniteQuery,
-  QueryFunctionContext,
   useQuery,
 } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,10 +35,11 @@ import {
   storeResourceForDetailView,
   getResourceUniqueId,
   haversineDistance,
-  ResourcePage,
 } from "../api/resourceApi";
+import {
+  ResourcePage,
+} from "../types/shared-schema";
 import { fetchLocationByZipCode } from "../api/locationApi";
-import type { Resource } from "../types/shared-schema";
 import type { HomeStackParamList } from "../navigation/AppNavigator";
 import SubcategoryDropdown from "../components/SubcategoryDropdown";
 import ResourceCard from "../components/ResourceCard";
@@ -76,6 +76,7 @@ export default function ResourceListScreen() {
   const { params } = useRoute<ResourceListRouteProp>();
   const { keyword, zipCode: zipParam = "", isSubcategory = false } = params ?? {};
 
+  const [isZipOutOfService, setIsZipOutOfService] = useState(false);
   const [zipCode, setZipCode] = useState(zipParam);
   const [subcat, setSubcat] = useState<string | null>(null);
   const fetchLock = useRef(false);
@@ -83,26 +84,52 @@ export default function ResourceListScreen() {
 
   useFocusEffect(useCallback(() => setSubcat(null), [keyword, zipCode]));
 
-  if (!keyword?.trim()) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.error}>Invalid category.</Text>
-      </View>
-    );
-  }
-
-  const { data: homeCoords, isLoading: coordsLoading } = useQuery<Coordinates>({
-  queryKey: ["zipCoords", zipCode],
-  queryFn: () => fetchLocationByZipCode(zipCode),
-  enabled: zipCode.length === 5,
-});
-
-
   useEffect(() => {
     AsyncStorage.getItem("saved_zip_code").then((saved) => {
       if (saved) setZipCode(saved);
     });
   }, []);
+
+  // Fetch main resource data
+  const queryKey = ["resources", keyword, zipCode, subcat] as const;
+  const {
+    data,
+    isLoading: loadingResources,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey,
+    initialPageParam: 0,
+    queryFn: ({ pageParam = 0 }) =>
+      subcat
+        ? fetchResourcesBySubcategory(subcat, zipCode, pageParam as number, PAGE_SIZE)
+        : isSubcategory
+          ? fetchResourcesBySubcategory(keyword, zipCode, pageParam as number, PAGE_SIZE)
+          : fetchResourcesByMainCategory(keyword, zipCode, pageParam as number, PAGE_SIZE),
+    getNextPageParam: (lastPage: ResourcePage) =>
+      lastPage.hasMore ? lastPage.items.length : undefined,
+    retry: 2,
+  });
+
+  // Watch for zip fallback
+  useEffect(() => {
+    if (data?.pages && data.pages[0]?.usedCountyInstead) {
+      setIsZipOutOfService(true);
+    } else {
+      setIsZipOutOfService(false);
+    }
+  }, [data]);
+
+  // Fetch origin coordinates for distance calc
+  const { data: homeCoords, isLoading: coordsLoading } = useQuery<Coordinates>({
+    queryKey: ["zipCoords", zipCode],
+    queryFn: () => fetchLocationByZipCode(zipCode),
+    enabled: zipCode.length === 5,
+  });
 
   const handleZipChange = useCallback((z: string) => setZipCode(z), []);
   const handleSaveZip = useCallback(async () => {
@@ -114,56 +141,44 @@ export default function ResourceListScreen() {
     await AsyncStorage.removeItem("saved_zip_code");
   }, []);
 
-  const queryKey = ["resources", keyword, zipCode, subcat] as const;
+  if (isZipOutOfService) {
+    return (
+      <ZipOutOfServiceScreen onStartNewSearch={() => navigation.replace('Home')} />
+    );
+  }
 
-  const {
-  data,
-  isLoading: loadingResources,
-  isError,
-  error,
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
-  refetch,
-} = useInfiniteQuery({
-  queryKey,
-  initialPageParam: 0, // REQUIRED!
-  queryFn: ({ pageParam = 0 }) =>
-    subcat
-      ? fetchResourcesBySubcategory(subcat, zipCode, pageParam as number, PAGE_SIZE)
-      : isSubcategory
-      ? fetchResourcesBySubcategory(keyword, zipCode, pageParam as number, PAGE_SIZE)
-      : fetchResourcesByMainCategory(keyword, zipCode, pageParam as number, PAGE_SIZE),
-  getNextPageParam: (lastPage: ResourcePage) =>
-    lastPage.hasMore ? lastPage.items.length : undefined,
-  retry: 2,
-});
-
+  if (!keyword?.trim()) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.error}>Invalid category.</Text>
+      </View>
+    );
+  }
 
   const resources = useMemo(() => {
     const all = data?.pages.flatMap((p) => p.items) ?? [];
     const deduped = all.filter(
-  (r, i, a) =>
-    r &&
-    a.findIndex((x) => x && getResourceUniqueId(x) === getResourceUniqueId(r)) === i
-);
+      (r, i, a) =>
+        r &&
+        a.findIndex((x) => x && getResourceUniqueId(x) === getResourceUniqueId(r)) === i
+    );
     if (homeCoords) {
       return deduped.sort((a, b) => {
         const aDist = a.address?.latitude
           ? haversineDistance(
-              homeCoords.latitude,
-              homeCoords.longitude,
-              Number(a.address.latitude),
-              Number(a.address.longitude)
-            )
+            homeCoords.latitude,
+            homeCoords.longitude,
+            Number(a.address.latitude),
+            Number(a.address.longitude)
+          )
           : Infinity;
         const bDist = b.address?.latitude
           ? haversineDistance(
-              homeCoords.latitude,
-              homeCoords.longitude,
-              Number(b.address.latitude),
-              Number(b.address.longitude)
-            )
+            homeCoords.latitude,
+            homeCoords.longitude,
+            Number(b.address.latitude),
+            Number(b.address.longitude)
+          )
           : Infinity;
         return aDist - bDist;
       });
@@ -202,50 +217,28 @@ export default function ResourceListScreen() {
     );
   }
 
+  // ----- HEADER STRUCTURE: This guarantees center alignment -----
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Home")}
-          style={styles.headerBack}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#005191" />
-          <Text style={styles.headerBackText}>Home</Text>
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
-            {`${subcat || keyword} Resources`}
-          </Text>
-          <Text style={styles.headerSubtitle}>{resources.length} found</Text>
-        </View>
-        <View style={styles.headerRight} />
-      </View>
-
-      <View style={styles.searchSection}>
-        <View style={styles.locationBar}>
-          <MaterialIcons name="location-on" size={24} color="#666" />
-          <TextInput
-            style={styles.locationInput}
-            placeholder="ZIP code"
-            placeholderTextColor="#666"
-            value={zipCode}
-            onChangeText={handleZipChange}
-            keyboardType="numeric"
-            maxLength={5}
-            clearButtonMode="while-editing"
-          />
-          {zipCode !== "" && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={handleClearZip}
-            >
-              <Text style={styles.clearButtonText}>Clear</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveZip}>
-            <Text style={styles.saveButtonText}>Save</Text>
+      <View style={styles.headerBar}>
+        <View style={styles.headerSide}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Home")}
+            style={styles.headerBack}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="#005191" />
+            <Text style={styles.headerBackText}>Home</Text>
           </TouchableOpacity>
         </View>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle} numberOfLines={2} ellipsizeMode="tail">
+            {subcat ? subcat : keyword}
+          </Text>
+          <Text style={styles.headerSubtitle}>
+            {resources.length} found
+          </Text>
+        </View>
+        <View style={styles.headerSide}>{/* Placeholder, retains symmetry */}</View>
       </View>
 
       <View style={styles.dropdownWrapper}>
@@ -267,11 +260,11 @@ export default function ResourceListScreen() {
             distanceMiles={
               homeCoords && item.address?.latitude
                 ? haversineDistance(
-                    homeCoords.latitude,
-                    homeCoords.longitude,
-                    Number(item.address.latitude),
-                    Number(item.address.longitude)
-                  )
+                  homeCoords.latitude,
+                  homeCoords.longitude,
+                  Number(item.address.latitude),
+                  Number(item.address.longitude)
+                )
                 : undefined
             }
             onPress={async () => {
@@ -315,51 +308,46 @@ export default function ResourceListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
+  message: { fontSize: 18, color: "#c00", marginBottom: 20, textAlign: "center" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  button: { backgroundColor: "#005191", padding: 12, borderRadius: 6 },
+  buttonText: { color: "white", fontSize: 16 },
   info: { marginTop: 12, color: "#555" },
   error: { color: "#c00", marginBottom: 12 },
   retryBtn: { backgroundColor: "#005191", padding: 8, borderRadius: 6 },
   retryText: { color: "#fff", fontWeight: "600" },
-  headerContainer: {
+  headerBar: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     backgroundColor: "white",
-    padding: 12,
+    paddingHorizontal: 8,
+    paddingTop: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
   },
+  headerSide: {
+    width: 70, // enough space for the back button + "Home"
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
   headerBack: { flexDirection: "row", alignItems: "center" },
   headerBackText: { marginLeft: 4, color: "#005191", fontSize: 16 },
-  headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "600" },
-  headerSubtitle: { fontSize: 16, color: "#666" },
-  headerRight: { width: 60 },
-  searchSection: { backgroundColor: "white", padding: 12 },
-  locationBar: {
-    flexDirection: "row",
+  headerCenter: {
+    flex: 1,
     alignItems: "center",
-    backgroundColor: "#fdfdfd",
-    borderRadius: 8,
-    padding: 10,
+    justifyContent: "center",
   },
-  locationInput: { flex: 1, marginLeft: 8, fontSize: 16, color: "#333" },
-  clearButton: {
-    marginLeft: 8,
-    backgroundColor: "#dc3545",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    paddingBottom: 2,
+    color: "#000000",
+    textAlign: "center",
   },
-  clearButtonText: { color: "white", fontSize: 14 },
-  saveButton: {
-    marginLeft: 8,
-    backgroundColor: "#005191",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  saveButtonText: { color: "white", fontSize: 14 },
-  dropdownWrapper: { backgroundColor: "white" },
+  headerSubtitle: { fontSize: 16, color: "#666" },
+  searchSection: { backgroundColor: "white", padding: 12 },
+  dropdownWrapper: { backgroundColor: "white", width: "100%" },
   footer: { padding: 16 },
 });

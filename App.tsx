@@ -2,10 +2,9 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// App contexts
+// App contexts and onboarding
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
-// Onboarding and screens
 import { useOnboarding } from "./hooks/use-onboarding";
 import HomeScreen from "./screens/HomeScreen";
 import SearchCategoryScreen from "./screens/SearchCategoryScreen";
@@ -20,7 +19,7 @@ import { SplashScreen } from "./screens/SplashScreen";
 import { OnboardingFlow } from "./components/onboarding/OnboardingFlow";
 import Toaster from "./components/ui/Toaster";
 
-// Drawer param types
+// Drawer param types - only serializable data!
 export type DrawerParamList = {
   Home: undefined;
   SearchCategory: undefined;
@@ -33,7 +32,6 @@ export type DrawerParamList = {
   Settings: undefined;
 };
 
-// Make sure Drawer is declared after createDrawerNavigator import
 const Drawer = createDrawerNavigator<DrawerParamList>();
 const queryClient = new QueryClient();
 
@@ -63,7 +61,12 @@ export default function App() {
                   <Drawer.Screen name="SearchKeyword" component={SearchKeywordScreen} options={{ title: "Search Keyword" }} />
                   <Drawer.Screen name="UpdateLocation" component={UpdateLocationScreen} options={{ title: "Update Location" }} />
                   <Drawer.Screen name="ResourceList" component={ResourceListScreen} options={{ title: "Resources List" }} />
-                  <Drawer.Screen name="ResourceDetail" component={ResourceDetailScreen} options={{ title: "Resource Detail" }} initialParams={{ id: "" }} />
+                  {/* Use render prop here so you can pass extra props if needed */}
+                      <Drawer.Screen
+                        name="ResourceDetail"
+                        component={ResourceDetailScreen}
+                        options={{ title: "Resource Detail" }}
+                      />
                   <Drawer.Screen name="Favorites" component={FavoritesScreen} options={{ title: "Favorites" }} />
                   <Drawer.Screen name="About" component={AboutScreen} options={{ title: "About" }} />
                   <Drawer.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />

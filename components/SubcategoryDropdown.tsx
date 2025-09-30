@@ -29,31 +29,29 @@ export default function SubcategoryDropdown({
       <TouchableOpacity
         style={styles.button}
         onPress={() => setOpen((v) => !v)}
+        activeOpacity={1}
       >
         <Text style={styles.buttonText}>
-          {selectedSubcategory || "All Subcategories"}
+          {selectedSubcategory || "Click to Search Subcategories"}
         </Text>
         <MaterialIcons
           name={open ? "expand-less" : "expand-more"}
-          size={24}
-          color="#005191"
+          size={28}
+          color="#fff"
         />
       </TouchableOpacity>
       {open && (
         <ScrollView style={styles.list}>
+          {/* Optionally add an "All Subcategories" menu item at top */}
           <TouchableOpacity
             style={styles.item}
             onPress={() => {
               onSelectSubcategory(null);
               setOpen(false);
             }}
+            activeOpacity={1}
           >
-            <Text
-              style={[
-                styles.itemText,
-                !selectedSubcategory && styles.selectedText,
-              ]}
-            >
+            <Text style={[styles.itemText, !selectedSubcategory && styles.selectedText]}>
               All Subcategories
             </Text>
           </TouchableOpacity>
@@ -65,6 +63,7 @@ export default function SubcategoryDropdown({
                 onSelectSubcategory(sub.name);
                 setOpen(false);
               }}
+              activeOpacity={1}
             >
               <Text
                 style={[
@@ -83,25 +82,28 @@ export default function SubcategoryDropdown({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 12 },
+  container: { padding: 0 }, // removed padding for flush dropdown
   button: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#539ed0",
+    padding: 14,
+    borderRadius: 2,
   },
-  buttonText: { fontSize: 16, color: "#005191" },
+  buttonText: { fontSize: 17, color: "#fff", fontWeight: "600" },
   list: {
-    maxHeight: 200,
-    backgroundColor: "white",
-    borderWidth: 1,
+    maxHeight: 250,
+    backgroundColor: "#539ed0",
+    borderWidth: 0,
     borderColor: "#ddd",
-    marginTop: 4,
+    marginBottom: 1,
   },
   item: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    padding: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#ccc",
   },
-  itemText: { fontSize: 16, color: "#333" },
-  selectedText: { color: "#005191", fontWeight: "600" },
+  itemText: { fontSize: 17, color: "#fff", fontWeight: "600" },
+  selectedText: { color: "#76ced9", fontWeight: "600" },
 });

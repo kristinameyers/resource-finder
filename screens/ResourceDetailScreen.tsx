@@ -8,6 +8,7 @@ import {
   Linking,
   ActivityIndicator,
 } from 'react-native';
+import type { DrawerScreenProps } from '@react-navigation/drawer';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText';
@@ -17,21 +18,19 @@ import {
   stripHtmlTags,
 } from '../api/resourceApi';
 
-type ResourceDetailScreenProps = {
-  route: {
-    params: {
-      resourceId: string;
-      backToList?: Record<string, any>;
-    };
-  };
-  navigation: any;
+// DrawerParamList must match your navigation setup (with NO function params)
+export type DrawerParamList = {
+  ResourceList: { category?: string; keyword?: string };
+  ResourceDetail: { id: string };
 };
+
+type ResourceDetailScreenProps = DrawerScreenProps<DrawerParamList, 'ResourceDetail'>;
 
 export default function ResourceDetailScreen({
   route,
   navigation,
 }: ResourceDetailScreenProps) {
-  const { resourceId, backToList } = route.params;
+  const { id } = route.params;
 
   const { text: backText } = useTranslatedText('Back');
   const { text: resourceDetailText } = useTranslatedText('Resource Details');
@@ -54,32 +53,26 @@ export default function ResourceDetailScreen({
     isError,
     refetch,
   } = useQuery<ServiceAtLocationDetails | null>({
-    queryKey: ['serviceAtLocationDetails', resourceId],
-    queryFn: () => fetchServiceAtLocationDetails(resourceId),
-    enabled: !!resourceId,
+    queryKey: ['serviceAtLocationDetails', id],
+    queryFn: () => fetchServiceAtLocationDetails(id),
+    enabled: !!id,
   });
 
   useEffect(() => {
     if (resourceDetails) {
       console.log('Loaded resource details:', {
-        id: resourceId,
+        id: id,
         name: resourceDetails.serviceName,
         org: resourceDetails.organizationName,
       });
     }
-  }, [resourceDetails, resourceId]);
+  }, [resourceDetails, id]);
 
   const renderHeader = () => (
     <View style={styles.header}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => {
-          if (backToList) {
-            navigation.navigate('ResourceList', backToList);
-          } else {
-            navigation.goBack();
-          }
-        }}
+        onPress={() => navigation.goBack()}
       >
         <MaterialIcons name="arrow-back" size={24} color="#005191" />
         <Text style={styles.backButtonText}>{backText}</Text>
@@ -107,7 +100,7 @@ export default function ResourceDetailScreen({
         {renderHeader()}
         <View style={styles.centerContainer}>
           <Text style={styles.noDataText}>Resource details not available</Text>
-          <Text style={styles.debugText}>Resource ID: {resourceId}</Text>
+          <Text style={styles.debugText}>Resource ID: {id}</Text>
           <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
             <MaterialIcons name="refresh" size={20} color="#005191" />
             <Text style={styles.retryText}>Retry</Text>
@@ -165,7 +158,6 @@ export default function ResourceDetailScreen({
             ) => {
               const phoneNumber = phone.number;
               if (!phoneNumber) return null;
-              
               return (
                 <TouchableOpacity
                   key={idx}
@@ -268,7 +260,7 @@ export default function ResourceDetailScreen({
             </>
           )}
           {Array.isArray(resourceDetails.languagesOffered) &&
-            resourceDetails.languagesOffered.length > 0 && (
+          resourceDetails.languagesOffered.length > 0 && (
             <>
               <Text style={styles.label}>{languagesText}</Text>
               <View style={styles.badgeRow}>
