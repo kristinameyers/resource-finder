@@ -1,4 +1,3 @@
-import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Skeleton } from "./ui/Skeleton";
 import { Card } from "./ui/Card";

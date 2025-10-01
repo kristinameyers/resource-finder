@@ -1,5 +1,3 @@
-import React from "react";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { ImageSourcePropType } from "react-native";
 
 // Reference PNGs with correct paths (from /components to /assets/icons)

@@ -1,41 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFavorites } from '../hooks/use-favorites';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FavoriteResource } from '../contexts/FavoritesContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText'; // Adapt import if needed
 import { useQuery } from '@tanstack/react-query';
 import { fetchCategories, fetchSubcategories } from '../api/archive/api';
 import { Category, Subcategory } from '../types/shared-schema';
 
-interface FavoriteResource {
-  id: string;
-  name: string;
-  description: string;
-  categoryId: string;
-  subcategoryId?: string;
-  organization?: string;
-  address?: string;
-  phone?: string;
-  phoneNumbers?: {
-    main?: string;
-    [key: string]: any;
-  };
-  zipCode?: string;
-  distance?: number;
-}
-
 // Optionally typed navigation
 export default function FavoritesScreen({ navigation }: any) {
-  const [favorites, setFavorites] = useState<FavoriteResource[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 👇 Hook to access state and functions
+  const { 
+    favorites, 
+    isLoading, // manage this implicitly
+    loadFavorites,
+    removeFavorite,
+    clearAllFavorites
+  } = useFavorites();
 
   // Translations
   const { text: favoritesText } = useTranslatedText("My Favorites");
@@ -43,7 +33,6 @@ export default function FavoritesScreen({ navigation }: any) {
   const { text: noFavoritesDescText } = useTranslatedText("Start by adding resources to your favorites when browsing.");
   const { text: removeText } = useTranslatedText("Remove from favorites");
   const { text: viewDetailsText } = useTranslatedText("View Details");
-  // Add other translation hooks as needed...
 
   // Fetch categories/subcategories for display
   const { data: categories = [] } = useQuery({
@@ -56,38 +45,11 @@ export default function FavoritesScreen({ navigation }: any) {
   });
 
   useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
     loadFavorites();
-  }, []);
-
-  // Load favorites from AsyncStorage (mobile)
-  const loadFavorites = async () => {
-    try {
-      const storedFavorites = await AsyncStorage.getItem('favorites');
-      if (storedFavorites) {
-        setFavorites(JSON.parse(storedFavorites));
-      }
-    } catch (error) {
-      console.error('Error loading favorites:', error);
-      setFavorites([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeFavorite = async (resourceId: string) => {
-    try {
-      const updatedFavorites = favorites.filter(f => f.id !== resourceId);
-      setFavorites(updatedFavorites);
-      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-    } catch (error) {
-      console.error('Error removing favorite:', error);
-    }
-  };
-
-  const clearAllFavorites = async () => {
-    setFavorites([]);
-    await AsyncStorage.removeItem('favorites');
-  };
+    });
+    return unsubscribe;
+  }, [navigation, loadFavorites]);
 
   const getCategoryName = (categoryId: string) =>
     categories.find((c: Category) => c.id === categoryId)?.name || 'Unknown Category';
@@ -132,7 +94,7 @@ export default function FavoritesScreen({ navigation }: any) {
     </TouchableOpacity>
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>

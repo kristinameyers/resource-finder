@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, AccessibilityState, Image, ImageSourcePropType } from "react-native";
 import { Category } from "../types/shared-schema";
 import { getCategoryGridIcon } from './CategoryIcons';

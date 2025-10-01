@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+// React Native components
 import {
   View,
   Text,
@@ -13,23 +14,26 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
-  TextInput,
   Keyboard,
 } from "react-native";
+// Navigation and data fetching
 import {
   useRoute,
   RouteProp,
   useNavigation,
   useFocusEffect,
 } from "@react-navigation/native";
+// React Query
 import {
   useInfiniteQuery,
   QueryFunctionContext,
   useQuery,
 } from "@tanstack/react-query";
+// Async Storage for rate limiting
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// Icons
 import { MaterialIcons } from "@expo/vector-icons";
-
+// API functions
 import {
   fetchResourcesByMainCategory,
   fetchResourcesBySubcategory,
@@ -39,10 +43,13 @@ import {
   ResourcePage,
 } from "../api/resourceApi";
 import { fetchLocationByZipCode } from "../api/locationApi";
+// Types
+import type { FavoriteResource } from "../contexts/FavoritesContext";
 import type { Resource } from "../types/shared-schema";
 import type { HomeStackParamList } from "../navigation/AppNavigator";
 import SubcategoryDropdown from "../components/SubcategoryDropdown";
 import ResourceCard from "../components/ResourceCard";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type ResourceListRouteProp = RouteProp<HomeStackParamList, "ResourceList">;
 interface Coordinates {
@@ -147,8 +154,11 @@ export default function ResourceListScreen() {
     const deduped = all.filter(
   (r, i, a) =>
     r &&
+  // ✅ 1. Filter out any resources that don't have a unique ID
+  getResourceUniqueId(r) &&
     a.findIndex((x) => x && getResourceUniqueId(x) === getResourceUniqueId(r)) === i
-);
+) as (Resource & FavoriteResource)[]; // ✅ 2. Cast the result to the combined type
+      // Sort by distance if we have homeCoords
     if (homeCoords) {
       return deduped.sort((a, b) => {
         const aDist = a.address?.latitude
@@ -205,7 +215,7 @@ export default function ResourceListScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <TouchableOpacity
           onPress={() => navigation.navigate("Home")}
@@ -284,7 +294,7 @@ export default function ResourceListScreen() {
           <Text style={styles.info}>No more results.</Text>
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

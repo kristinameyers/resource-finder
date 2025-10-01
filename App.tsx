@@ -5,8 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // App contexts
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { FavoritesProvider } from "./contexts/FavoritesContext";
 // Removed: import { useOnboarding } from "./hooks/use-onboarding"; 
-
+// App screens
 import HomeScreen from "./screens/HomeScreen";
 import SearchCategoryScreen from "./screens/SearchCategoryScreen";
 import SearchKeywordScreen from "./screens/SearchKeywordScreen";
@@ -72,6 +73,7 @@ export default function App() {
             <SplashScreen isVisible={true} />
           ) : (
             // The main content now loads immediately after the splash screen
+            <FavoritesProvider>
             <>
               <NavigationContainer>
                 <Drawer.Navigator initialRouteName="Home" screenOptions={{ headerShown: true }}>
@@ -92,6 +94,7 @@ export default function App() {
               </NavigationContainer>
               <Toaster />
             </>
+            </FavoritesProvider>
           )}
         </LanguageProvider>
       </AccessibilityProvider>
