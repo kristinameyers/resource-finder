@@ -9,6 +9,26 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+// Define the complex object types first
+export interface AddressObject {
+    streetAddress?: string;
+    city?: string;
+    county?: string;
+    stateProvince?: string;
+    postalCode?: string;
+    country?: string;
+    latitude?: number;
+    longitude?: number;
+}
+
+export interface PhoneObject {
+    main?: string;
+    // Add other phone properties if necessary, e.g., 'TTY', 'Fax', etc.
+    [key: string]: any; 
+}
+
+
 // Re-using the FavoriteResource interface from FavoritesScreen
 export interface FavoriteResource {
   id: string;
@@ -17,8 +37,8 @@ export interface FavoriteResource {
   categoryId: string;
   subcategoryId?: string;
   organization?: string;
-  address?: string;
-  phone?: string;
+  address?: AddressObject;
+  phone?: PhoneObject;
   phoneNumbers?: {
     main?: string;
     [key: string]: any;
@@ -131,10 +151,10 @@ export const FavoritesProvider: React.FC<FavoritesProviderProps> = ({ children }
 };
 
 // Custom hook to use the favorites context
-export const useFavoritesContext = () => {
+export const useFavorites = () => {
   const context = useContext(FavoritesContext);
   if (context === undefined) {
-    throw new Error('useFavoritesContext must be used within a FavoritesProvider');
+    throw new Error('useFavorites must be used within a FavoritesProvider');
   }
   return context;
 };

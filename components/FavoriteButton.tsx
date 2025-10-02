@@ -1,9 +1,10 @@
-import { Text, StyleSheet, ViewStyle } from "react-native";
+import React, { memo } from "react"; // Import memo from React
+import { Text, StyleSheet, ViewStyle, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "./ui/Button";
-import { useFavorites } from "../hooks/use-favorites";
+import { useFavorites } from "../contexts/FavoritesContext";
 import { useTranslatedText } from "./TranslatedText";
-import { FavoriteResource } from "../contexts/FavoritesContext";
+import type { FavoriteResource } from "../contexts/FavoritesContext";
 
 interface FavoriteButtonProps {
   resource: FavoriteResource;
@@ -11,91 +12,97 @@ interface FavoriteButtonProps {
   showText?: boolean;
 }
 
-export default function FavoriteButton({
+// 1. Define the component as a regular function
+function FavoriteButton({
   resource,
   style,
   showText = true,
 }: FavoriteButtonProps) {
-  // Use the resource.id for checking/toggling
   const { isFavorite, toggleFavorite } = useFavorites();
-  const favorite = isFavorite(resource.id); // Check status using ID
+  const favorite = isFavorite(resource.id);
 
   const { text: addToFavoritesText } = useTranslatedText("Add to Favorites");
   const { text: removeFromFavoritesText } = useTranslatedText("Remove from Favorites");
 
   const handleToggle = () => {
-    // Pass the full resource object to the toggle function
     toggleFavorite(resource);
   };
+  
+  // --- Start: Icon-Only Logic (List View) ---
+  if (!showText) {
+    return (
+      <TouchableOpacity
+        onPress={handleToggle}
+        style={[styles.iconOnlyContainer, style]} // Use a simple TouchableOpacity
+      >
+        <Ionicons
+          name={favorite ? "heart" : "heart-outline"}
+          size={24} // Use a clearly visible size
+          color={favorite ? "#D0021B" : "#333"} // Dark color for outline visibility
+        />
+      </TouchableOpacity>
+    );
+  }
+  // --- End: Icon-Only Logic ---
 
-  const baseStyle = showText ? styles.defaultButton : styles.iconOnlyButton;
-
-  const buttonVariant = showText ? (favorite ? "default" : "outline") : undefined;
-
-  const favoriteOverrideStyle = !showText && favorite ? styles.iconFavoriteOverride : styles.favorite;
-
+  // --- Start: Full Button Logic (Detail View) ---
   return (
     <Button
       onPress={handleToggle}
-      variant={buttonVariant} 
+      // Use the variant system ONLY for the full button view
+      variant={favorite ? "default" : "outline"} 
       style={[
-        baseStyle,
-        // ✅ Use the correct style override based on whether text is shown
-        favorite && favoriteOverrideStyle, 
+        styles.defaultButton,
+        favorite && styles.favorite,
         style,
       ] as ViewStyle[]}
     >
       <Ionicons
         name={favorite ? "heart" : "heart-outline"}
-        size={showText ? 18 : 22} // Using 22 for better visibility
-        color={favorite ? "#D0021B" : "#333"} //
-        style={{ marginRight: showText ? 8 : 0 }}
+        size={18} // Smaller icon for text button
+        color={favorite ? "#fff" : "#d33"}
+        style={{ marginRight: 8 }}
       />
-      // Conditionally render text based on showText prop
-      {showText && (
-        <Text style={[styles.text, favorite && styles.textActive]}>
-          {favorite ? removeFromFavoritesText : addToFavoritesText}
-        </Text>
-      )}
+      {/* Conditionally render text based on showText prop */}
+      <Text style={[styles.text, favorite && styles.textActive]}>
+        {favorite ? removeFromFavoritesText : addToFavoritesText}
+      </Text>
     </Button>
   );
 }
 
+// 2. Export the component wrapped in React.memo
+export default memo(FavoriteButton);
+
 const styles = StyleSheet.create({
+  // ✅ Simple container for the icon in the list view
+  iconOnlyContainer: {
+    backgroundColor: 'transparent',
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 0,
+    margin: 0,
+  },
+  
+  // Base style for the full button (when showText is true)
   defaultButton: {
     backgroundColor: '#005191',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: "center",
     paddingVertical: 10,
     paddingHorizontal: 15,
   },
-  iconOnlyButton: {
-    backgroundColor: 'transparent', // Make the background disappear
-    padding: 0,    // Remove all internal padding
-    margin: 0,     // Remove all external margin
-    width: 28,     // Set a small fixed width/height for the touch target
-    height: 28,    // Set a small fixed width/height for the touch target
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: 'transparent', 
-    borderWidth: 0,
-  },
-  iconFavoriteOverride: {
-    backgroundColor: 'transparent', // The background is handled by the icon color only
-    borderWidth: 0,
-  },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
+  
+  // Favorite state for the full button
   favorite: {
     backgroundColor: "#d33",
     borderWidth: 0,
   },
+  
   text: {
     color: "#d33",
     fontWeight: "500",

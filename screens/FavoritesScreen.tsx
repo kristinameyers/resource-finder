@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { useFavorites } from '../hooks/use-favorites';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FavoriteResource } from '../contexts/FavoritesContext';
+// Import useFavorites and FavoriteResource from the unified context file
+import { useFavorites, FavoriteResource } from '../contexts/FavoritesContext'; 
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslatedText } from '../components/TranslatedText'; // Adapt import if needed
+import { useTranslatedText } from '../components/TranslatedText';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCategories, fetchSubcategories } from '../api/archive/api';
 import { Category, Subcategory } from '../types/shared-schema';
@@ -21,7 +21,7 @@ export default function FavoritesScreen({ navigation }: any) {
   // 👇 Hook to access state and functions
   const { 
     favorites, 
-    isLoading, // manage this implicitly
+    isLoading,
     loadFavorites,
     removeFavorite,
     clearAllFavorites
@@ -57,42 +57,65 @@ export default function FavoritesScreen({ navigation }: any) {
   const getSubcategoryName = (subcategoryId?: string) =>
     subcategories.find((s: Subcategory) => s.id === subcategoryId)?.name || '';
 
-  const renderFavorite = ({ item }: { item: FavoriteResource }) => (
-    <TouchableOpacity
-      style={styles.favoriteCard}
-      onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
-    >
-      <View style={styles.favoriteContent}>
-        <Text style={styles.favoriteName} numberOfLines={2}>{item.name}</Text>
-        <View style={styles.categoryRow}>
-          <Text style={styles.categoryTag}>{getCategoryName(item.categoryId)}</Text>
-          {item.subcategoryId && (
-            <Text style={styles.subcategoryTag}> | {getSubcategoryName(item.subcategoryId)}</Text>
+  const renderFavorite = ({ item }: { item: FavoriteResource }) => {
+    
+    // 🌟 FIX: Format the address object into a string to prevent the crash
+    // Assumes item.address is an object { streetAddress, city, stateProvince, ...}
+    const formattedAddress = item.address && typeof item.address === 'object'
+        ? [
+            item.address.streetAddress,
+            item.address.city,
+            item.address.stateProvince,
+          ]
+          .filter(Boolean)
+          .join(", ")
+        : item.address; // Fallback if it was already a string
+        
+    // Also ensuring item.phone is only the main number if it is an object
+    const displayPhone = item.phone && typeof item.phone === 'object' ? item.phone.main : item.phone;
+
+
+    return (
+      <TouchableOpacity
+        style={styles.favoriteCard}
+        onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
+      >
+        <View style={styles.favoriteContent}>
+          <Text style={styles.favoriteName} numberOfLines={2}>{item.name}</Text>
+          <View style={styles.categoryRow}>
+            <Text style={styles.categoryTag}>{getCategoryName(item.categoryId)}</Text>
+            {item.subcategoryId && (
+              <Text style={styles.subcategoryTag}> | {getSubcategoryName(item.subcategoryId)}</Text>
+            )}
+            {item.distance !== undefined && (
+              <Text style={styles.distanceTag}> | {item.distance.toFixed(1)} mi</Text>
+            )}
+          </View>
+          <Text style={styles.favoriteDescription} numberOfLines={2}>{item.description}</Text>
+          
+          {/* 🌟 FIX: Render the formatted string */}
+          {formattedAddress && (
+            <Text style={styles.favoriteAddress} numberOfLines={1}>
+              <Ionicons name="location-outline" size={14} color="#888" /> {formattedAddress}
+            </Text>
           )}
-          {item.distance !== undefined && (
-            <Text style={styles.distanceTag}> | {item.distance.toFixed(1)} mi</Text>
+          
+          {/* FIX: Ensure item.phone is a string if it's an object */}
+          {displayPhone && (
+            <Text style={styles.favoritePhone} numberOfLines={1}>
+              <Ionicons name="call-outline" size={14} color="#888" /> {displayPhone}
+            </Text>
           )}
         </View>
-        <Text style={styles.favoriteDescription} numberOfLines={2}>{item.description}</Text>
-        {item.address && (
-          <Text style={styles.favoriteAddress} numberOfLines={1}>
-            <Ionicons name="location-outline" size={14} color="#888" /> {item.address}
-          </Text>
-        )}
-        {item.phone && (
-          <Text style={styles.favoritePhone} numberOfLines={1}>
-            <Ionicons name="call-outline" size={14} color="#888" /> {item.phone}
-          </Text>
-        )}
-      </View>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => removeFavorite(item.id)}
-      >
-        <Ionicons name="heart-dislike" size={24} color="#D0021B" />
+        <TouchableOpacity
+          style={styles.removeButton}
+          onPress={() => removeFavorite(item.id)}
+        >
+          <Ionicons name="heart-dislike" size={24} color="#D0021B" />
+        </TouchableOpacity>
       </TouchableOpacity>
-    </TouchableOpacity>
-  );
+    );
+  }; // <-- This closing bracket was previously missing, ensure it's here.
 
   if (isLoading) {
     return (
@@ -139,7 +162,7 @@ export default function FavoritesScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  // re-use or adapt your original styles here
+  // ... (Styles remain the same) ...
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',

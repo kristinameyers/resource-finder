@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import FavoriteButton from './FavoriteButton';
 import { FavoriteResource } from '../contexts/FavoritesContext';
 import type { Resource } from "../types/shared-schema";
-// Utility to get a unique identifier for a resource
+
 interface Props {
   resource: Resource & FavoriteResource;
   distanceMiles?: number;
+  // NOTE: onPress should ideally be wrapped in useCallback in the parent component
+  // to avoid breaking memoization if performance becomes an issue.
   onPress: () => void;
 }
-// Utility function to get a unique identifier for a resource
-export default function ResourceCard({
+
+// 1. Define the component as a regular function
+function ResourceCard({
   resource,
   distanceMiles,
   onPress,
@@ -63,6 +66,9 @@ export default function ResourceCard({
   );
 }
 
+// 2. Export the component wrapped in React.memo
+export default memo(ResourceCard);
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
@@ -88,7 +94,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4, // Add a bit of space below the header
   },
-  title: { fontSize: 16, fontWeight: "600", color: "#005191", flex: 1, flexShrink:1, paddingRight: 10 },
+  // Ensure the title shrinks to make space for the button
+  title: { 
+    fontSize: 16, 
+    fontWeight: "600", 
+    color: "#005191", 
+    flex: 1, 
+    flexShrink: 1, 
+    paddingRight: 10 
+  },
   distance: { fontSize: 15, color: "#555", marginTop: 4 },
   organization: { fontSize: 15, color: "#000", marginTop: 4 },
   address: { fontSize: 14, color: "#000", marginTop: 4 },
