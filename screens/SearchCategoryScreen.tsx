@@ -1,48 +1,56 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslatedText } from "../components/TranslatedText";
 
-// Use API base URL from Env
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "";
+// Import the static category data
+import { MAIN_CATEGORIES } from "../taxonomy";
 
-interface Category {
-  id: string;
+// Define the structure of the category map value
+interface StaticCategory {
   name: string;
-  icon: string;
-  taxonomyCode: string;
+  icon: string | undefined; // Allows undefined to match source data
+  keywords: string[];
+  taxonomyCode: any;
 }
 
+// Define the navigation parameters
 type RootStackParamList = {
-  ResourceList: { categoryId: string; useApi: boolean };
+  ResourceList: { category?: string; keyword: string; isSubcategory: boolean };
   SearchKeyword: undefined;
 };
+
+// Convert the object map into an array for easy mapping
+const CATEGORIES_ARRAY: (StaticCategory & { id: string })[] = Object.entries(MAIN_CATEGORIES).map(
+  ([id, cat]) => ({
+    id, // e.g., 'housing'
+    name: cat.name,
+    icon: cat.icon,
+    keywords: cat.keywords,
+    taxonomyCode: cat.taxonomyCode,
+  })
+);
 
 export default function SearchCategoryScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { text: searchCategoryText } = useTranslatedText("Search Category");
   const { text: searchKeywordText } = useTranslatedText("Search Keyword");
   const { text: searchByCategoryText } = useTranslatedText("Search by Category");
-  const { text: loadingCategoriesText } = useTranslatedText("Loading categories...");
 
-  // Fetch categories using .env API base
-  const { data: categoriesResponse, isLoading } = useQuery<Category[]>({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const url = `${API_BASE_URL}/categories`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      const json = await response.json();
-      return json.categories ?? [];
-    },
-  });
-  const categories = categoriesResponse || [];
+  // Removed all useQuery and related logic
 
-  const handleCategorySelect = (categoryId: string) => {
-    navigation.navigate("ResourceList", { categoryId, useApi: true });
+  const categories = CATEGORIES_ARRAY;
+  const isLoading = false; // Data is local
+
+  const handleCategorySelect = (categoryName: string) => {
+    navigation.navigate("ResourceList", {
+      category: categoryName,
+      keyword: categoryName,
+      isSubcategory: false,
+    });
   };
+
   const handleSearchKeyword = () => {
     navigation.navigate("SearchKeyword");
   };
@@ -59,25 +67,23 @@ export default function SearchCategoryScreen() {
       </View>
       <Text style={styles.title}>{searchByCategoryText}</Text>
       <View style={styles.grid}>
-        {isLoading ? (
-          <View style={styles.fullRow}>
-            <Text style={styles.loadingText}>{loadingCategoriesText}</Text>
-          </View>
-        ) : (
-          categories.map((category: Category) => (
-            <TouchableOpacity
-              key={category.id}
-              style={styles.categoryBtn}
-              onPress={() => handleCategorySelect(category.id)}
-            >
-              <View style={styles.iconCircle}>
-                <MaterialIcons name={category.icon as keyof typeof MaterialIcons.glyphMap} size={26} color="#257" />
-
-              </View>
-              <Text style={styles.categoryText}>{category.name}</Text>
-            </TouchableOpacity>
-          ))
-        )}
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
+            style={styles.categoryBtn}
+            onPress={() => handleCategorySelect(category.name)}
+          >
+            <View style={styles.iconCircle}>
+              <MaterialIcons
+                name={(category.icon || "local-offer") as keyof typeof MaterialIcons.glyphMap}
+                size={26}
+                color="#257"
+              />
+            </View>
+            <Text style={styles.categoryText}>{category.name}</Text>
+          </TouchableOpacity>
+        ))
+        }
       </View>
     </ScrollView>
   );
@@ -92,8 +98,6 @@ const styles = StyleSheet.create({
   toggleText: { fontWeight: "bold", color: "#222" },
   title: { fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 18, color: "#222" },
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", minHeight: 220 },
-  fullRow: { flex: 1, alignItems: "center", justifyContent: "center", width: "100%", paddingVertical: 50 },
-  loadingText: { fontSize: 17, color: "#666", textAlign: "center" },
   categoryBtn: {
     width: "30%", margin: "1.5%", backgroundColor: "#fff", borderRadius: 10, padding: 12,
     alignItems: "center", elevation: 2, shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 3,

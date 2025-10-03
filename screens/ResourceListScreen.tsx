@@ -94,8 +94,9 @@ export default function ResourceListScreen() {
       const id = getResourceUniqueId(item);
       if (!id) return;
       await storeResourceForDetailView(item);
+      
       navigation.navigate("ResourceDetail", {
-        id: id,
+        resourceId: id,
         backToList: {
           keyword,
           zipCode,
@@ -127,7 +128,7 @@ export default function ResourceListScreen() {
         if (saved) setZipCode(saved);
       });
     }
-  }, [zipParam]);
+  }, [zipParam]); 
 
   const handleZipChange = useCallback((z: string) => setZipCode(z), []);
   const handleSaveZip = useCallback(async () => {
@@ -161,6 +162,15 @@ export default function ResourceListScreen() {
       lastPage.hasMore ? lastPage.items.length : undefined,
     retry: 2,
   });
+
+  useEffect(() => {
+    // Only run if coordinates are present and are not undefined/null
+    if (homeCoords) {
+        console.log("📍 Home coordinates loaded. Refetching resources to apply API sorting.");
+        // This forces a new API call using the newly available location for distance sorting
+        refetch(); 
+    }
+  }, [homeCoords, refetch]);
 
   const resources = useMemo(() => {
     const all = data?.pages.flatMap((p) => p.items) ?? [];
@@ -357,15 +367,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "white",
     padding: 12,
+    marginTop: -60,
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
+    position: "relative",
   },
-  headerBack: { flexDirection: "row", alignItems: "center" },
+  headerBack: { flexDirection: "row", alignItems: "center", width: 90, zIndex: 1, },
   headerBackText: { marginLeft: 4, color: "#005191", fontSize: 16 },
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "600" },
-  headerSubtitle: { fontSize: 16, color: "#666" },
-  headerRight: { width: 60 },
+  headerTitle: { fontSize: 16, fontWeight: "600" },
+  headerSubtitle: { fontSize: 15, color: "#666" },
+  headerRight: { width: 90 },
   searchSection: { backgroundColor: "white", padding: 12 },
   locationBar: {
     flexDirection: "row",
@@ -378,7 +390,7 @@ const styles = StyleSheet.create({
   clearButton: {
     marginLeft: 8,
     backgroundColor: "#dc3545",
-    paddingHorizontal: 12,
+    paddingHorizontal: 2,
     paddingVertical: 6,
     borderRadius: 6,
   },

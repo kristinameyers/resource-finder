@@ -8,7 +8,7 @@ import {
   Linking,
   ActivityIndicator,
 } from 'react-native';
-import type { DrawerScreenProps } from '@react-navigation/drawer';
+import type { StackScreenProps } from '@react-navigation/stack';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText';
@@ -26,28 +26,28 @@ export type ResourceListBackParams = {
   selectedSubcategory: string | null;
 };
 
-// DrawerParamList must match your navigation setup (with NO function params)
-export type DrawerParamList = {
-  ResourceList: { 
-    category?: string; 
-    keyword?: string;
-    zipCode?: string; // <--- ADDED
-    isSubcategory?: boolean; // <--- ADDED
-    selectedSubcategory?: string | null; // <--- ADDED
+export type DetailScreenParams = {
+  ResourceList: {
+    keyword: string;
+    zipCode: string;
+    isSubcategory: boolean;
+    // Note: We don't explicitly pass selectedSubcategory here, as it's handled by keyword
   };
   ResourceDetail: {
-    id: string;
-    backToList: ResourceListBackParams; // <-- Now includes the backToList object
+    // These are the only params the screen cares about, regardless of the stack
+    resourceId: string; 
+    backToList?: ResourceListBackParams; // If you need this optional from ResourcesList
   };
 };
 
-type ResourceDetailScreenProps = DrawerScreenProps<DrawerParamList, 'ResourceDetail'>;
+type ResourceDetailScreenProps = StackScreenProps<DetailScreenParams, 'ResourceDetail'>;
 
 export default function ResourceDetailScreen({
   route,
   navigation,
 }: ResourceDetailScreenProps) {
-  const { id, backToList } = route.params;
+  const { resourceId, backToList } = route.params;
+  const id = resourceId;
 
   const { text: backText } = useTranslatedText('Back');
   const { text: resourceDetailText } = useTranslatedText('Resource Details');
@@ -87,19 +87,26 @@ export default function ResourceDetailScreen({
 
   const renderHeader = () => (
     <View style={styles.header}>
+
       <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => 
-          navigation.navigate('ResourceList', {
-            // Pass the keyword that was used to generate the list
-            keyword: backToList.selectedSubcategory || backToList.keyword,
-            // Pass the ZIP code used for the list
-            zipCode: backToList.zipCode,
-            // Use the correct flag to tell the list screen what kind of search to run
-            isSubcategory: Boolean(backToList.selectedSubcategory) || backToList.isSubcategory,
-          })
-        }
-      >
+  style={styles.backButton}
+  onPress={() => {
+    // 🛠️ FIX: Check if backToList exists. It will be undefined when coming from FavoritesScreen.
+    if (backToList && backToList.keyword) {
+      // 1. Navigation path for returning to the specific ResourceList search
+      navigation.navigate('ResourceList', {
+        // This is safe because we checked if backToList exists
+        keyword: backToList.selectedSubcategory || backToList.keyword,
+        zipCode: backToList.zipCode,
+        isSubcategory: Boolean(backToList.selectedSubcategory) || backToList.isSubcategory,
+      });
+    } else {
+      // 2. Navigation path for when coming from FavoritesScreen (no list context)
+      // Safely go back to the previous screen (which is the FavoritesScreen)
+      navigation.goBack(); 
+    }
+  }}
+>
         <MaterialIcons name="arrow-back" size={24} color="#005191" />
         <Text style={styles.backButtonText}>{backText}</Text>
       </TouchableOpacity>
@@ -121,6 +128,13 @@ export default function ResourceDetailScreen({
   }
 
   if (isError || !resourceDetails) {
+    // 🛑 TEMPORARY DEBUG LOGS 🛑
+  console.log("-----------------------------------------");
+  console.log("RENDERING DETAILS for ID:", id);
+  console.log("Service Name (Found):", resourceDetails?.serviceName);
+  console.log("Organization Name (Found):", resourceDetails?.organizationName);
+  console.log("Full Resource Details Object:", JSON.stringify(resourceDetails, null, 2)); 
+  console.log("-----------------------------------------");
     return (
       <View style={styles.container}>
         {renderHeader()}

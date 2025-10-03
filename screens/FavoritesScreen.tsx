@@ -62,7 +62,12 @@ export default function FavoritesScreen({ navigation }: any) {
   const renderFavorite = ({ item }: { item: FavoriteResource }) => {
     <TouchableOpacity
       style={styles.favoriteCard}
-      onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
+      onPress={() =>
+        // ✅ Explicitly pass the ID property from the FavoriteResource object
+        navigation.navigate('ResourceDetail', { 
+          resourceId: item.id, 
+        })
+        }
     >
         {/* ... Card Content ... */}
     </TouchableOpacity>
@@ -92,7 +97,11 @@ export default function FavoritesScreen({ navigation }: any) {
     return (
       <TouchableOpacity
         style={styles.favoriteCard}
-        onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
+        onPress={() => navigation.navigate('ResourceDetail', { 
+          id: item.id,
+          resource: item,
+        })
+      }
       >
         <View style={styles.favoriteContent}>
           {/* 1. Resource Name (Service Name or Organization fallback) */}
@@ -183,8 +192,10 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#005191',
     padding: 15,
-    paddingTop: 40,
+    paddingTop: 20,
     alignItems: 'center',
+    marginTop: -60,
+    marginBottom: 0,
   },
   headerTitle: {
     fontSize: 20,

@@ -1,4 +1,4 @@
-// src/taxonomy/index.ts
+// /taxonomy/index.ts
 /* --------------------------------------------------------------
    Taxonomy – a single import point for the whole app
    -------------------------------------------------------------- */

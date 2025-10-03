@@ -221,6 +221,7 @@ export async function fetchCategories(): Promise<Category[]> {
       name: cat.name,
       icon: cat.icon,
       keywords: Array.isArray(cat.keywords) ? cat.keywords : [],
+      taxonomyCode: cat.taxonomyCode,
     })
   );
   if (__DEV__) {

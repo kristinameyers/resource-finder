@@ -138,8 +138,9 @@ export interface ServiceAtLocationDetails {
 export interface Category {
   id: string;
   name: string;
-  icon?: string;
+  icon: string | undefined;
   keywords: string[];
+  taxonomyCode: string | undefined; 
 }
 
 /** Sub‑category – always belongs to a parent Category */
