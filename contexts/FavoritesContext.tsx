@@ -37,7 +37,13 @@ export interface FavoriteResource {
   categoryId: string;
   subcategoryId?: string;
   organization?: string;
-  address?: AddressObject;
+  address?: { 
+    streetAddress?: string;
+    city?: string;
+    stateProvince?: string;
+    latitude?: string | number;
+    longitude?: string | number;
+  }; 
   phone?: PhoneObject;
   phoneNumbers?: {
     main?: string;

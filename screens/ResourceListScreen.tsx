@@ -178,10 +178,16 @@ export default function ResourceListScreen() {
     const resourcesForDisplay = deduped.map(r => {
       // Use explicit type assertion for reliable property access
       const apiResource = r as any; 
-      
-      const primaryName = apiResource.name || apiResource.serviceName || apiResource.programName; 
-      const orgName = apiResource.organization || apiResource.organizationName; 
 
+      const primaryName = (
+        apiResource.nameServiceAtLocation || 
+        apiResource.nameService || 
+        apiResource.name ||
+        apiResource.organization || // Fallback to Organization name if all else fails
+        'Unknown Service Name'
+      );  
+      const orgName = apiResource.organization || apiResource.organizationName;
+      
       return ({
         ...r,
         // Guarantee 'id' is present for FavoritesContext
