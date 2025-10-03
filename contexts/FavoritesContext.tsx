@@ -111,6 +111,7 @@ export const FavoritesProvider: React.FC<FavoritesProviderProps> = ({ children }
       saveFavorites(updatedFavorites);
     } else if (typeof resource !== 'string') {
       // Add favorite (only if we have the full resource object)
+      console.log("Attempting to add resource:", resourceId);
       const updatedFavorites = [...favorites, resource];
       saveFavorites(updatedFavorites);
     }

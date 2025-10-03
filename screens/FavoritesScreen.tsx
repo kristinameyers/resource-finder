@@ -38,10 +38,12 @@ export default function FavoritesScreen({ navigation }: any) {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: fetchCategories,
+    staleTime: Infinity,
   });
   const { data: subcategories = [] } = useQuery({
     queryKey: ['subcategories'],
     queryFn: () => fetchSubcategories('all'),
+    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -58,22 +60,34 @@ export default function FavoritesScreen({ navigation }: any) {
     subcategories.find((s: Subcategory) => s.id === subcategoryId)?.name || '';
 
   const renderFavorite = ({ item }: { item: FavoriteResource }) => {
-    
-    // 🌟 FIX: Format the address object into a string to prevent the crash
-    // Assumes item.address is an object { streetAddress, city, stateProvince, ...}
-    const formattedAddress = item.address && typeof item.address === 'object'
-        ? [
-            item.address.streetAddress,
-            item.address.city,
-            item.address.stateProvince,
-          ]
-          .filter(Boolean)
-          .join(", ")
-        : item.address; // Fallback if it was already a string
+    <TouchableOpacity
+      style={styles.favoriteCard}
+      onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
+    >
+        {/* ... Card Content ... */}
+    </TouchableOpacity>
+    // 🌟 Format the address properly - item.address is an object { streetAddress, city, stateProvince, ...}
+    const formattedAddress = item.address
+    ? [
+        item.address.streetAddress,
+        item.address.city,
+        item.address.stateProvince,
+      ]
+      .filter(Boolean)
+      .join(", ")
+    : null; // Null if no address object exists
         
     // Also ensuring item.phone is only the main number if it is an object
-    const displayPhone = item.phone && typeof item.phone === 'object' ? item.phone.main : item.phone;
+    const displayPhone = item.phone?.main || item.phone?.mobile || item.phone?.default || item.phone;
 
+    // Determine the main title (Service Name or Organization Name)
+    const mainTitle = item.name || item.organization || "Service Name Not Available";
+
+    // Determine the subtitle (Organization Name, only if it's different from the title)
+    let subTitle = '';
+    if (item.organization && item.organization !== mainTitle) {
+      subTitle = item.organization;
+    }
 
     return (
       <TouchableOpacity
@@ -81,37 +95,36 @@ export default function FavoritesScreen({ navigation }: any) {
         onPress={() => navigation.navigate('ResourceDetail', { resource: item })}
       >
         <View style={styles.favoriteContent}>
-          <Text style={styles.favoriteName} numberOfLines={2}>{item.name}</Text>
-          <View style={styles.categoryRow}>
-            <Text style={styles.categoryTag}>{getCategoryName(item.categoryId)}</Text>
-            {item.subcategoryId && (
-              <Text style={styles.subcategoryTag}> | {getSubcategoryName(item.subcategoryId)}</Text>
-            )}
-            {item.distance !== undefined && (
-              <Text style={styles.distanceTag}> | {item.distance.toFixed(1)} mi</Text>
-            )}
-          </View>
-          <Text style={styles.favoriteDescription} numberOfLines={2}>{item.description}</Text>
+          {/* 1. Resource Name (Service Name or Organization fallback) */}
+          <Text style={styles.favoriteName} numberOfLines={2}>{mainTitle}</Text>
+
+          {/* 2. Organization Name (as subtitle, only if different from main title) */}
+          {subTitle.length > 0 && (
+            <Text style={styles.favoriteDescription} numberOfLines={1}>{subTitle}</Text>
+          )}
           
-          {/* 🌟 FIX: Render the formatted string */}
+          {/* 3. Address */}
           {formattedAddress && (
             <Text style={styles.favoriteAddress} numberOfLines={1}>
               <Ionicons name="location-outline" size={14} color="#888" /> {formattedAddress}
             </Text>
           )}
           
-          {/* FIX: Ensure item.phone is a string if it's an object */}
+          {/* 4. Phone Number (NEW REQUIREMENT) */}
           {displayPhone && (
             <Text style={styles.favoritePhone} numberOfLines={1}>
               <Ionicons name="call-outline" size={14} color="#888" /> {displayPhone}
             </Text>
           )}
         </View>
+        
+        {/* Heart Dislike Icon (Remove Button) */}
         <TouchableOpacity
           style={styles.removeButton}
           onPress={() => removeFavorite(item.id)}
         >
-          <Ionicons name="heart-dislike" size={24} color="#D0021B" />
+          {/* Required: heart-dislike icon */}
+          <Ionicons name="heart-dislike" size={24} color="#D0021B" /> 
         </TouchableOpacity>
       </TouchableOpacity>
     );
@@ -142,7 +155,7 @@ export default function FavoritesScreen({ navigation }: any) {
           <Text style={styles.emptySubtext}>{noFavoritesDescText}</Text>
         </View>
       ) : (
-        <>
+        <View key="favorites-list-content" style={{ flex: 1 }}>
           <FlatList
             data={favorites}
             renderItem={renderFavorite}
@@ -155,7 +168,7 @@ export default function FavoritesScreen({ navigation }: any) {
               <Text style={styles.clearAllButtonText}>Clear All Favorites</Text>
             </TouchableOpacity>
           </View>
-        </>
+        </View>
       )}
     </SafeAreaView>
   );

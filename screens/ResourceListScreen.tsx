@@ -82,29 +82,44 @@ export default function ResourceListScreen() {
   const navigation = useNavigation<any>();
   const { params } = useRoute<ResourceListRouteProp>();
   const { keyword, zipCode: zipParam = "", isSubcategory = false } = params ?? {};
-
   const [zipCode, setZipCode] = useState(zipParam);
   const [subcat, setSubcat] = useState<string | null>(null);
   const fetchLock = useRef(false);
   const [rateLimited, setRateLimited] = useState(false);
 
-  useFocusEffect(useCallback(() => setSubcat(null), [keyword, zipCode]));
+  const queryKey = ["resources", keyword, zipCode, subcat] as const;
 
-  if (!keyword?.trim()) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.error}>Invalid category.</Text>
-      </View>
-    );
-  }
+  const handleCardPress = useCallback(
+    async (item: Resource & FavoriteResource) => {
+      const id = getResourceUniqueId(item);
+      if (!id) return;
+      await storeResourceForDetailView(item);
+      navigation.navigate("ResourceDetail", {
+        id: id,
+        backToList: {
+          keyword,
+          zipCode,
+          isSubcategory,
+          selectedSubcategory: subcat,
+        },
+      });
+    },
+    [navigation, keyword, zipCode, isSubcategory, subcat]
+  );
+
+  useFocusEffect(useCallback(() => setSubcat(null), [keyword, zipCode]));
+  
+  // -------------------------------------------------------------
+  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY BEFORE ANY RETURNS
+  // -------------------------------------------------------------
 
   const { data: homeCoords, isLoading: coordsLoading } = useQuery<Coordinates>({
-  queryKey: ["zipCoords", zipCode],
-  queryFn: () => fetchLocationByZipCode(zipCode),
-  enabled: zipCode.length === 5,
-});
+    queryKey: ["zipCoords", zipCode],
+    queryFn: () => fetchLocationByZipCode(zipCode),
+    enabled: zipCode.length === 5,
+  });
 
-   useEffect(() => {
+  useEffect(() => {
     // If zipParam is empty (meaning no zip was passed from Home),
     // check storage for a saved one.
     if (!zipParam) { 
@@ -124,43 +139,66 @@ export default function ResourceListScreen() {
     await AsyncStorage.removeItem("saved_zip_code");
   }, []);
 
-  const queryKey = ["resources", keyword, zipCode, subcat] as const;
-
   const {
-  data,
-  isLoading: loadingResources,
-  isError,
-  error,
-  fetchNextPage,
-  hasNextPage,
-  isFetchingNextPage,
-  refetch,
-} = useInfiniteQuery({
-  queryKey,
-  initialPageParam: 0, // REQUIRED!
-  queryFn: ({ pageParam = 0 }) =>
-    subcat
-      ? fetchResourcesBySubcategory(subcat, zipCode, pageParam as number, PAGE_SIZE)
-      : isSubcategory
-      ? fetchResourcesBySubcategory(keyword, zipCode, pageParam as number, PAGE_SIZE)
-      : fetchResourcesByMainCategory(keyword, zipCode, pageParam as number, PAGE_SIZE),
-  getNextPageParam: (lastPage: ResourcePage) =>
-    lastPage.hasMore ? lastPage.items.length : undefined,
-  retry: 2,
-});
+    data,
+    isLoading: loadingResources,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey,
+    initialPageParam: 0,
+    queryFn: ({ pageParam = 0 }) =>
+      subcat
+        ? fetchResourcesBySubcategory(subcat, zipCode, pageParam as number, PAGE_SIZE)
+        : isSubcategory
+        ? fetchResourcesBySubcategory(keyword, zipCode, pageParam as number, PAGE_SIZE)
+        : fetchResourcesByMainCategory(keyword, zipCode, pageParam as number, PAGE_SIZE),
+    getNextPageParam: (lastPage: ResourcePage) =>
+      lastPage.hasMore ? lastPage.items.length : undefined,
+    retry: 2,
+  });
 
   const resources = useMemo(() => {
     const all = data?.pages.flatMap((p) => p.items) ?? [];
+
+    // 1. Deduplication
     const deduped = all.filter(
-  (r, i, a) =>
-    r &&
-  // ✅ 1. Filter out any resources that don't have a unique ID
-  getResourceUniqueId(r) &&
-    a.findIndex((x) => x && getResourceUniqueId(x) === getResourceUniqueId(r)) === i
-) as (Resource & FavoriteResource)[]; // ✅ 2. Cast the result to the combined type
-      // Sort by distance if we have homeCoords
+      (r, i, a) =>
+        r &&
+        // Filter out any resources that don't have a unique ID
+        getResourceUniqueId(r) &&
+        a.findIndex((x) => x && getResourceUniqueId(x) === getResourceUniqueId(r)) === i
+    ) as (Resource & FavoriteResource)[];
+
+    // 🌟 CRITICAL FIX: Explicitly map fields for FavoritesContext
+    const resourcesForDisplay = deduped.map(r => {
+      // Use explicit type assertion for reliable property access
+      const apiResource = r as any; 
+      
+      const primaryName = apiResource.name || apiResource.serviceName || apiResource.programName; 
+      const orgName = apiResource.organization || apiResource.organizationName; 
+
+      return ({
+        ...r,
+        // Guarantee 'id' is present for FavoritesContext
+        id: getResourceUniqueId(r) || r.id, 
+        // Ensure 'name' is set from the service title
+        name: primaryName,
+        // Ensure 'organization' is set
+        organization: orgName,
+      });
+    }) as (Resource & FavoriteResource)[];
+
+    // 2. Immutability and Sorting
+    const sortableResources = [...resourcesForDisplay];
+
+    // Sort by distance if we have homeCoords
     if (homeCoords) {
-      return deduped.sort((a, b) => {
+      return sortableResources.sort((a, b) => {
         const aDist = a.address?.latitude
           ? haversineDistance(
               homeCoords.latitude,
@@ -180,7 +218,9 @@ export default function ResourceListScreen() {
         return aDist - bDist;
       });
     }
-    return deduped;
+
+    // Return the ID/name-corrected array if no sorting is applied
+    return resourcesForDisplay; 
   }, [data, homeCoords]);
 
   const loadMore = async () => {
@@ -194,6 +234,19 @@ export default function ResourceListScreen() {
     fetchLock.current = true;
     fetchNextPage().finally(() => (fetchLock.current = false));
   };
+  
+  // -------------------------------------------------------------
+  // CONDITIONAL RETURNS (After all hooks)
+  // -------------------------------------------------------------
+  
+  // 🛠️ FIX: Invalid keyword check moved here, after all Hooks
+  if (!keyword?.trim()) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.error}>Invalid category.</Text>
+      </View>
+    );
+  }
 
   if (coordsLoading || loadingResources) {
     return (
@@ -245,49 +298,36 @@ export default function ResourceListScreen() {
       </View>
 
       <FlatList
-        data={resources}
-        renderItem={({ item }) => (
-          <ResourceCard
-            resource={item}
-            distanceMiles={
-              homeCoords && item.address?.latitude
-                ? haversineDistance(
-                    homeCoords.latitude,
-                    homeCoords.longitude,
-                    Number(item.address.latitude),
-                    Number(item.address.longitude)
-                  )
-                : undefined
-            }
-            onPress={async () => {
-              const id = getResourceUniqueId(item);
-              if (!id) return;
-              await storeResourceForDetailView(item);
-              navigation.navigate("ResourceDetail", {
-                id: id,
-                backToList: {
-                  keyword,
-                  zipCode,
-                  isSubcategory,
-                  selectedSubcategory: subcat,
-                },
-              });
-            }}
-          />
-        )}
-        keyExtractor={(item, idx) =>
-          getResourceUniqueId(item) ?? `res-${idx}`
+    data={resources}
+    renderItem={({ item }) => (
+      <ResourceCard
+        resource={item}
+        distanceMiles={
+          homeCoords && item.address?.latitude
+            ? haversineDistance(
+                homeCoords.latitude,
+                homeCoords.longitude,
+                Number(item.address.latitude),
+                Number(item.address.longitude)
+              )
+            : undefined
         }
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.8}
-        ListFooterComponent={
-          rateLimited ? (
-            <Text style={styles.info}>Loading too fast.</Text>
-          ) : isFetchingNextPage ? (
-            <ActivityIndicator style={styles.footer} />
-          ) : null
-        }
+        onPress={() => handleCardPress(item)} 
       />
+    )}
+    keyExtractor={(item, idx) =>
+      getResourceUniqueId(item) ?? `res-${idx}`
+    }
+    onEndReached={loadMore}
+    onEndReachedThreshold={0.8}
+    ListFooterComponent={
+      rateLimited ? (
+        <Text style={styles.info}>Loading too fast.</Text>
+      ) : isFetchingNextPage ? (
+        <ActivityIndicator style={styles.footer} />
+      ) : null
+    }
+  />
 
       {!hasNextPage && (
         <View style={styles.center}>
