@@ -49,6 +49,11 @@ import SubcategoryDropdown from "../components/SubcategoryDropdown";
 import ResourceCard from "../components/ResourceCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// GPS Async Storage Keys
+const SAVED_LAT = "userLatitude";
+const SAVED_LNG = "userLongitude";
+const SAVED_ZIP = "saved_zip_code";
+
 type ResourceListRouteProp = RouteProp<HomeStackParamList, "ResourceList">;
 // Coordinates interface is simplified as it's only used for homeCoords structure
 interface Coordinates {
@@ -85,6 +90,8 @@ export default function ResourceListScreen() {
   // STATE
   const [initialZipLoaded, setInitialZipLoaded] = useState(false);
   const [zipCode, setZipCode] = useState(zipParam);
+  const [homeLat, setHomeLat] = useState<number | null>(null);
+  const [homeLng, setHomeLng] = useState<number | null>(null);
   const [subcat, setSubcat] = useState<string | null>(null);
   const fetchLock = useRef(false);
   const [rateLimited, setRateLimited] = useState(false);
@@ -97,8 +104,16 @@ export default function ResourceListScreen() {
 
   // HOOK 1: Synchronous coordinate lookup
   const homeCoords = useMemo(() => {
+    // 1. Check for GPS coordinates first (Highest Priority)
+    if (homeLat && homeLng) {
+        console.log('Memo running. Using GPS Coords.');
+        return { latitude: homeLat, longitude: homeLng }; 
+    }
+
+    // 2. Fallback to ZIP code lookup
     const cleanedZip = zipCode?.trim();
     console.log('Memo running. Current ZIP code state:', cleanedZip);
+    
     if (cleanedZip && cleanedZip.length === 5) {
         // NOTE: Assuming getCoordinatesByZip returns { lat, lng }
         const coords = getCoordinatesByZip(cleanedZip);
@@ -109,34 +124,47 @@ export default function ResourceListScreen() {
             return { latitude: coords.lat, longitude: coords.lng }; 
         }
     }
-    return null; // Returns null if zip is invalid or not found
-}, [zipCode]);
+    return null; // Returns null if no valid location is found
+}, [zipCode, homeLat, homeLng]); // IMPORTANT: Add GPS state to dependencies!
 
-  // HOOK 2: Load initial ZIP from storage and manage loading state
+  // HOOK 2: Load initial location from storage and manage loading state
   useEffect(() => {
-    // 1. If zip was passed via navigation, we are immediately done.
-    if (zipParam) {
-      setInitialZipLoaded(true);
-      return;
-    }
-
-    // 2. If zipParam is empty, check storage and wait.
-    AsyncStorage.getItem("saved_zip_code")
-      .then((saved) => {
-        if (saved) {
-          // If a saved ZIP is found, update the state.
-          setZipCode(saved);
+    const loadLocation = async () => {
+      // If zip was passed via navigation, we trust it and are done.
+        // The zipCode state is already initialized with zipParam.
+        if (zipParam) {
+            setInitialZipLoaded(true);
+            return;
         }
-      })
-      .catch(error => {
-        console.error("Error reading saved ZIP from storage:", error);
-      })
-      .finally(() => {
-        // 3. CRITICAL: Mark loading complete here
-        setInitialZipLoaded(true);
-      });
-  }, [zipParam]);
 
+      // --- Check GPS Coordinates ---
+        const [savedLatRaw, savedLngRaw] = await Promise.all([
+            AsyncStorage.getItem(SAVED_LAT),
+            AsyncStorage.getItem(SAVED_LNG),
+        ]);
+        const savedLat = savedLatRaw ? parseFloat(savedLatRaw) : null;
+        const savedLng = savedLngRaw ? parseFloat(savedLngRaw) : null;
+
+        if (savedLat && savedLng) {
+            // Found GPS: Set GPS state, clear ZIP state (if it was set by error/old run)
+            setHomeLat(savedLat);
+            setHomeLng(savedLng);
+            setZipCode(''); 
+        } else {
+            // --- Fallback to Saved ZIP ---
+            const savedZip = await AsyncStorage.getItem(SAVED_ZIP);
+            if (savedZip) {
+                setZipCode(savedZip);
+            }
+            // If nothing is found, zipCode remains ''
+        }
+        
+        setInitialZipLoaded(true);
+    };
+
+    // Only run this effect once on component mount
+    loadLocation(); 
+}, []); // <-- CRITICAL: Empty dependency array ensures one run only
 
   // HOOK 3: Navigation logic for detail screen
   const handleCardPress = useCallback(
@@ -196,31 +224,61 @@ export default function ResourceListScreen() {
     retry: 2,
   });
 
-  // HOOK X: Aggressive Refetch and ZIP Check on Focus
+  // HOOK 7: Aggressive Refetch and ZIP Check on Focus
   useFocusEffect(
-      useCallback(() => {
-          // 1. Re-read saved ZIP on every focus to ensure we catch the cleared state
-          AsyncStorage.getItem("saved_zip_code")
-            .then((saved) => {
-              // If the saved value is null/empty, but our state is 93111,
-              // force the state to update to clear homeCoords.
-              if (!saved && zipCode) {
-                 console.log("Forcing ZIP state clear due to empty AsyncStorage.");
-                 setZipCode("");
-              } else if (saved && saved !== zipCode) {
-                 // Or if AsyncStorage *still* has a value but our state is different
-                 setZipCode(saved);
-              }
-            })
-            .finally(() => {
-                 // 2. Force the query to re-run with the *current* zipCode state (now cleared)
-                 refetch();
-            });
+    useCallback(() => {
+        const checkLocationState = async () => {
+            // Check all three keys
+            const [savedZip, savedLatRaw, savedLngRaw] = await Promise.all([
+                AsyncStorage.getItem(SAVED_ZIP), // <-- Use your actual ZIP key
+                AsyncStorage.getItem(SAVED_LAT),
+                AsyncStorage.getItem(SAVED_LNG),
+            ]);
 
-      }, [zipCode, refetch])
-  );
+            const savedLat = savedLatRaw ? parseFloat(savedLatRaw) : null;
+            const savedLng = savedLngRaw ? parseFloat(savedLngRaw) : null;
 
-  // HOOK 7: Refetch resources when homeCoords becomes available (if ZIP was entered later)
+            let shouldRefetch = false;
+
+            if (savedLat && savedLng) {
+                // If GPS is found, set GPS state and clear ZIP state
+                if (homeLat !== savedLat || homeLng !== savedLng || zipCode !== '') {
+                    setHomeLat(savedLat);
+                    setHomeLng(savedLng);
+                    setZipCode('');
+                    shouldRefetch = true;
+                }
+            } else if (savedZip) {
+                // If only ZIP is found, set ZIP state and clear GPS state
+                if (zipCode !== savedZip || homeLat !== null || homeLng !== null) {
+                    setZipCode(savedZip);
+                    setHomeLat(null);
+                    setHomeLng(null);
+                    shouldRefetch = true;
+                }
+            } else {
+                // No location saved, ensure all state is cleared
+                if (zipCode !== '' || homeLat !== null || homeLng !== null) {
+                    setZipCode('');
+                    setHomeLat(null);
+                    setHomeLng(null);
+                    shouldRefetch = true;
+                }
+            }
+            
+            // Only refetch if a state change occurred
+            if (shouldRefetch) {
+                console.log("HOOK X: State changed, forcing refetch.");
+                refetch();
+            }
+        };
+
+        checkLocationState();
+
+    }, [zipCode, homeLat, homeLng, refetch])
+);
+
+  // HOOK 8: Refetch resources when homeCoords becomes available (if ZIP was entered later)
   useEffect(() => {
     // If homeCoords changes from null to a valid object, refetch the resources
     if (homeCoords) {
@@ -229,7 +287,7 @@ export default function ResourceListScreen() {
     }
   }, [homeCoords, refetch]);
 
-  // HOOK 8: Memoized resource list processing
+  // HOOK 9: Memoized resource list processing
   const resources = useMemo(() => {
     const all = data?.pages.flatMap((p) => p.items) ?? [];
 

@@ -1,35 +1,22 @@
 // Centralized distance calculation and geolocation utilities
+import { getCoordinatesByZip } from './zip/zipLookup';
 import * as Location from 'expo-location';
 
 /**
  * Sync: Get coordinates for a zip code (node/server/zipcodes package or preloaded map)
  */
 export function getCoordinatesForZipSync(zipCode: string): { lat: number; lng: number } | null {
-  // Example for zipcodes package; replace as needed for your real db
-  // const location = zipcodes.lookup(zipCode);
-  // if (location) return { lat: parseFloat(location.latitude), lng: parseFloat(location.longitude) };
-  // return null;
-
-  // Or, from a preloaded in-memory map (see zipUtils)
-  // return getZipCodeCoordinates(zipCode);
-  return null;
+  // Now uses the imported synchronous function
+  return getCoordinatesByZip(zipCode);
 }
 
 /**
  * Async: Get coordinates using an API call (client or server)
  */
 export async function getCoordinatesForZip(zipCode: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    // Replace this with your own API endpoint/method if needed
-    const response = await fetch(`/api/zip-to-coords?zipCode=${zipCode}`);
-    if (response.ok) {
-      const data = await response.json();
-      return { lat: data.latitude, lng: data.longitude };
-    }
-  } catch (error) {
-    console.error('Error getting coordinates for zip code:', error);
-  }
-  return null;
+  // Use the local lookup table and return a resolved promise.
+  const coords = getCoordinatesByZip(zipCode); 
+  return Promise.resolve(coords);
 }
 
 // --- Calculation: Haversine formula ---

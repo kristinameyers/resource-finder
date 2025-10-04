@@ -10,25 +10,31 @@ import {
   Keyboard,
   SafeAreaView
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// Navigation
 import { Ionicons } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons'; // Import for error icon
+import { MaterialIcons } from '@expo/vector-icons';
+// Data Fetching
 import { useQuery } from '@tanstack/react-query';
 import { useOnboarding } from '../hooks/use-onboarding';
+// Location Handling
 import { useLocation } from '../hooks/use-location';
+// Utilities
 import { useTranslatedText } from '../components/TranslatedText';
 import { fetchCategories, fetchResourcesByMainCategory } from '../api/resourceApi';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-
+// Components
 import CategoryGrid from '../components/CategoryGrid';
 import CategoryGridSkeleton from '../components/CategoryGridSkeleton';
-
+// Types
 import type { Category, ResourcePage } from '../types/shared-schema';
 import type { NavigationProp } from '@react-navigation/native';
 import { getCategoryIcon } from '../taxonomy';
 
 const new211Logo = require('../assets/images/new-211-logo.png');
 const SAVED_ZIP = 'saved_zip_code';
+const SAVED_LAT = "userLatitude";
+const SAVED_LNG = "userLongitude";
 
 // GEOGRAPHIC VALIDATION
 const SANTA_BARBARA_COUNTY_ZIPS = [
@@ -56,64 +62,86 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
 
   const {
     locationState,
+    refreshLocation,
     requestCurrentLocation,
     setLocationByZipCode,
     clearLocation,
   } = useLocation?.() || {};
 
+  // Whenever locationState changes, update AsyncStorage
   useFocusEffect(
     useCallback(() => {
+      // 1. Clear any existing selected category ID every time the screen is focused
       setSelectedCategoryId(null);
-    }, [])
-  );
 
+      // 2. Trigger the global location hook to check AsyncStorage and update its state.
+      refreshLocation?.();
+
+      // Cleanup function is NOT strictly necessary for this logic but is good practice,
+      // and having an empty dependency array ensures the callback is stable.
+    }, []) 
+  );
+  
+  // HOOK: Update local ZIP state when locationState changes (e.g., after refreshLocation runs)
   useEffect(() => {
-    AsyncStorage.getItem(SAVED_ZIP).then(saved => {
-      if (saved) {
-        setZipCode(saved);
-        setLocationByZipCode?.(saved);
-      }
-    });
-  }, []);
+    if (locationState?.type === 'zipCode') {
+      // If hook has ZIP, sync it to local input field
+      setZipCode(locationState.zipCode);
+    } else if (locationState?.type === 'coordinates' || locationState?.type === 'none') {
+      // If hook has GPS or no location, clear local input field
+      setZipCode('');
+    }
+    // We only depend on locationState to avoid endless re-runs if other vars change
+  }, [locationState]);
 
   const handleSaveZip = useCallback(async () => {
     setZipTouched(true); // Mark that user wants zip validated
     Keyboard.dismiss();
+
+    if (zipCode.length === 5) {
+      // CRITICAL: Update the location hook immediately
+      setLocationByZipCode?.(zipCode);
+    }
+
     try {
+      // Save ZIP and clear GPS keys to ensure precedence
       await AsyncStorage.setItem(SAVED_ZIP, zipCode);
+      await AsyncStorage.removeItem(SAVED_LAT);
+      await AsyncStorage.removeItem(SAVED_LNG);
     } catch (e) {
       console.error('Failed saving ZIP', e);
     }
-  }, [zipCode]);
+  }, [zipCode, setLocationByZipCode]);
 
-const handleClearZip = useCallback(async () => {
+  const handleClearZip = useCallback(async () => {
     // 1. Clears local state
     setZipCode('');
     setZipTouched(false);
+    Keyboard.dismiss();
     clearLocation?.();
 
     try {
       // 2. CLEARS SAVED ZIP (CRITICAL for ResourceListScreen HOOK 2)
       await AsyncStorage.removeItem(SAVED_ZIP);
+      await AsyncStorage.removeItem(SAVED_LAT); 
+      await AsyncStorage.removeItem(SAVED_LNG);
       console.log('✅ Cleared saved zip code and storage.');
-      
+
       // OPTIONAL: If the list is directly visible after this, you may need a local refetch trigger,
       // but relying on HOOK 2/7 in ResourceListScreen is usually sufficient if navigating back/forth.
 
     } catch (e) {
       console.error('Failed clearing ZIP', e);
     }
-}, [clearLocation]);
+  }, [clearLocation]);
 
   const handleZipChange = useCallback(
     (zip: string) => {
       setZipCode(zip);
       setZipTouched(false); // Reset touch state on manual change
-      if (zip.length === 5) {
-        setLocationByZipCode?.(zip);
-      }
+      // NOTE: We rely on the SAVE button to trigger setLocationByZipCode for validation/lookup
     },
-    [setLocationByZipCode]
+    [] // No external dependencies needed for simple text change
   );
 
   const handleStartNewSearch = useCallback(async () => {
@@ -217,8 +245,8 @@ const handleClearZip = useCallback(async () => {
           <Text style={styles.subtitle}>{footerSubtext}</Text>
         </View>
         <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search" size={24} color="#666666" />
+          <View style={styles.searchBarWrapper}>
+            <Ionicons name="search" size={24} color="#666666" style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
               placeholder="Type a keyword..."
@@ -226,8 +254,15 @@ const handleClearZip = useCallback(async () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={handleSearch}
-              returnKeyType="search"
+              returnKeyType="go" // Change return key to 'go'
             />
+            <TouchableOpacity
+              style={styles.goButton}
+              onPress={handleSearch}
+              disabled={!searchQuery.trim()} // Disable if input is empty
+            >
+              <Text style={styles.goButtonText}>Go</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.locationBar}>
             <Ionicons name="location" size={24} color="#666666" />
@@ -277,7 +312,7 @@ const handleClearZip = useCallback(async () => {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1, backgroundColor: '#fdfdfdff' },
   center: {
     flex: 1,
     justifyContent: 'center',
@@ -317,12 +352,48 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: 'bold', color: 'white' },
   subtitle: { fontSize: 16, color: 'white' },
   searchSection: { padding: 14 },
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'white', borderRadius: 10, padding: 20, marginBottom: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+
+  searchBarWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: '#ddd',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden', // Crucial to clip the button's corners
+    height: 60, // Give it a fixed height
   },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#333333' },
+  searchIcon: {
+    paddingLeft: 20,
+    paddingRight: 10,
+    color: '#666666',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333333',
+    height: '100%',
+    paddingRight: 5, // Small padding before the button
+  },
+  goButton: {
+    backgroundColor: '#005191',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+  },
+  goButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
   locationBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: 'white', borderRadius: 10, padding: 18,
