@@ -1,3 +1,4 @@
+// components/drawer/DrawerContent.js
 import { View, Text, StyleSheet } from 'react-native';
 import { DrawerItemList } from '@react-navigation/drawer';
 

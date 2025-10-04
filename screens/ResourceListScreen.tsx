@@ -26,8 +26,6 @@ import {
 // React Query
 import {
   useInfiniteQuery,
-  QueryFunctionContext,
-  useQuery,
 } from "@tanstack/react-query";
 // Async Storage for rate limiting
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -39,10 +37,10 @@ import {
   fetchResourcesBySubcategory,
   storeResourceForDetailView,
   getResourceUniqueId,
-  haversineDistance,
   ResourcePage,
 } from "../api/resourceApi";
-import { fetchLocationByZipCode } from "../api/locationApi";
+// Use local lookup instead of API
+import { getCoordinatesByZip, haversineDistance } from '../utils/zip/zipLookup';
 // Types
 import type { FavoriteResource } from "../contexts/FavoritesContext";
 import type { Resource } from "../types/shared-schema";
@@ -52,9 +50,10 @@ import ResourceCard from "../components/ResourceCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type ResourceListRouteProp = RouteProp<HomeStackParamList, "ResourceList">;
+// Coordinates interface is simplified as it's only used for homeCoords structure
 interface Coordinates {
-  latitude: number;
-  longitude: number;
+  lat: number;
+  lng: number;
 }
 
 const RATE_LIMIT_KEY = "resource_page_fetch_timestamps";
@@ -82,6 +81,9 @@ export default function ResourceListScreen() {
   const navigation = useNavigation<any>();
   const { params } = useRoute<ResourceListRouteProp>();
   const { keyword, zipCode: zipParam = "", isSubcategory = false } = params ?? {};
+  
+  // STATE
+  const [initialZipLoaded, setInitialZipLoaded] = useState(false);
   const [zipCode, setZipCode] = useState(zipParam);
   const [subcat, setSubcat] = useState<string | null>(null);
   const fetchLock = useRef(false);
@@ -89,6 +91,54 @@ export default function ResourceListScreen() {
 
   const queryKey = ["resources", keyword, zipCode, subcat] as const;
 
+  // -------------------------------------------------------------
+  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY FIRST
+  // -------------------------------------------------------------
+
+  // HOOK 1: Synchronous coordinate lookup
+  const homeCoords = useMemo(() => {
+    const cleanedZip = zipCode?.trim();
+    console.log('Memo running. Current ZIP code state:', cleanedZip);
+    if (cleanedZip && cleanedZip.length === 5) {
+        // NOTE: Assuming getCoordinatesByZip returns { lat, lng }
+        const coords = getCoordinatesByZip(cleanedZip);
+
+        // Ensure coordinates are valid numbers before returning
+        if (coords && typeof coords.lat === 'number' && typeof coords.lng === 'number') {
+             // Return object matching the expected structure
+            return { latitude: coords.lat, longitude: coords.lng }; 
+        }
+    }
+    return null; // Returns null if zip is invalid or not found
+}, [zipCode]);
+
+  // HOOK 2: Load initial ZIP from storage and manage loading state
+  useEffect(() => {
+    // 1. If zip was passed via navigation, we are immediately done.
+    if (zipParam) {
+      setInitialZipLoaded(true);
+      return;
+    }
+
+    // 2. If zipParam is empty, check storage and wait.
+    AsyncStorage.getItem("saved_zip_code")
+      .then((saved) => {
+        if (saved) {
+          // If a saved ZIP is found, update the state.
+          setZipCode(saved);
+        }
+      })
+      .catch(error => {
+        console.error("Error reading saved ZIP from storage:", error);
+      })
+      .finally(() => {
+        // 3. CRITICAL: Mark loading complete here
+        setInitialZipLoaded(true);
+      });
+  }, [zipParam]);
+
+
+  // HOOK 3: Navigation logic for detail screen
   const handleCardPress = useCallback(
     async (item: Resource & FavoriteResource) => {
       const id = getResourceUniqueId(item);
@@ -108,28 +158,10 @@ export default function ResourceListScreen() {
     [navigation, keyword, zipCode, isSubcategory, subcat]
   );
 
+  // HOOK 4: Clear subcategory on focus
   useFocusEffect(useCallback(() => setSubcat(null), [keyword, zipCode]));
-  
-  // -------------------------------------------------------------
-  // ALL HOOKS MUST BE CALLED UNCONDITIONALLY BEFORE ANY RETURNS
-  // -------------------------------------------------------------
 
-  const { data: homeCoords, isLoading: coordsLoading } = useQuery<Coordinates>({
-    queryKey: ["zipCoords", zipCode],
-    queryFn: () => fetchLocationByZipCode(zipCode),
-    enabled: zipCode.length === 5,
-  });
-
-  useEffect(() => {
-    // If zipParam is empty (meaning no zip was passed from Home),
-    // check storage for a saved one.
-    if (!zipParam) { 
-      AsyncStorage.getItem("saved_zip_code").then((saved) => {
-        if (saved) setZipCode(saved);
-      });
-    }
-  }, [zipParam]); 
-
+  // HOOK 5: ZIP code state handlers (kept for completeness, though not used in list view)
   const handleZipChange = useCallback((z: string) => setZipCode(z), []);
   const handleSaveZip = useCallback(async () => {
     Keyboard.dismiss();
@@ -140,6 +172,7 @@ export default function ResourceListScreen() {
     await AsyncStorage.removeItem("saved_zip_code");
   }, []);
 
+  // HOOK 6: Infinite Query for Resources
   const {
     data,
     isLoading: loadingResources,
@@ -163,48 +196,70 @@ export default function ResourceListScreen() {
     retry: 2,
   });
 
+  // HOOK X: Aggressive Refetch and ZIP Check on Focus
+  useFocusEffect(
+      useCallback(() => {
+          // 1. Re-read saved ZIP on every focus to ensure we catch the cleared state
+          AsyncStorage.getItem("saved_zip_code")
+            .then((saved) => {
+              // If the saved value is null/empty, but our state is 93111,
+              // force the state to update to clear homeCoords.
+              if (!saved && zipCode) {
+                 console.log("Forcing ZIP state clear due to empty AsyncStorage.");
+                 setZipCode("");
+              } else if (saved && saved !== zipCode) {
+                 // Or if AsyncStorage *still* has a value but our state is different
+                 setZipCode(saved);
+              }
+            })
+            .finally(() => {
+                 // 2. Force the query to re-run with the *current* zipCode state (now cleared)
+                 refetch();
+            });
+
+      }, [zipCode, refetch])
+  );
+
+  // HOOK 7: Refetch resources when homeCoords becomes available (if ZIP was entered later)
   useEffect(() => {
-    // Only run if coordinates are present and are not undefined/null
+    // If homeCoords changes from null to a valid object, refetch the resources
     if (homeCoords) {
         console.log("📍 Home coordinates loaded. Refetching resources to apply API sorting.");
-        // This forces a new API call using the newly available location for distance sorting
         refetch(); 
     }
   }, [homeCoords, refetch]);
 
+  // HOOK 8: Memoized resource list processing
   const resources = useMemo(() => {
     const all = data?.pages.flatMap((p) => p.items) ?? [];
+
+    console.log('Final Home Zip:', zipCode);
+    console.log('Final Home Coords:', homeCoords); // Logs for final verification
 
     // 1. Deduplication
     const deduped = all.filter(
       (r, i, a) =>
         r &&
-        // Filter out any resources that don't have a unique ID
         getResourceUniqueId(r) &&
         a.findIndex((x) => x && getResourceUniqueId(x) === getResourceUniqueId(r)) === i
     ) as (Resource & FavoriteResource)[];
 
-    // 🌟 CRITICAL FIX: Explicitly map fields for FavoritesContext
+    // 🌟 Mapping/Normalization
     const resourcesForDisplay = deduped.map(r => {
-      // Use explicit type assertion for reliable property access
       const apiResource = r as any; 
-
       const primaryName = (
         apiResource.nameServiceAtLocation || 
         apiResource.nameService || 
         apiResource.name ||
-        apiResource.organization || // Fallback to Organization name if all else fails
+        apiResource.organization || 
         'Unknown Service Name'
       );  
       const orgName = apiResource.organization || apiResource.organizationName;
       
       return ({
         ...r,
-        // Guarantee 'id' is present for FavoritesContext
         id: getResourceUniqueId(r) || r.id, 
-        // Ensure 'name' is set from the service title
         name: primaryName,
-        // Ensure 'organization' is set
         organization: orgName,
       });
     }) as (Resource & FavoriteResource)[];
@@ -215,30 +270,40 @@ export default function ResourceListScreen() {
     // Sort by distance if we have homeCoords
     if (homeCoords) {
       return sortableResources.sort((a, b) => {
-        const aDist = a.address?.latitude
+        // FIX: Robust Number Parsing for Sorting Logic
+        const aLat = parseFloat(a.address?.latitude || '');
+        const aLng = parseFloat(a.address?.longitude || '');
+        const bLat = parseFloat(b.address?.latitude || '');
+        const bLng = parseFloat(b.address?.longitude || '');
+
+        const aDist = 
+          !isNaN(aLat) && !isNaN(aLng)
           ? haversineDistance(
               homeCoords.latitude,
               homeCoords.longitude,
-              Number(a.address.latitude),
-              Number(a.address.longitude)
+              aLat,
+              aLng
             )
           : Infinity;
-        const bDist = b.address?.latitude
+          
+        const bDist = 
+          !isNaN(bLat) && !isNaN(bLng)
           ? haversineDistance(
               homeCoords.latitude,
               homeCoords.longitude,
-              Number(b.address.latitude),
-              Number(b.address.longitude)
+              bLat,
+              bLng
             )
           : Infinity;
+        
         return aDist - bDist;
       });
     }
 
-    // Return the ID/name-corrected array if no sorting is applied
     return resourcesForDisplay; 
   }, [data, homeCoords]);
 
+  // Function for loading next page
   const loadMore = async () => {
     if (rateLimited || fetchLock.current || !hasNextPage) return;
     if (!(await canFetchPage())) {
@@ -252,10 +317,20 @@ export default function ResourceListScreen() {
   };
   
   // -------------------------------------------------------------
-  // CONDITIONAL RETURNS (After all hooks)
+  // CONDITIONAL RETURNS (After all hooks are called)
   // -------------------------------------------------------------
   
-  // 🛠️ FIX: Invalid keyword check moved here, after all Hooks
+  // 1. Wait for initial ZIP loading
+  if (!initialZipLoaded) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.info}>Loading user location preference...</Text>
+      </View>
+    );
+  }
+  
+  // 2. Invalid keyword
   if (!keyword?.trim()) {
     return (
       <View style={styles.center}>
@@ -264,7 +339,8 @@ export default function ResourceListScreen() {
     );
   }
 
-  if (coordsLoading || loadingResources) {
+  // 3. Main resource loading
+  if (loadingResources && !data) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
@@ -272,6 +348,8 @@ export default function ResourceListScreen() {
       </View>
     );
   }
+  
+  // 4. Error state
   if (isError) {
     return (
       <View style={styles.center}>
@@ -315,22 +393,43 @@ export default function ResourceListScreen() {
 
       <FlatList
     data={resources}
-    renderItem={({ item }) => (
+    renderItem={({ item }) => {
+      // FIX: Calculate parsed coordinates and validity check here
+      const resourceLat = parseFloat(item.address?.latitude || '');
+      const resourceLng = parseFloat(item.address?.longitude || '');
+      const isResourceLocationValid = !isNaN(resourceLat) && !isNaN(resourceLng);
+
+      // Standard JavaScript logic and control flow goes here
+      if (item.address) {
+          console.log(`Resource ID: ${getResourceUniqueId(item)}`);
+          console.log(`Resource Coords: ${item.address.latitude}, ${item.address.longitude}`);
+          // Add log to check validity of home and resource coords
+          if (homeCoords && isResourceLocationValid) {
+             console.log(`Distance Check: Ready to calculate! Home: ${homeCoords.latitude}, Resource: ${resourceLat}`);
+          } else {
+             console.log(`Distance Check: NOT ready. HomeCoords: ${!!homeCoords}, Resource Valid: ${isResourceLocationValid}`);
+          }
+      } else {
+          console.log(`Resource ID: ${getResourceUniqueId(item)} - Address missing!`);
+      }
+      return (
       <ResourceCard
         resource={item}
         distanceMiles={
-          homeCoords && item.address?.latitude
+          // Use the pre-calculated validity and parsed numbers
+          homeCoords && isResourceLocationValid
             ? haversineDistance(
                 homeCoords.latitude,
                 homeCoords.longitude,
-                Number(item.address.latitude),
-                Number(item.address.longitude)
+                resourceLat,
+                resourceLng
               )
             : undefined
         }
         onPress={() => handleCardPress(item)} 
       />
-    )}
+      );
+    }}
     keyExtractor={(item, idx) =>
       getResourceUniqueId(item) ?? `res-${idx}`
     }

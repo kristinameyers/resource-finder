@@ -86,17 +86,24 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     }
   }, [zipCode]);
 
-  const handleClearZip = useCallback(async () => {
+const handleClearZip = useCallback(async () => {
+    // 1. Clears local state
     setZipCode('');
     setZipTouched(false);
     clearLocation?.();
+
     try {
+      // 2. CLEARS SAVED ZIP (CRITICAL for ResourceListScreen HOOK 2)
       await AsyncStorage.removeItem(SAVED_ZIP);
-      console.log('✅ Cleared saved zip code');
+      console.log('✅ Cleared saved zip code and storage.');
+      
+      // OPTIONAL: If the list is directly visible after this, you may need a local refetch trigger,
+      // but relying on HOOK 2/7 in ResourceListScreen is usually sufficient if navigating back/forth.
+
     } catch (e) {
       console.error('Failed clearing ZIP', e);
     }
-  }, [clearLocation]);
+}, [clearLocation]);
 
   const handleZipChange = useCallback(
     (zip: string) => {
