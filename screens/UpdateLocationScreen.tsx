@@ -8,6 +8,7 @@ import { useToast } from "../hooks/use-toast";
 import { getCoordinatesForZip } from '../utils/distance';
 import { getCurrentLocation } from '../utils/distance';
 import { useTranslatedText } from "../components/TranslatedText";
+import { useFocusEffect } from '@react-navigation/native';
 
 const SAVED_ZIP = "saved_zip_code"; // Key used in HomeScreen/ResourceListScreen
 const SAVED_LAT = "userLatitude";
@@ -36,12 +37,17 @@ export default function UpdateLocationScreen() {
   const backToSearchText = "Back to Search";
 
   // HOOK 1: Load saved ZIP code on mount
-  useEffect(() => {
-    // Reading the corrected key: SAVED_ZIP
-    AsyncStorage.getItem(SAVED_ZIP).then(savedZipCode => {
-      if (savedZipCode) setZipCode(savedZipCode);
-    });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      // Read directly from AsyncStorage
+      AsyncStorage.getItem(SAVED_ZIP).then(savedZipCode => {
+        // If savedZipCode is null (cleared), set local state to empty string
+        setZipCode(savedZipCode || ''); 
+      });
+      // Return a cleanup function (empty) to satisfy the hook's requirement for a stable callback
+      return () => {}; 
+    }, []) // Empty dependency array ensures it runs on focus and remains stable
+  );
 
   // HOOK 2: Function to handle 'Use My Current Location'
   const handleUseCurrentLocation = useCallback(async () => {

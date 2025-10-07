@@ -94,12 +94,20 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     // We only depend on locationState to avoid endless re-runs if other vars change
   }, [locationState]);
 
-  const handleSaveZip = useCallback(async () => {
-    setZipTouched(true); // Mark that user wants zip validated
+  const handleZipChange = useCallback(
+    (zip: string) => {
+      setZipCode(zip);
+      setZipTouched(false);
+      
+    },
+    []
+);
+const handleSaveZip = useCallback(async () => {
+    setZipTouched(true);
     Keyboard.dismiss();
 
     if (zipCode.length === 5) {
-      // CRITICAL: Update the location hook immediately
+      // 1. Update the central location hook (triggers search updates, updates locationState)
       setLocationByZipCode?.(zipCode);
     }
 
@@ -134,15 +142,6 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
       console.error('Failed clearing ZIP', e);
     }
   }, [clearLocation]);
-
-  const handleZipChange = useCallback(
-    (zip: string) => {
-      setZipCode(zip);
-      setZipTouched(false); // Reset touch state on manual change
-      // NOTE: We rely on the SAVE button to trigger setLocationByZipCode for validation/lookup
-    },
-    [] // No external dependencies needed for simple text change
-  );
 
   const handleStartNewSearch = useCallback(async () => {
     setZipCode('');
