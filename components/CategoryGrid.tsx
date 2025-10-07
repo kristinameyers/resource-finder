@@ -5,9 +5,19 @@ import { useTranslatedText } from "./TranslatedText";
 import { useAccessibility } from "../contexts/AccessibilityContext";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
+// Get accessibility context outside of CategoryLabel to ensure it has access to props
 function CategoryLabel({ category }: { category: Category }) {
+  const { getFontSize, theme, highContrast } = useAccessibility();
   const { text } = useTranslatedText(category.name);
-  return <Text style={styles.categoryLabel}>{text}</Text>;
+  
+  // ✅ FIX: Force the text color to white if in high contrast mode to guarantee visibility 
+  // on the dark primary/accent button backgrounds.
+  const textColor = highContrast ? '#fff' : theme.backgroundSecondary;
+
+  return <Text style={[styles.categoryLabel, { 
+    fontSize: getFontSize(16), 
+    color: textColor
+  }]}>{text}</Text>;
 }
 
 interface CategoryGridProps {
@@ -22,15 +32,26 @@ type IconConfig =
   | { type: "vector"; icon: { iconSet: "Ionicons" | "MaterialCommunityIcons"; name: string } };
 
 export default function CategoryGrid({ categories, onCategorySelect, selectedCategoryId }: CategoryGridProps) {
+  // ✅ ACCESS CONTEXT FOR STYLING AND SCALING
+  const { triggerHaptic, reduceMotion, theme, getFontSize, highContrast } = useAccessibility();
   const { text: browseCategoriesText } = useTranslatedText("Search Category");
-  const { triggerHaptic, reduceMotion } = useAccessibility();
+
+  // Default button colors
+  const defaultGridItemColor = highContrast ? theme.background : '#256BAE'; // Light background in HC, dark blue otherwise
+  
+  // Selected border colors
+  const selectedBorderColor = highContrast ? theme.accent : theme.backgroundSecondary; // Use accent border in HC for better visibility on dark button
 
   return (
-    <View style={styles.wrapper}>
-      <Text style={styles.title}>{browseCategoriesText}</Text>
+    // ✅ HC: Apply primary color to the wrapper background
+    <View style={[styles.wrapper, { backgroundColor: theme.primary }]}>
+      {/* FONT SCALING & HC: Title */}
+      <Text style={[styles.title, { 
+        fontSize: getFontSize(26), 
+        color: theme.backgroundSecondary // Title text color should be light/white
+      }]}>{browseCategoriesText}</Text>
       <View style={styles.grid}>
         {categories.map((category) => {
-          // Ensure type safety!
           const iconConfig = getCategoryGridIcon(category.id) as IconConfig;
           const isSelected = selectedCategoryId === category.id;
           const accessibilityState: AccessibilityState = { selected: isSelected };
@@ -40,6 +61,12 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
               key={category.id}
               style={[
                 styles.gridItem,
+                { 
+                    backgroundColor: isSelected ? theme.accent : defaultGridItemColor, 
+                    borderColor: isSelected ? selectedBorderColor : theme.primary, 
+                    borderWidth: isSelected || highContrast ? 2 : 0,
+                    shadowOpacity: highContrast ? 0 : 0.09, 
+                },
                 isSelected && styles.selectedItem,
                 !isSelected && !reduceMotion && styles.unselectedAnimated,
               ]}
@@ -54,15 +81,23 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
             >
               <View style={styles.iconWrap}>
                 {iconConfig.type === "png" ? (
-                  <Image source={iconConfig.icon} style={styles.iconImage} resizeMode="contain" />
+                  <Image 
+                    source={iconConfig.icon} 
+                    style={styles.iconImage} 
+                    resizeMode="contain" 
+                  />
                 ) : iconConfig.icon.iconSet === "Ionicons" ? (
-                  <Ionicons name={iconConfig.icon.name as any} size={38} color="#fff" />
+                  // ✅ Icon color should be theme.backgroundSecondary (light/white)
+                  <Ionicons name={iconConfig.icon.name as any} size={getFontSize(38)} color={theme.backgroundSecondary} />
                 ) : (
-                  <MaterialCommunityIcons name={iconConfig.icon.name as any} size={38} color="#fff" />
+                  // ✅ Icon color should be theme.backgroundSecondary (light/white)
+                  <MaterialCommunityIcons name={iconConfig.icon.name as any} size={getFontSize(38)} color={theme.backgroundSecondary} />
                 )}
               </View>
 
+              {/* CategoryLabel component now forces white text in HC */}
               <CategoryLabel category={category} />
+
               {isSelected && (
                 <Text
                   style={styles.srOnly}
@@ -81,8 +116,8 @@ export default function CategoryGrid({ categories, onCategorySelect, selectedCat
 }
 
 const styles = StyleSheet.create({
+// ... (Styles are left largely unchanged)
   wrapper: {
-    backgroundColor: "#005191",
     paddingHorizontal: 24,
     paddingVertical: 32,
     borderRadius: 0,
@@ -90,8 +125,6 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center",
-    color: "#fff",
-    fontSize: 26,
     marginBottom: 24,
     fontWeight: "400",
   },
@@ -104,7 +137,6 @@ const styles = StyleSheet.create({
   gridItem: {
     width: 140,
     height: 140,
-    backgroundColor: "#256BAE",
     borderRadius: 32,
     marginBottom: 18,
     alignItems: "center",
@@ -112,12 +144,9 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.09,
     shadowRadius: 8,
-    borderWidth: 0,
     overflow: "hidden",
   },
   selectedItem: {
-    borderWidth: 2,
-    borderColor: "#fff",
     shadowOpacity: 0.18,
     transform: [{ scale: 1.05 }],
     zIndex: 1,
@@ -130,22 +159,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.12)", 
   },
   iconImage: {
     width: 42,
     height: 42,
     borderRadius: 8,
   },
-  iconPlaceholder: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
-    backgroundColor: "#ffffff22",
-  },
   categoryLabel: {
-    color: "#fff",
-    fontSize: 16,
     fontWeight: "500",
     textAlign: "center",
   },

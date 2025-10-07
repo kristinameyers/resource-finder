@@ -30,6 +30,7 @@ import CategoryGridSkeleton from '../components/CategoryGridSkeleton';
 import type { Category, ResourcePage } from '../types/shared-schema';
 import type { NavigationProp } from '@react-navigation/native';
 import { getCategoryIcon } from '../taxonomy';
+import { useAccessibility } from '../contexts/AccessibilityContext'; // 👈 IMPORTED
 
 const new211Logo = require('../assets/images/new-211-logo.png');
 const SAVED_ZIP = 'saved_zip_code';
@@ -49,16 +50,20 @@ type HomeScreenNavProp = {
   navigation: NavigationProp<any>;
 };
 
+// --- START OF COMPONENT ---
+
 export default function HomeScreen({ navigation }: HomeScreenNavProp) {
+  // ✅ ACCESS THE CONTEXT
+  const { theme, getFontSize, highContrast } = useAccessibility();
+  
   const { preferences } = useOnboarding() || {};
-  const { text: loadingText } = useTranslatedText('Loading...') || { text: 'Loading...' };
-  const { text: footerText } = useTranslatedText('Resource Finder') || { text: 'Resource Finder' };
   const { text: footerSubtext } = useTranslatedText('Find local resources and services') || { text: 'Find local resources and services' };
+  const { text: footerText } = useTranslatedText('Resource Finder') || { text: 'Resource Finder' };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [zipTouched, setZipTouched] = useState(false); // Track user-initiated zip validation
+  const [zipTouched, setZipTouched] = useState(false);
 
   const {
     locationState,
@@ -68,51 +73,38 @@ export default function HomeScreen({ navigation }: HomeScreenNavProp) {
     clearLocation,
   } = useLocation?.() || {};
 
-  // Whenever locationState changes, update AsyncStorage
   useFocusEffect(
     useCallback(() => {
-      // 1. Clear any existing selected category ID every time the screen is focused
       setSelectedCategoryId(null);
-
-      // 2. Trigger the global location hook to check AsyncStorage and update its state.
       refreshLocation?.();
-
-      // Cleanup function is NOT strictly necessary for this logic but is good practice,
-      // and having an empty dependency array ensures the callback is stable.
     }, []) 
   );
   
-  // HOOK: Update local ZIP state when locationState changes (e.g., after refreshLocation runs)
   useEffect(() => {
     if (locationState?.type === 'zipCode') {
-      // If hook has ZIP, sync it to local input field
       setZipCode(locationState.zipCode);
     } else if (locationState?.type === 'coordinates' || locationState?.type === 'none') {
-      // If hook has GPS or no location, clear local input field
       setZipCode('');
     }
-    // We only depend on locationState to avoid endless re-runs if other vars change
   }, [locationState]);
 
   const handleZipChange = useCallback(
     (zip: string) => {
       setZipCode(zip);
       setZipTouched(false);
-      
     },
     []
-);
-const handleSaveZip = useCallback(async () => {
+  );
+
+  const handleSaveZip = useCallback(async () => {
     setZipTouched(true);
     Keyboard.dismiss();
 
     if (zipCode.length === 5) {
-      // 1. Update the central location hook (triggers search updates, updates locationState)
       setLocationByZipCode?.(zipCode);
     }
 
     try {
-      // Save ZIP and clear GPS keys to ensure precedence
       await AsyncStorage.setItem(SAVED_ZIP, zipCode);
       await AsyncStorage.removeItem(SAVED_LAT);
       await AsyncStorage.removeItem(SAVED_LNG);
@@ -122,22 +114,15 @@ const handleSaveZip = useCallback(async () => {
   }, [zipCode, setLocationByZipCode]);
 
   const handleClearZip = useCallback(async () => {
-    // 1. Clears local state
     setZipCode('');
     setZipTouched(false);
     Keyboard.dismiss();
     clearLocation?.();
 
     try {
-      // 2. CLEARS SAVED ZIP (CRITICAL for ResourceListScreen HOOK 2)
       await AsyncStorage.removeItem(SAVED_ZIP);
       await AsyncStorage.removeItem(SAVED_LAT); 
       await AsyncStorage.removeItem(SAVED_LNG);
-      console.log('✅ Cleared saved zip code and storage.');
-
-      // OPTIONAL: If the list is directly visible after this, you may need a local refetch trigger,
-      // but relying on HOOK 2/7 in ResourceListScreen is usually sufficient if navigating back/forth.
-
     } catch (e) {
       console.error('Failed clearing ZIP', e);
     }
@@ -185,26 +170,6 @@ const handleSaveZip = useCallback(async () => {
     [navigation, zipCode]
   );
 
-  const {
-    data: mainCategoryResources = { items: [], total: 0, hasMore: false },
-    isLoading: loadingMainCategoryResources,
-    error: mainCategoryError,
-  } = useQuery<ResourcePage>({
-    queryKey: ['main-category-resources', selectedCategoryId, zipCode],
-    queryFn: () => {
-      if (!selectedCategoryId) return Promise.resolve({ items: [], total: 0, hasMore: false });
-      return fetchResourcesByMainCategory(
-        selectedCategoryId,
-        zipCode,
-        0,
-        20
-      );
-    },
-    enabled: Boolean(selectedCategoryId),
-    staleTime: 1000 * 60 * 15,
-    gcTime: 1000 * 60 * 30,
-  });
-
   const handleSearch = useCallback(() => {
     if (searchQuery.trim()) {
       navigation.navigate('ResourceList', {
@@ -214,21 +179,32 @@ const handleSaveZip = useCallback(async () => {
     }
   }, [navigation, searchQuery, zipCode]);
 
-  const handleUseLocation = useCallback(async () => {
-    await requestCurrentLocation?.();
-  }, [requestCurrentLocation]);
-
   // --- ZIP CODE VALIDATION: placed after hooks, before main return ---
   if (zipTouched && zipCode.length === 5 && !SANTA_BARBARA_COUNTY_ZIPS.includes(zipCode)) {
+    // 💡 FIX 1: Replace theme.error with a fallback color (#c00) or theme.primary
+    const errorColor = highContrast ? theme.primary : '#c00'; // Use primary or a distinct red
+    const errorBg = highContrast ? theme.backgroundSecondary : '#ffe5e5'; // Use secondary background for contrast circle
+
     return (
-      <SafeAreaView style={styles.center}>
-        <View style={styles.iconCircle}>
-          <MaterialIcons name="error-outline" size={54} color="#c00" />
+      // ✅ HC: Apply background color
+      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
+        {/* ✅ HC: Apply error colors */}
+        <View style={[styles.iconCircle, { 
+          backgroundColor: errorBg, 
+          shadowColor: highContrast ? theme.border : '#c00', // Use border for shadow in HC
+          borderColor: highContrast ? errorColor : 'transparent',
+          borderWidth: highContrast ? 2 : 0,
+        }]}>
+          <MaterialIcons name="error-outline" size={getFontSize(54)} color={errorColor} />
         </View>
-        <Text style={styles.errorTitle}>Out of Service Area</Text>
-        <Text style={styles.error}>That zip code is out of our service range</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={handleStartNewSearch}>
-          <Text style={styles.retryText}>Start New Search</Text>
+        {/* FONT SCALING & HC */}
+        <Text style={[styles.errorTitle, { fontSize: getFontSize(20), color: errorColor }]}>Out of Service Area</Text>
+        {/* FONT SCALING & HC */}
+        <Text style={[styles.error, { fontSize: getFontSize(17), color: errorColor }]}>That zip code is out of our service range</Text>
+        {/* ✅ HC: Apply button colors */}
+        <TouchableOpacity style={[styles.retryBtn, { backgroundColor: theme.primary, shadowColor: highContrast ? 'transparent' : theme.primary }]} onPress={handleStartNewSearch}>
+          {/* FONT SCALING & HC */}
+          <Text style={[styles.retryText, { fontSize: getFontSize(16), color: theme.backgroundSecondary }]}>Start New Search</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -236,39 +212,66 @@ const handleSaveZip = useCallback(async () => {
 
   // --- MAIN RENDER ---
   return (
-    <SafeAreaView style={styles.container}>
+    // ✅ HC: Apply background color
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView keyboardShouldPersistTaps="handled">
         <Image source={new211Logo} style={styles.logo} />
-        <View style={styles.header}>
-          <Text style={styles.title}>Santa Barbara 211</Text>
-          <Text style={styles.subtitle}>{footerSubtext}</Text>
+        {/* ✅ HC: Apply header background and text colors */}
+        <View style={[styles.header, { backgroundColor: theme.primary }]}>
+          {/* FONT SCALING & HC */}
+          <Text style={[styles.title, { fontSize: getFontSize(22), color: theme.backgroundSecondary }]}>Santa Barbara 211</Text>
+          {/* FONT SCALING & HC */}
+          <Text style={[styles.subtitle, { fontSize: getFontSize(16), color: theme.backgroundSecondary }]}>{footerSubtext}</Text>
         </View>
         <View style={styles.searchSection}>
-          <View style={styles.searchBarWrapper}>
-            <Ionicons name="search" size={24} color="#666666" style={styles.searchIcon} />
+          {/* Search Bar */}
+          <View style={[styles.searchBarWrapper, { 
+            backgroundColor: theme.backgroundSecondary, 
+            borderColor: theme.border, 
+            borderWidth: highContrast ? 1 : 0.5,
+            // 💡 FIX 2: Replace theme.shadow with a hardcoded, semi-transparent black
+            shadowColor: highContrast ? 'transparent' : '#000', 
+          }]}>
+            <Ionicons name="search" size={getFontSize(24)} color={theme.textSecondary} style={styles.searchIcon} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { 
+                fontSize: getFontSize(16), 
+                color: theme.text,
+              }]}
               placeholder="Type a keyword..."
-              placeholderTextColor="#666666"
+              placeholderTextColor={theme.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={handleSearch}
-              returnKeyType="go" // Change return key to 'go'
+              returnKeyType="go"
             />
+            {/* Go Button */}
             <TouchableOpacity
-              style={styles.goButton}
+              style={[styles.goButton, { backgroundColor: theme.accent }]}
               onPress={handleSearch}
-              disabled={!searchQuery.trim()} // Disable if input is empty
+              disabled={!searchQuery.trim()}
             >
-              <Text style={styles.goButtonText}>Go</Text>
+              {/* FONT SCALING & HC */}
+              <Text style={[styles.goButtonText, { fontSize: getFontSize(16), color: theme.backgroundSecondary }]}>Go</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.locationBar}>
-            <Ionicons name="location" size={24} color="#666666" />
+          
+          {/* Location Bar */}
+          <View style={[styles.locationBar, { 
+            backgroundColor: theme.backgroundSecondary,
+            borderColor: theme.border, 
+            borderWidth: highContrast ? 1 : 0.5,
+            // 💡 FIX 3: Replace theme.shadow with a hardcoded, semi-transparent black
+            shadowColor: highContrast ? 'transparent' : '#000', 
+          }]}>
+            <Ionicons name="location" size={getFontSize(24)} color={theme.textSecondary} />
             <TextInput
-              style={styles.locationInput}
+              style={[styles.locationInput, { 
+                fontSize: getFontSize(16), 
+                color: theme.text,
+              }]}
               placeholder="Enter a ZIP code"
-              placeholderTextColor="#666666"
+              placeholderTextColor={theme.textSecondary}
               value={zipCode}
               onChangeText={handleZipChange}
               keyboardType="numeric"
@@ -277,18 +280,24 @@ const handleSaveZip = useCallback(async () => {
               clearButtonMode="while-editing"
             />
             {zipCode ? (
-              <TouchableOpacity style={styles.clearButton} onPress={handleClearZip}>
-                <Text style={styles.clearButtonText}>Clear</Text>
+              // Clear Button
+              // 💡 FIX 4: Replace theme.error with theme.accent (or another contrasting color like primary)
+              <TouchableOpacity style={[styles.clearButton, { backgroundColor: theme.primary }]} onPress={handleClearZip}>
+                {/* FONT SCALING & HC */}
+                <Text style={[styles.clearButtonText, { fontSize: getFontSize(14), color: theme.backgroundSecondary }]}>Clear</Text>
               </TouchableOpacity>
             ) : null}
-            <TouchableOpacity style={styles.saveButton} onPress={handleSaveZip}>
-              <Text style={styles.saveButtonText}>Save</Text>
+            {/* Save Button */}
+            <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.accent }]} onPress={handleSaveZip}>
+              {/* FONT SCALING & HC */}
+              <Text style={[styles.saveButtonText, { fontSize: getFontSize(15), color: theme.backgroundSecondary }]}>Save</Text>
             </TouchableOpacity>
           </View>
         </View>
+        
         <View style={styles.categoriesSection}>
           {loadingCategories ? (
-            <CategoryGridSkeleton />
+            <CategoryGridSkeleton /> 
           ) : (
             <CategoryGrid
               categories={sortedCategories.map((cat: Category) => ({
@@ -300,8 +309,11 @@ const handleSaveZip = useCallback(async () => {
             />
           )}
         </View>
-        <View style={styles.footer}>
-          <Text>
+        
+        {/* Footer */}
+        {/* ✅ HC: Apply background and text colors */}
+        <View style={[styles.footer, { backgroundColor: theme.backgroundSecondary, borderTopWidth: highContrast ? 1 : 0, borderTopColor: theme.border }]}>
+          <Text style={{ fontSize: getFontSize(14), color: theme.textSecondary }}>
             {footerText} © {new Date().getFullYear()} | {footerSubtext}
           </Text>
         </View>
@@ -311,6 +323,7 @@ const handleSaveZip = useCallback(async () => {
 }
 
 const styles = StyleSheet.create({
+  // ... (Styles are left largely unchanged as they are overridden inline)
   container: { flex: 1, backgroundColor: '#fdfdfdff' },
   center: {
     flex: 1,
@@ -323,33 +336,31 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#ffe5e5',
+    backgroundColor: '#ffe5e5', // Will be overridden
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#c00',
+    shadowColor: '#c00', // Will be overridden
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 3,
   },
   errorTitle: {
-    fontSize: 20,
-    color: "#c00",
+    color: "#c00", // Will be overridden
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 9,
   },
   error: {
-    color: "#c00",
-    fontSize: 17,
+    color: "#c00", // Will be overridden
     textAlign: "center",
     marginBottom: 10,
   },
   logo: { width: 180, height: 100, margin: 2, resizeMode: 'contain', alignSelf: 'center' },
   header: { backgroundColor: '#005191', padding: 13, alignItems: 'center' },
-  title: { fontSize: 22, fontWeight: 'bold', color: 'white' },
-  subtitle: { fontSize: 16, color: 'white' },
+  title: { fontWeight: 'bold', color: 'white' },
+  subtitle: { color: 'white' },
   searchSection: { padding: 14 },
 
   searchBarWrapper: {
@@ -365,20 +376,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden', // Crucial to clip the button's corners
-    height: 60, // Give it a fixed height
+    overflow: 'hidden',
+    height: 60,
   },
   searchIcon: {
     paddingLeft: 20,
     paddingRight: 10,
-    color: '#666666',
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
     color: '#333333',
     height: '100%',
-    paddingRight: 5, // Small padding before the button
+    paddingRight: 5,
   },
   goButton: {
     backgroundColor: '#005191',
@@ -389,7 +398,6 @@ const styles = StyleSheet.create({
   },
   goButtonText: {
     color: 'white',
-    fontSize: 16,
     fontWeight: '600',
   },
 
@@ -398,11 +406,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', borderRadius: 10, padding: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
-  locationInput: { flex: 1, marginLeft: 10, fontSize: 16, color: '#333333' },
+  locationInput: { flex: 1, marginLeft: 10, color: '#333333' },
   saveButton: { marginLeft: 12, backgroundColor: '#ffb351', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
-  saveButtonText: { color: 'black', fontSize: 15, fontWeight: '600' },
+  saveButtonText: { color: 'black', fontWeight: '600' },
   clearButton: { marginLeft: 8, backgroundColor: '#dc3545', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
-  clearButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
+  clearButtonText: { color: 'white', fontWeight: '600' },
   categoriesSection: { padding: 0 },
   footer: { padding: 16, alignItems: 'center' },
   retryBtn: {
@@ -417,5 +425,5 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  retryText: { color: "#fff", fontWeight: "600", fontSize: 16, letterSpacing: 0.2 },
+  retryText: { color: "#fff", fontWeight: "600" },
 });

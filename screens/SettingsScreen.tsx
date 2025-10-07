@@ -1,28 +1,97 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Modal, Pressable } from "react-native";
+import { 
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, 
+  Switch, Modal, Pressable, Platform, Alert 
+} from "react-native";
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { useLanguage, Language } from "../contexts/LanguageContext";
 import { useAccessibility } from "../contexts/AccessibilityContext";
+import Constants from 'expo-constants'; 
+
+// 🛑 Configuration Constants
+const GOOGLE_TRANSLATE_API_KEY = Constants.expoConfig?.extra?.GOOGLE_TRANSLATE_API_KEY;
+
+const FONT_PREVIEW_SIZES = {
+  small: 14, 
+  medium: 18,
+  large: 22,
+};
+
+// You can keep the scaling constants here or move them inside the component
+const FONT_SCALING = {
+  small: -2,
+  medium: 0,
+  large: 4,
+};
+const BASE_FONT_SIZE = 16;
+
+
+// 🛑 Fallback/Utility colors for missing theme properties
+const FALLBACK_THEME = {
+    backgroundSecondary: '#f5f5f5', 
+    cardBackground: 'white',
+    iconColor: '#888',
+    switchOff: '#ccc', 
+    border: '#e0e0e0',
+    accentBackground: '#e0e7ff', 
+    textSecondary: '#666', 
+    text: '#222', // Fallback for general text
+    primary: '#005191', // Fallback for primary
+    background: '#ffffff', // Fallback for background
+};
+
+// 🛑 High Contrast Color Palette (Define the specific high contrast colors)
+const HIGH_CONTRAST_COLORS = {
+    background: '#000000', // Black background
+    backgroundSecondary: '#000000', // Black secondary background
+    cardBackground: '#000000', // Black cards
+    text: '#FFFF00', // Bright yellow text
+    primary: '#FFFF00', // Bright yellow accent
+    textSecondary: '#FFFFFF', // White secondary text
+    iconColor: '#FFFFFF', // White icons
+    switchOff: '#555555', // Dark grey switch track when off
+    border: '#FFFFFF', // White border
+    accentBackground: '#333333', // Dark grey accent background
+};
 
 export default function SettingsScreen() {
   const { currentLanguage, setLanguage, translateBatch, clearTranslationCache } = useLanguage();
   const { fontSize, highContrast, reduceMotion, screenReader, hapticFeedback,
     setFontSize, setHighContrast, setReduceMotion, setScreenReader, setHapticFeedback,
-    triggerHaptic, theme } = useAccessibility();
+    triggerHaptic, theme: contextTheme } = useAccessibility(); // Renamed imported theme to contextTheme
 
   const [translatedTexts, setTranslatedTexts] = useState<Record<string, string>>({});
   const [pickerVisible, setPickerVisible] = useState(false);
 
-  // Language support
+  // ✅ FIX 1: Define getScaledFontSize here where `fontSize` is in scope
+  const getScaledFontSize = (base: number) => {
+    // We use BASE_FONT_SIZE for reference, but the scaling is applied based on the component's original size
+    const scale = FONT_SCALING[fontSize as 'small' | 'medium' | 'large'] || 0;
+    return base + scale;
+  };
+
+  // ✅ FIX 3: Define the dynamic theme object based on highContrast state
+  const dynamicTheme = highContrast 
+    ? { ...contextTheme, ...HIGH_CONTRAST_COLORS }
+    : { ...contextTheme, ...FALLBACK_THEME };
+    
+  // Merge dynamic theme with fallbacks (ensure fallbacks/base colors are used if contextTheme doesn't provide them)
+  const effectiveTheme = { ...FALLBACK_THEME, ...dynamicTheme }; 
+
+  // ... (Language Data and Translation Effect remain the same) ...
+
+  // Language Data
   const languages: { code: Language, name: string, nativeName: string }[] = [
     { code: 'en', name: 'English', nativeName: 'English' },
     { code: 'es', name: 'Spanish (Mexican)', nativeName: 'Español (México)' },
     { code: 'tl', name: 'Tagalog', nativeName: 'Tagalog' }
   ];
 
+  // Translation Effect (Ready for API Key)
   useEffect(() => {
     let isCancelled = false;
     const defaultTexts: Record<string, string> = {
+      // ... (All default texts remain the same) ...
       'Settings': 'Settings', 'Language': 'Language', 'Choose your preferred language': 'Choose your preferred language',
       'Current Language': 'Current Language', 'Resource Finder Settings': 'Resource Finder Settings',
       'Configure your app preferences': 'Configure your app preferences', 'Accessibility': 'Accessibility',
@@ -34,14 +103,23 @@ export default function SettingsScreen() {
       'Optimize for screen reader users': 'Optimize for screen reader users', 'Enable Screen Reader Mode': 'Enable Screen Reader Mode',
       'Haptic Feedback': 'Haptic Feedback', 'Vibration feedback for interactions': 'Vibration feedback for interactions',
       'Enable Haptic Feedback': 'Enable Haptic Feedback',
-      'Settings are automatically saved and will be remembered next time you visit.': 'Settings are automatically saved and will be remembered next time you visit.'
+      'Settings are automatically saved and will be remembered next time you visit.': 'Settings are automatically saved and will be remembered next time you visit.',
+      'Clear Translation Cache': 'Clear Translation Cache'
     };
     if (currentLanguage === 'en') {
       if (!isCancelled) setTranslatedTexts(defaultTexts);
       return;
     }
+    
+    // We only check for the key, but do not pass it as an argument here.
+    if (!GOOGLE_TRANSLATE_API_KEY) {
+        console.warn("GOOGLE_TRANSLATE_API_KEY is missing. Using default (English) texts.");
+        setTranslatedTexts(defaultTexts);
+        return; 
+    }
 
     const textsToTranslate = Object.keys(defaultTexts);
+    // 🛑 FIX: Removed the third argument (GOOGLE_TRANSLATE_API_KEY) from translateBatch call.
     translateBatch(textsToTranslate, currentLanguage).then(results => {
       if (!isCancelled) {
         const translations = { ...defaultTexts };
@@ -53,43 +131,82 @@ export default function SettingsScreen() {
       setTranslatedTexts(defaultTexts);
     });
     return () => { isCancelled = true; };
-  }, [currentLanguage]);
+  }, [currentLanguage, translateBatch]); // Added translateBatch to dependencies
 
   const t = (text: string) => translatedTexts[text] || text;
 
+  // Haptic Handler
+  const handleAccessibilityToggle = (setter: (value: boolean) => void, newValue: boolean) => {
+    setter(newValue);
+    if (hapticFeedback) {
+        triggerHaptic('light'); 
+    }
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: effectiveTheme.backgroundSecondary }]} 
+      contentContainerStyle={styles.content}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerIconCircle}>
-          <MaterialIcons name="settings" size={32} color="#fff" />
+        <View style={[styles.headerIconCircle, { backgroundColor: effectiveTheme.primary }]}>
+          <MaterialIcons name="settings" size={32} color={highContrast ? '#000000' : '#fff'} />
         </View>
-        <Text style={styles.headerTitle}>{t('Resource Finder Settings')}</Text>
-        <Text style={styles.headerDesc}>{t('Configure your app preferences')}</Text>
+        {/* ✅ FIX 2: Apply scaled font size (Base size 26 from styles.headerTitle) */}
+        <Text style={[
+            styles.headerTitle, 
+            { color: effectiveTheme.text, fontSize: getScaledFontSize(26) }
+        ]}>{t('Resource Finder Settings')}</Text>
+        {/* ✅ FIX 2: Apply scaled font size (Base size 15 from styles.headerDesc) */}
+        <Text style={[
+            styles.headerDesc, 
+            { color: effectiveTheme.textSecondary, fontSize: getScaledFontSize(15) }
+        ]}>{t('Configure your app preferences')}</Text>
       </View>
 
       {/* Language Settings */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: effectiveTheme.cardBackground }]}>
         <View style={styles.cardHeaderRow}>
-          <Ionicons name="globe-outline" size={22} color="#005191" />
-          <Text style={styles.cardHeaderTitle}>{t('Language')}</Text>
+          <Ionicons name="globe-outline" size={22} color={effectiveTheme.primary} />
+          <Text style={[styles.cardHeaderTitle, { color: effectiveTheme.primary }]}>{t('Language')}</Text>
         </View>
-        <Text style={styles.cardDesc}>{t('Choose your preferred language')}</Text>
-        <Text style={styles.label}>{t('Current Language')}</Text>
-        <View style={styles.currentLanguageRow}>
-          <FontAwesome name="check" size={18} color="#005191" />
-          <Text style={styles.currentLanguageMain}>{languages.find(l => l.code === currentLanguage)?.nativeName}</Text>
-          <Text style={styles.currentLanguageSub}>({languages.find(l => l.code === currentLanguage)?.name})</Text>
+        <Text style={[styles.cardDesc, { color: effectiveTheme.textSecondary }]}>{t('Choose your preferred language')}</Text>
+        {/* ✅ FIX 2: Apply scaled font size (Base size 15 from styles.label) */}
+        <Text style={[
+            styles.label, 
+            { color: effectiveTheme.text, fontSize: getScaledFontSize(15) }
+        ]}>{t('Current Language')}</Text>
+        <View style={[styles.currentLanguageRow, { 
+          backgroundColor: effectiveTheme.accentBackground,
+          borderColor: highContrast ? effectiveTheme.border : 'transparent', // High contrast border
+          borderWidth: highContrast ? 1 : 0, 
+        }]}>
+          <FontAwesome name="check" size={18} color={effectiveTheme.primary} />
+          {/* ✅ FIX 2: Apply scaled font size (Base size 16 from styles.currentLanguageMain's implicit size/design) */}
+          <Text style={[
+            styles.currentLanguageMain, 
+            { color: effectiveTheme.primary, fontSize: getScaledFontSize(16) }
+          ]}>{languages.find(l => l.code === currentLanguage)?.nativeName}</Text>
+          <Text style={[styles.currentLanguageSub, { color: effectiveTheme.textSecondary }]}>({languages.find(l => l.code === currentLanguage)?.name})</Text>
         </View>
-        {/* Language Picker - replaced native-base Picker with custom modal */}
+        {/* Language Picker Button */}
         <TouchableOpacity
-          style={styles.languagePickerBtn}
-          onPress={() => setPickerVisible(true)}
+          style={[
+            styles.languagePickerBtn, 
+            { 
+              backgroundColor: effectiveTheme.accentBackground,
+              borderColor: highContrast ? effectiveTheme.border : 'transparent',
+              borderWidth: highContrast ? 1 : 0,
+            }
+          ]}
+          onPress={() => { setPickerVisible(true); triggerHaptic('light'); }} 
         >
-          <Text style={styles.languagePickerBtnText}>
+          <Text style={[styles.languagePickerBtnText, { color: effectiveTheme.primary }]}>
             {t('Choose your preferred language')}
           </Text>
         </TouchableOpacity>
+        {/* Language Picker Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -97,115 +214,192 @@ export default function SettingsScreen() {
           onRequestClose={() => setPickerVisible(false)}
         >
           <Pressable style={styles.modalOverlay} onPress={() => setPickerVisible(false)}>
-            <View style={styles.modalContent}>
+            <Pressable style={[styles.modalContent, { backgroundColor: effectiveTheme.cardBackground }]}> 
               {languages.map(lang => (
                 <TouchableOpacity
                   key={lang.code}
-                  style={styles.modalOption}
+                  style={[
+                    styles.modalOption,
+                    { borderBottomColor: highContrast ? effectiveTheme.border : '#e0e0e0' },
+                  ]}
                   onPress={() => {
                     setLanguage(lang.code);
-                    triggerHaptic('light');
+                    triggerHaptic('heavy'); 
                     setPickerVisible(false);
                   }}
                 >
                   <Text style={[
                     styles.modalOptionText,
-                    currentLanguage === lang.code && styles.modalOptionTextSelected
+                    { color: effectiveTheme.text }, // 🛑 FIX: Use theme.text instead of theme.textPrimary
+                    currentLanguage === lang.code && styles.modalOptionTextSelected,
+                    currentLanguage === lang.code && { color: effectiveTheme.primary }
                   ]}>
                     {lang.nativeName} ({lang.name})
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </Pressable>
           </Pressable>
         </Modal>
       </View>
 
-      {/* Accessibility Settings (unchanged) */}
-      <View style={styles.card}>
+      {/* Accessibility Settings */}
+      <View style={[styles.card, { backgroundColor: effectiveTheme.cardBackground }]}>
         <View style={styles.cardHeaderRow}>
-          <Ionicons name="accessibility" size={22} color="#005191" />
-          <Text style={styles.cardHeaderTitle}>{t('Accessibility')}</Text>
+          <Ionicons name="accessibility" size={22} color={effectiveTheme.primary} />
+          <Text style={[styles.cardHeaderTitle, { color: effectiveTheme.primary }]}>{t('Accessibility')}</Text>
         </View>
-        <Text style={styles.cardDesc}>{t('Customize display and interaction settings')}</Text>
-        {/* Font Size */}
-        <Text style={styles.label}>{t('Font Size')}</Text>
+        <Text style={[styles.cardDesc, { color: effectiveTheme.textSecondary }]}>{t('Customize display and interaction settings')}</Text>
+        
+        {/* Font Size Feature */}
+        {/* ✅ FIX 2: Apply scaled font size (Base size 15 from styles.label) */}
+        <Text style={[
+            styles.label, 
+            { color: effectiveTheme.text, fontSize: getScaledFontSize(15) }
+        ]}>{t('Font Size')}</Text>
+        
         <View style={styles.fontSizeRow}>
-          {['small', 'medium', 'large'].map(size => (
+          {Object.entries(FONT_PREVIEW_SIZES).map(([sizeKey, sizeValue]) => (
             <TouchableOpacity
-              key={size}
-              style={[styles.fontSizeOption, fontSize === size && styles.fontSizeActive]}
-              onPress={() => setFontSize(size as 'small' | 'medium' | 'large')}
+              key={sizeKey}
+              style={[
+                styles.fontSizeOption, 
+                { borderColor: effectiveTheme.border }, 
+                fontSize === sizeKey && [
+                  styles.fontSizeActive, 
+                  { 
+                    borderColor: effectiveTheme.primary, 
+                    backgroundColor: effectiveTheme.accentBackground 
+                  }
+                ] 
+              ]}
+              onPress={() => { 
+                setFontSize(sizeKey as 'small' | 'medium' | 'large');
+                triggerHaptic('light'); 
+              }}
             >
               <Text style={[
                 styles.fontSizeLabel,
-                size === 'large' ? styles.fontSizeLarge :
-                  size === 'small' ? styles.fontSizeSmall : styles.fontSizeMedium
+                { fontSize: sizeValue, color: effectiveTheme.text } 
               ]}>
                 Aa
               </Text>
-              <Text style={styles.fontSizeOptionText}>{t(size.charAt(0).toUpperCase() + size.slice(1))}</Text>
+              <Text style={[styles.fontSizeOptionText, { color: effectiveTheme.textSecondary }]}>{t(sizeKey.charAt(0).toUpperCase() + sizeKey.slice(1))}</Text>
             </TouchableOpacity>
           ))}
         </View>
-        {/* Display Mode */}
-        <Text style={styles.label}>{t('Display Mode')}</Text>
+        
+        {/* Display Mode Feature */}
+        <Text style={[styles.label, { color: effectiveTheme.text }]}>{t('Display Mode')}</Text>
         <View style={styles.displayModeRow}>
-          <TouchableOpacity style={[styles.displayModeOption, !highContrast && styles.displayModeActive]}
-            onPress={() => setHighContrast(false)}>
-            <MaterialIcons name="visibility" size={20} color="#007aff" />
-            <Text style={styles.displayModeOptionText}>{t('Default')}</Text>
+          {/* Default */}
+          <TouchableOpacity 
+            style={[
+              styles.displayModeOption, 
+              { borderColor: effectiveTheme.border }, 
+              !highContrast && [
+                styles.displayModeActive, 
+                { 
+                  borderColor: effectiveTheme.primary, 
+                  backgroundColor: effectiveTheme.accentBackground 
+                }
+              ] 
+            ]}
+            onPress={() => { setHighContrast(false); triggerHaptic('light'); }}
+          >
+            <MaterialIcons name="visibility" size={20} color={effectiveTheme.primary} />
+            <Text style={[styles.displayModeOptionText, { color: effectiveTheme.text }]}>{t('Default')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.displayModeOption, highContrast && styles.displayModeActive]}
-            onPress={() => setHighContrast(true)}>
-            <MaterialIcons name="contrast" size={20} color="#005191" />
-            <Text style={styles.displayModeOptionText}>{t('High Contrast')}</Text>
+          {/* High Contrast */}
+          <TouchableOpacity 
+            style={[
+              styles.displayModeOption, 
+              { borderColor: effectiveTheme.border }, 
+              highContrast && [
+                styles.displayModeActive, 
+                { 
+                  borderColor: effectiveTheme.primary, 
+                  backgroundColor: effectiveTheme.accentBackground 
+                }
+              ] 
+            ]}
+            onPress={() => { setHighContrast(true); triggerHaptic('light'); }}
+          >
+            <MaterialIcons name="contrast" size={20} color={effectiveTheme.primary} />
+            <Text style={[styles.displayModeOptionText, { color: effectiveTheme.text }]}>{t('High Contrast')}</Text>
           </TouchableOpacity>
         </View>
-        {/* Reduce Motion */}
+        
+        {/* Reduce Motion Switch */}
         <View style={styles.switchRow}>
-          <MaterialIcons name="waves" size={18} color="#888" />
-          <Text style={styles.switchLabel}>{t('Reduce Motion')}</Text>
-          <Switch value={reduceMotion} onValueChange={setReduceMotion} />
+          <MaterialIcons name="waves" size={18} color={effectiveTheme.iconColor} />
+          <Text style={[styles.switchLabel, { color: effectiveTheme.text }]}>{t('Reduce Motion')}</Text>
+          <Switch 
+            value={reduceMotion} 
+            onValueChange={(v) => handleAccessibilityToggle(setReduceMotion, v)} 
+            trackColor={{ false: effectiveTheme.switchOff, true: effectiveTheme.primary }} 
+          />
         </View>
-        {/* Screen Reader */}
+        
+        {/* Screen Reader Switch */}
         <View style={styles.switchRow}>
-          <MaterialIcons name="record-voice-over" size={18} color="#888" />
-          <Text style={styles.switchLabel}>{t('Enable Screen Reader Mode')}</Text>
-          <Switch value={screenReader} onValueChange={setScreenReader} />
+          <MaterialIcons name="record-voice-over" size={18} color={effectiveTheme.iconColor} />
+          <Text style={[styles.switchLabel, { color: effectiveTheme.text }]}>{t('Enable Screen Reader Mode')}</Text>
+          <Switch 
+            value={screenReader} 
+            onValueChange={(v) => handleAccessibilityToggle(setScreenReader, v)} 
+            trackColor={{ false: effectiveTheme.switchOff, true: effectiveTheme.primary }}
+          />
         </View>
-        {/* Haptic Feedback */}
+        
+        {/* Haptic Feedback Switch */}
         <View style={styles.switchRow}>
-          <MaterialIcons name="phonelink-ring" size={18} color="#888" />
-          <Text style={styles.switchLabel}>{t('Enable Haptic Feedback')}</Text>
-          <Switch value={hapticFeedback} onValueChange={setHapticFeedback} />
+          <MaterialIcons name="phonelink-ring" size={18} color={effectiveTheme.iconColor} />
+          <Text style={[styles.switchLabel, { color: effectiveTheme.text }]}>{t('Enable Haptic Feedback')}</Text>
+          <Switch 
+            value={hapticFeedback} 
+            onValueChange={(v) => handleAccessibilityToggle(setHapticFeedback, v)} 
+            trackColor={{ false: effectiveTheme.switchOff, true: effectiveTheme.primary }}
+          />
         </View>
       </View>
+      
       {/* Info Card */}
-      <View style={styles.card}>
-        <Text style={styles.infoText}>
+      <View style={[styles.card, { backgroundColor: effectiveTheme.cardBackground }]}>
+        <Text style={[styles.infoText, { color: effectiveTheme.textSecondary }]}>
           {t('Settings are automatically saved and will be remembered next time you visit.')}
         </Text>
       </View>
-      {/* Developer Card */}
+      
+      {/* Developer Card (For API Key Check) */}
       {__DEV__ && (
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: effectiveTheme.cardBackground }]}>
           <View style={styles.cardHeaderRow}>
-            <MaterialIcons name="build" size={22} color="#999" />
-            <Text style={styles.cardHeaderTitle}>Developer Tools</Text>
+            <MaterialIcons name="build" size={22} color={effectiveTheme.textSecondary} />
+            <Text style={[styles.cardHeaderTitle, { color: effectiveTheme.text }]}>Developer Tools</Text>
           </View>
           <View style={styles.devRow}>
-            <Text style={styles.devLabel}>{t("Clear Translation Cache")}</Text>
-            <TouchableOpacity onPress={clearTranslationCache} style={styles.clearCacheBtn}>
-              <Text style={styles.clearCacheText}>Clear</Text>
+            <Text style={[styles.devLabel, { color: effectiveTheme.text }]}>{t("Clear Translation Cache")}</Text>
+            <TouchableOpacity onPress={() => { clearTranslationCache(); triggerHaptic('heavy');}} style={[styles.clearCacheBtn, { 
+                backgroundColor: effectiveTheme.accentBackground,
+                borderColor: highContrast ? effectiveTheme.border : 'transparent',
+                borderWidth: highContrast ? 1 : 0,
+            }]}>
+              <Text style={[styles.clearCacheText, { color: effectiveTheme.text }]}>Clear</Text>
             </TouchableOpacity>
           </View>
+          {!GOOGLE_TRANSLATE_API_KEY && (
+            <Text style={{ color: 'red', marginTop: 10 }}>
+                Translation API Key Missing: Check Constants.expoConfig.extra
+            </Text>
+          )}
         </View>
       )}
     </ScrollView>
   );
 }
 
+// ... (Styles remain the same) ...
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   content: { padding: 16 },
@@ -225,7 +419,6 @@ const styles = StyleSheet.create({
   fontSizeOption: { borderWidth: 2, borderColor: "#e0e0e0", borderRadius: 8, padding: 11, alignItems: "center", flex: 1, marginHorizontal: 4 },
   fontSizeActive: { borderColor: "#005191", backgroundColor: "#e3effb" },
   fontSizeLabel: { fontWeight: "bold" },
-  fontSizeSmall: { fontSize: 14 }, fontSizeMedium: { fontSize: 18 }, fontSizeLarge: { fontSize: 22 },
   fontSizeOptionText: { fontSize: 13, color: "#555", marginTop: 2 },
   currentLanguageRow: { flexDirection: "row", alignItems: "center", padding: 8, backgroundColor: "#e0e7ef", borderRadius: 6, marginVertical: 7 },
   currentLanguageMain: { fontWeight: "bold", color: "#005191", marginHorizontal: 8 },
@@ -237,7 +430,7 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10, marginTop: 10 },
   switchLabel: { fontSize: 15, flex: 1, marginLeft: 8 },
   infoText: { textAlign: "center", color: "#888", fontSize: 14 },
-  devRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  devRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
   devLabel: { fontSize: 15, color: "#444" },
   clearCacheBtn: { padding: 7, backgroundColor: "#eee", borderRadius: 5, marginLeft: 8 },
   clearCacheText: { color: "#222", fontWeight: "700" },

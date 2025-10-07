@@ -268,7 +268,27 @@ export async function fetchResourcesByMainCategory(
   console.log('fetchResourcesByMainCategory called with:', { categoryName, zipCode, skip, size });
   const locationParams = buildLocationParams();
 
-  // --- Step 1: Determine query logic and fallback ---
+  // --- Step 1: Resolve Category and determine search term ---
+  // Find the category object using the normalized name
+  const normalizedCategoryKey = categoryName.trim()
+    .toLowerCase()
+    .replace(/[\W_]+/g, '-') // Replace non-word characters with a single hyphen
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+
+  const category = MAIN_CATEGORIES[normalizedCategoryKey];
+
+ if (!category) {
+    console.error(`Category '${categoryName}' (looked up as '${normalizedCategoryKey}') not found in MAIN_CATEGORIES.`);
+    return { items: [], total: 0, hasMore: false, error: "Category not found." };
+  }
+
+  // Determine the search keywords to use for the API
+  // Prioritize taxonomyCode if it exists and we're using the taxonomy endpoint
+  const searchKeyword = (Array.isArray(category.keywords) && category.keywords.length > 0)
+    ? category.keywords[0] // Use the single, high-priority term
+    : category.name;       // Fallback to the category name
+
+  // --- Step 2: Determine location query logic and fallback ---
   let usedCountyFallback = false;
   let zipError: string | undefined = undefined;
 
@@ -290,16 +310,18 @@ export async function fetchResourcesByMainCategory(
   console.log(`Search location: ${location}`);
   console.log(`searchWithinLocationType: ${searchWithinLocationType}, orderByDistance: ${orderByDistance}`);
 
-  // --- Step 2: Build query ---
+  // --- Step 3: Build query ---
   const queryParams: Record<string, string | undefined> = {
-    keywords: categoryName.trim().toLowerCase(),
+    // ✅ FIX: Use the resolved searchKeywords instead of the raw categoryName
+    keywords: searchKeyword, 
     searchWithinLocationType,
     location,
     orderByDistance,
     skip: String(skip),
     size: String(size),
   };
-
+  
+  // NOTE: The header keywordIsTaxonomyTerm is set to 'true'.
   const searchHeaders: Record<string, string | undefined> = {
     "searchMode": "All",
     "locationMode": "Serving",
@@ -307,14 +329,23 @@ export async function fetchResourcesByMainCategory(
     "keywordIsTaxonomyTerm": "true",
   };
 
+  // Re-adjusting to prioritize Taxonomy Term if no code exists
+  // Assuming 'keywords' (e.g., 'children') is meant to be a taxonomy term
+  const finalHeaders = {
+    ...searchHeaders,
+    "keywordIsTaxonomyCode": category.taxonomyCode ? "true" : "false",
+    // If no taxonomy code, assume the custom keyword is a taxonomy term (as per original logic)
+    "keywordIsTaxonomyTerm": !category.taxonomyCode ? "true" : "false",
+  };
+  
   console.log('Main category request params:', queryParams);
-  console.log('Main category search headers:', searchHeaders);
+  console.log('Main category search headers:', finalHeaders);
 
-  // --- Step 3: Query the API ---
+  // --- Step 4: Query the API ---
   const data = await national211Get<{ results: Resource[]; count?: number; total?: number }>(
     "/search/keyword",
     queryParams,
-    searchHeaders
+    finalHeaders
   );
 
   // --- Step 4: Result structure & error handling ---

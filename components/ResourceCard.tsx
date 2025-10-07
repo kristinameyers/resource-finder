@@ -1,14 +1,13 @@
 import React, { memo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import FavoriteButton from './FavoriteButton';
 import { FavoriteResource } from '../contexts/FavoritesContext';
 import type { Resource } from "../types/shared-schema";
+import { useAccessibility } from "../contexts/AccessibilityContext"; // 👈 Imported
 
 interface Props {
   resource: Resource & FavoriteResource;
   distanceMiles?: number;
-  // NOTE: onPress should ideally be wrapped in useCallback in the parent component
-  // to avoid breaking memoization if performance becomes an issue.
   onPress: () => void;
 }
 
@@ -18,6 +17,9 @@ function ResourceCard({
   distanceMiles,
   onPress,
 }: Props) {
+  // ✅ Access the accessibility context
+  const { theme, getFontSize, highContrast } = useAccessibility();
+
   const name =
     resource.nameServiceAtLocation ||
     resource.nameService ||
@@ -35,18 +37,42 @@ function ResourceCard({
       .join(", ")
     : "";
 
+  // 💡 FIX: Replaced theme.shadow with a hardcoded shadow color ('#000') for non-HC mode.
+  const shadowStyle = highContrast
+    ? { borderWidth: 1, borderColor: theme.border, elevation: 0 }
+    : { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 };
+
   return (
-    // Use a top-level View for the Card Styling (Background/Shadow/Margin)
-    <View style={styles.cardContainer}>
+    // ✅ Apply dynamic container styling (HC borders, shadow reduction, background)
+    <View style={[
+      styles.cardContainer, 
+      { backgroundColor: theme.backgroundSecondary }, 
+      shadowStyle
+    ]}>
       {/* The TouchableOpacity wraps the main content for the onPress action */}
-      <TouchableOpacity style={styles.contentWrapper} onPress={onPress}>
+      <TouchableOpacity 
+        style={styles.contentWrapper} 
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`View details for ${name}.`}
+        >
         {/* 1. Header/Title Row */}
         <View style={styles.headerRow}>
-          <Text style={styles.title} numberOfLines={2}>
+          {/* FONT SCALING & HC: Title */}
+          <Text 
+            style={[
+              styles.title, 
+              { 
+                fontSize: getFontSize(16), 
+                color: theme.primary,
+              }
+            ]} 
+            numberOfLines={2}
+          >
             {name}
           </Text>
 
-          {/* 2. Favorite Button */}
+          {/* 2. Favorite Button (assumes internal HC updates) */}
           <FavoriteButton
             resource={resource} // Pass the full resource object
             showText={false} // Show icon only for list view
@@ -54,13 +80,24 @@ function ResourceCard({
         </View>
 
         {/* 3. Distance and other details */}
+        {/* FONT SCALING & HC: Distance */}
         {distanceMiles != null && (
-          <Text style={styles.distance}>{distanceMiles.toFixed(1)} mi</Text>
+          <Text style={[styles.distance, { fontSize: getFontSize(15), color: theme.textSecondary }]}>
+            {distanceMiles.toFixed(1)} mi
+          </Text>
         )}
+        {/* FONT SCALING & HC: Organization Name */}
         {resource.nameOrganization && (
-          <Text style={styles.organization}>{resource.nameOrganization}</Text>
+          <Text style={[styles.organization, { fontSize: getFontSize(15), color: theme.text }]}>
+            {resource.nameOrganization}
+          </Text>
         )}
-        {address ? <Text style={styles.address}>{address}</Text> : null}
+        {/* FONT SCALING & HC: Address */}
+        {address ? (
+          <Text style={[styles.address, { fontSize: getFontSize(14), color: theme.text }]}>
+            {address}
+          </Text>
+        ) : null}
       </TouchableOpacity>
     </View>
   );
@@ -69,21 +106,14 @@ function ResourceCard({
 // 2. Export the component wrapped in React.memo
 export default memo(ResourceCard);
 
+// Styles are adjusted to remove hardcoded values that are now dynamic
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#fff",
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 14,
-    borderRadius: 8,
-    elevation: 1,
-  },
   cardContainer: {
-    backgroundColor: "#fff",
+    // Background and shadow managed inline
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 8,
-    elevation: 1,
+    elevation: 0, // Set elevation to 0 and manage shadow via prop for control
   },
   contentWrapper: {
     padding: 14,
@@ -92,18 +122,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4, // Add a bit of space below the header
+    marginBottom: 4,
   },
-  // Ensure the title shrinks to make space for the button
   title: { 
-    fontSize: 16, 
+    // fontSize and color managed inline
     fontWeight: "600", 
-    color: "#005191", 
     flex: 1, 
     flexShrink: 1, 
     paddingRight: 10 
   },
-  distance: { fontSize: 15, color: "#555", marginTop: 4 },
-  organization: { fontSize: 15, color: "#000", marginTop: 4 },
-  address: { fontSize: 14, color: "#000", marginTop: 4 },
+  distance: { 
+    // fontSize and color managed inline
+    marginTop: 4 
+  },
+  organization: { 
+    // fontSize and color managed inline
+    marginTop: 4 
+  },
+  address: { 
+    // fontSize and color managed inline
+    marginTop: 4 
+  },
 });

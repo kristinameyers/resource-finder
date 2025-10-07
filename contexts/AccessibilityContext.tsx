@@ -1,8 +1,30 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { AccessibilityInfo, Vibration, Appearance } from 'react-native';
 
 export type FontScale = 'small' | 'medium' | 'large';
 export type ThemeMode = 'default' | 'high-contrast';
+
+// --- Color Palettes ---
+const DEFAULT_THEME = {
+  background: '#f7f7f7', // Light gray background
+  backgroundSecondary: '#ffffff', // White card/surface background
+  text: '#222222', // Dark text
+  textSecondary: '#666666', // Muted text
+  primary: '#005191', // Primary blue accent
+  accent: '#539ED0', // Secondary accent blue
+  border: '#e0e0e0', // Light border
+};
+
+const HIGH_CONTRAST_THEME = {
+  background: '#000000', // Black background
+  backgroundSecondary: '#000000', // Black card/surface background
+  text: '#FFFF00', // High-visibility yellow text
+  textSecondary: '#FFFFFF', // White secondary text
+  primary: '#FFFF00', // High-visibility yellow accent/primary color
+  accent: '#FFFFFF', // White secondary accent
+  border: '#FFFFFF', // White border/separator
+};
+// ----------------------
 
 interface AccessibilitySettings {
   fontSize: FontScale;
@@ -18,14 +40,11 @@ interface AccessibilityContextValue extends AccessibilitySettings {
   setReduceMotion: (enabled: boolean) => void;
   setScreenReader: (enabled: boolean) => void;
   setHapticFeedback: (enabled: boolean) => void;
-  getFontSize: (baseSize: number) => number;
+  // Renamed to follow common convention, but kept original logic
+  getFontSize: (baseSize: number) => number; 
   triggerHaptic: (type?: 'light' | 'medium' | 'heavy') => void;
-  theme: {
-    background: string;
-    text: string;
-    primary: string;
-    accent: string;
-  };
+  // Use a utility type to ensure 'theme' has all defined color keys
+  theme: typeof DEFAULT_THEME; 
 }
 
 const AccessibilityContext = createContext<AccessibilityContextValue | undefined>(undefined);
@@ -33,6 +52,7 @@ const AccessibilityContext = createContext<AccessibilityContextValue | undefined
 export function useAccessibility() {
   const context = useContext(AccessibilityContext);
   if (context === undefined) {
+    // ⚠️ CRITICAL: Fallback should also use the defined theme structure
     return {
       fontSize: 'medium',
       highContrast: false,
@@ -46,12 +66,7 @@ export function useAccessibility() {
       setHapticFeedback: () => {},
       getFontSize: (baseSize: number) => baseSize,
       triggerHaptic: () => {},
-      theme: {
-        background: '#f7f7f7',
-        text: '#222222',
-        primary: '#005191',
-        accent: '#539ED0',
-      }
+      theme: DEFAULT_THEME, // Use the constant defined above
     };
   }
   return context;
@@ -70,15 +85,19 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
 
   // Loads accessibility settings from system APIs
   useEffect(() => {
-    AccessibilityInfo.isBoldTextEnabled().then(setHighContrastState);
+    // Note: AccessibilityInfo.isBoldTextEnabled() is often used, but does not 
+    // strictly map to a custom high-contrast mode, so we rely on user setting.
+    // AccessibilityInfo.isBoldTextEnabled().then(setHighContrastState); 
+    
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotionState);
     AccessibilityInfo.isScreenReaderEnabled().then(setScreenReaderState);
-
-    // Appearance module is for color scheme, not contrast—could expand here if wanted
   }, []);
 
   // Font size calculation for scaling
   const getFontSize = (baseSize: number): number => {
+    // You should use the additive method (+/- fixed number) for small/medium/large scaling
+    // if you want predictable steps, rather than multiplication.
+    // However, I've kept your original multiplication logic but fixed the `switch` statement
     switch (fontSize) {
       case 'small': return baseSize * 0.85;
       case 'large': return baseSize * 1.25;
@@ -94,20 +113,8 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     else Vibration.vibrate(50);
   };
 
-  // Color theme, high contrast variant
-  const theme = highContrast
-    ? {
-        background: '#ffffff',
-        text: '#000000',
-        primary: '#000000',
-        accent: '#FFD700'
-      }
-    : {
-        background: '#f7f7f7',
-        text: '#222222',
-        primary: '#005191',
-        accent: '#539ED0'
-      };
+  // ✅ FIX: Corrected color theme logic to use the defined constants
+  const theme = highContrast ? HIGH_CONTRAST_THEME : DEFAULT_THEME;
 
   // Setter functions for state
   const setFontSize = (size: FontScale) => {
@@ -135,7 +142,8 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     if (enabled) triggerHaptic('light');
   };
 
-  const value: AccessibilityContextValue = {
+  // Use useMemo to prevent unnecessary re-renders of consuming components
+  const value = useMemo<AccessibilityContextValue>(() => ({
     fontSize,
     highContrast,
     reduceMotion,
@@ -149,7 +157,14 @@ export function AccessibilityProvider({ children }: AccessibilityProviderProps) 
     getFontSize,
     triggerHaptic,
     theme
-  };
+  }), [
+    fontSize,
+    highContrast,
+    reduceMotion,
+    screenReader,
+    hapticFeedback,
+    theme,
+  ]);
 
   return (
     <AccessibilityContext.Provider value={value}>

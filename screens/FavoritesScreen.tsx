@@ -8,17 +8,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// Import useFavorites and FavoriteResource from the unified context file
 import { useFavorites, FavoriteResource } from '../contexts/FavoritesContext'; 
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText';
 import { useQuery } from '@tanstack/react-query';
-import { fetchCategories, fetchSubcategories } from '../api/archive/api';
+import { fetchCategories, fetchSubcategories } from '../api/archive/api'; // Note: check path
 import { Category, Subcategory } from '../types/shared-schema';
 
-// Optionally typed navigation
 export default function FavoritesScreen({ navigation }: any) {
-  // 👇 Hook to access state and functions
   const { 
     favorites, 
     isLoading,
@@ -31,9 +28,8 @@ export default function FavoritesScreen({ navigation }: any) {
   const { text: favoritesText } = useTranslatedText("My Favorites");
   const { text: noFavoritesText } = useTranslatedText("No favorites yet");
   const { text: noFavoritesDescText } = useTranslatedText("Start by adding resources to your favorites when browsing.");
-  const { text: removeText } = useTranslatedText("Remove from favorites");
-  const { text: viewDetailsText } = useTranslatedText("View Details");
-
+  const { text: viewDetailsText } = useTranslatedText("View Details"); // Added back
+  
   // Fetch categories/subcategories for display
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -48,30 +44,16 @@ export default function FavoritesScreen({ navigation }: any) {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-    loadFavorites();
+      loadFavorites();
     });
     return unsubscribe;
   }, [navigation, loadFavorites]);
 
-  const getCategoryName = (categoryId: string) =>
-    categories.find((c: Category) => c.id === categoryId)?.name || 'Unknown Category';
-
-  const getSubcategoryName = (subcategoryId?: string) =>
-    subcategories.find((s: Subcategory) => s.id === subcategoryId)?.name || '';
+  // Removed unused category functions for brevity
 
   const renderFavorite = ({ item }: { item: FavoriteResource }) => {
-    <TouchableOpacity
-      style={styles.favoriteCard}
-      onPress={() =>
-        // ✅ Explicitly pass the ID property from the FavoriteResource object
-        navigation.navigate('ResourceDetail', { 
-          resourceId: item.id, 
-        })
-        }
-    >
-        {/* ... Card Content ... */}
-    </TouchableOpacity>
-    // 🌟 Format the address properly - item.address is an object { streetAddress, city, stateProvince, ...}
+    
+    // Format the address properly - item.address is an object { streetAddress, city, stateProvince, ...}
     const formattedAddress = item.address
     ? [
         item.address.streetAddress,
@@ -80,7 +62,7 @@ export default function FavoritesScreen({ navigation }: any) {
       ]
       .filter(Boolean)
       .join(", ")
-    : null; // Null if no address object exists
+    : null;
         
     // Also ensuring item.phone is only the main number if it is an object
     const displayPhone = item.phone?.main || item.phone?.mobile || item.phone?.default || item.phone;
@@ -95,13 +77,19 @@ export default function FavoritesScreen({ navigation }: any) {
     }
 
     return (
+      // 🛑 FIX: This is the ONLY TouchableOpacity that returns the content.
+      // Ensure it passes the ID using the key expected by ResourceDetailScreen (usually 'resourceId').
       <TouchableOpacity
         style={styles.favoriteCard}
-        onPress={() => navigation.navigate('ResourceDetail', { 
-          id: item.id,
-          resource: item,
-        })
-      }
+        onPress={() => {
+          console.log(`Navigating to ResourceDetail with ID: ${item.id}`);
+          navigation.navigate('ResourceDetail', { 
+            // 🚨 CRITICAL FIX: Use the key expected by the destination screen
+            resourceId: item.id, 
+            // We pass the partial item data as a fallback, though resourceId is primary
+            initialResourceData: item, 
+          });
+        }}
       >
         <View style={styles.favoriteContent}>
           {/* 1. Resource Name (Service Name or Organization fallback) */}
@@ -137,7 +125,9 @@ export default function FavoritesScreen({ navigation }: any) {
         </TouchableOpacity>
       </TouchableOpacity>
     );
-  }; // <-- This closing bracket was previously missing, ensure it's here.
+  }; 
+  
+  // <-- This closing bracket was previously missing, ensure it's here.
 
   if (isLoading) {
     return (

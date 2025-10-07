@@ -48,6 +48,8 @@ import type { HomeStackParamList } from "../navigation/AppNavigator";
 import SubcategoryDropdown from "../components/SubcategoryDropdown";
 import ResourceCard from "../components/ResourceCard";
 import { SafeAreaView } from "react-native-safe-area-context";
+// 👈 NEW IMPORTS:
+import { useAccessibility } from "../contexts/AccessibilityContext";
 
 // GPS Async Storage Keys
 const SAVED_LAT = "userLatitude";
@@ -64,6 +66,10 @@ interface Coordinates {
 const RATE_LIMIT_KEY = "resource_page_fetch_timestamps";
 const RATE_WINDOW_MS = 60 * 1000;
 const PAGE_SIZE = 20;
+
+// Scaling Constants (Not needed if using getFontSize from context)
+// const FONT_SCALING = { ... };
+
 
 async function canFetchPage() {
   try {
@@ -86,6 +92,12 @@ export default function ResourceListScreen() {
   const navigation = useNavigation<any>();
   const { params } = useRoute<ResourceListRouteProp>();
   const { keyword, zipCode: zipParam = "", isSubcategory = false } = params ?? {};
+  
+  // ✅ HOOK for Accessibility Context: Get theme and getFontSize
+  const { theme, getFontSize } = useAccessibility();
+
+  // ❌ Removed: Font Scaling Function Definition (using getFontSize instead)
+  // const getScaledFontSize = (base: number) => { ... };
   
   // STATE
   const [initialZipLoaded, setInitialZipLoaded] = useState(false);
@@ -141,6 +153,7 @@ export default function ResourceListScreen() {
         const [savedLatRaw, savedLngRaw] = await Promise.all([
             AsyncStorage.getItem(SAVED_LAT),
             AsyncStorage.getItem(SAVED_LNG),
+            // The saved ZIP key should be consistently used
         ]);
         const savedLat = savedLatRaw ? parseFloat(savedLatRaw) : null;
         const savedLng = savedLngRaw ? parseFloat(savedLngRaw) : null;
@@ -381,9 +394,11 @@ export default function ResourceListScreen() {
   // 1. Wait for initial ZIP loading
   if (!initialZipLoaded) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.info}>Loading user location preference...</Text>
+      // ✅ HC: Apply background color
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        {/* FONT SCALING & HC: info (Base 15) */}
+        <Text style={[styles.info, { fontSize: getFontSize(15), color: theme.textSecondary }]}>Loading user location preference...</Text>
       </View>
     );
   }
@@ -391,8 +406,10 @@ export default function ResourceListScreen() {
   // 2. Invalid keyword
   if (!keyword?.trim()) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>Invalid category.</Text>
+      // ✅ HC: Apply background color
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        {/* FONT SCALING & HC: error (Base 16) */}
+        <Text style={[styles.error, { fontSize: getFontSize(16), color: theme.primary }]}>❌ Invalid category.</Text>
       </View>
     );
   }
@@ -400,9 +417,11 @@ export default function ResourceListScreen() {
   // 3. Main resource loading
   if (loadingResources && !data) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.info}>Loading…</Text>
+      // ✅ HC: Apply background color
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        {/* FONT SCALING & HC: info (Base 15) */}
+        <Text style={[styles.info, { fontSize: getFontSize(15), color: theme.textSecondary }]}>Loading…</Text>
       </View>
     );
   }
@@ -410,35 +429,49 @@ export default function ResourceListScreen() {
   // 4. Error state
   if (isError) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>❌ {error?.message}</Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
-          <Text style={styles.retryText}>Retry</Text>
+      // ✅ HC: Apply background color
+      <View style={[styles.center, { backgroundColor: theme.background }]}>
+        {/* FONT SCALING & HC: error (Base 16) */}
+        <Text style={[styles.error, { fontSize: getFontSize(16), color: theme.primary }]}>❌ {error?.message}</Text>
+        {/* ✅ HC: Apply button colors */}
+        <TouchableOpacity style={[styles.retryBtn, { backgroundColor: theme.primary }]} onPress={() => refetch()}>
+          {/* FONT SCALING & HC: retryText (Base 16) */}
+          <Text style={[styles.retryText, { fontSize: getFontSize(16), color: theme.backgroundSecondary }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.headerContainer}>
+    // ✅ HC: Apply container background color
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* ✅ HC: Apply header background and border colors */}
+      <View style={[styles.headerContainer, { 
+        backgroundColor: theme.backgroundSecondary,
+        borderBottomColor: theme.border,
+      }]}>
         <TouchableOpacity
           onPress={() => navigation.navigate("Home")}
           style={styles.headerBack}
         >
-          <MaterialIcons name="arrow-back" size={24} color="#005191" />
-          <Text style={styles.headerBackText}>Home</Text>
+          {/* ✅ HC: Apply icon color */}
+          <MaterialIcons name="arrow-back" size={24} color={theme.primary} />
+          {/* FONT SCALING & HC: headerBackText (Base 16) */}
+          <Text style={[styles.headerBackText, { fontSize: getFontSize(16), color: theme.primary }]}>Home</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>
+          {/* FONT SCALING & HC: headerTitle (Base 16) */}
+          <Text style={[styles.headerTitle, { fontSize: getFontSize(16), color: theme.text }]}>
             {`${subcat || keyword} Resources`}
           </Text>
-          <Text style={styles.headerSubtitle}>{resources.length} found</Text>
+          {/* FONT SCALING & HC: headerSubtitle (Base 15) */}
+          <Text style={[styles.headerSubtitle, { fontSize: getFontSize(15), color: theme.textSecondary }]}>{resources.length} found</Text>
         </View>
         <View style={styles.headerRight} />
       </View>
 
-      <View style={styles.dropdownWrapper}>
+      {/* ✅ HC: Apply dropdown wrapper background color */}
+      <View style={[styles.dropdownWrapper, { backgroundColor: theme.backgroundSecondary }]}>
         <SubcategoryDropdown
           categoryKeyword={keyword.toLowerCase()}
           selectedSubcategory={subcat}
@@ -452,16 +485,14 @@ export default function ResourceListScreen() {
       <FlatList
     data={resources}
     renderItem={({ item }) => {
-      // FIX: Calculate parsed coordinates and validity check here
+      // ... (Rest of renderItem logic remains the same)
       const resourceLat = parseFloat(item.address?.latitude || '');
       const resourceLng = parseFloat(item.address?.longitude || '');
       const isResourceLocationValid = !isNaN(resourceLat) && !isNaN(resourceLng);
 
-      // Standard JavaScript logic and control flow goes here
       if (item.address) {
           console.log(`Resource ID: ${getResourceUniqueId(item)}`);
           console.log(`Resource Coords: ${item.address.latitude}, ${item.address.longitude}`);
-          // Add log to check validity of home and resource coords
           if (homeCoords && isResourceLocationValid) {
              console.log(`Distance Check: Ready to calculate! Home: ${homeCoords.latitude}, Resource: ${resourceLat}`);
           } else {
@@ -471,10 +502,10 @@ export default function ResourceListScreen() {
           console.log(`Resource ID: ${getResourceUniqueId(item)} - Address missing!`);
       }
       return (
+      // NOTE: ResourceCard must be updated to use the context internally for its colors
       <ResourceCard
         resource={item}
         distanceMiles={
-          // Use the pre-calculated validity and parsed numbers
           homeCoords && isResourceLocationValid
             ? haversineDistance(
                 homeCoords.latitude,
@@ -495,47 +526,51 @@ export default function ResourceListScreen() {
     onEndReachedThreshold={0.8}
     ListFooterComponent={
       rateLimited ? (
-        <Text style={styles.info}>Loading too fast.</Text>
+        // FONT SCALING & HC: info (Base 15)
+        <Text style={[styles.info, { fontSize: getFontSize(15), color: theme.textSecondary }]}>Loading too fast.</Text>
       ) : isFetchingNextPage ? (
-        <ActivityIndicator style={styles.footer} />
+        <ActivityIndicator style={styles.footer} color={theme.primary} />
       ) : null
     }
   />
 
       {!hasNextPage && (
-        <View style={styles.center}>
-          <Text style={styles.info}>No more results.</Text>
+        // ✅ HC: Apply background color for the 'No more results' message area
+        <View style={[styles.center, { flex: 0, paddingVertical: 16, backgroundColor: theme.background }]}>
+          {/* FONT SCALING & HC: info (Base 15) */}
+          <Text style={[styles.info, { fontSize: getFontSize(15), color: theme.textSecondary }]}>No more results.</Text>
         </View>
       )}
     </SafeAreaView>
   );
 }
 
+// Stylesheet: Removed hardcoded colors where they were overridden inline
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#f5f5f5" }, // Overridden inline
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  info: { marginTop: 12, color: "#555" },
-  error: { color: "#c00", marginBottom: 12 },
-  retryBtn: { backgroundColor: "#005191", padding: 8, borderRadius: 6 },
-  retryText: { color: "#fff", fontWeight: "600" },
+  info: { marginTop: 12, color: "#555" }, // Overridden inline
+  error: { color: "#c00", marginBottom: 12 }, // Overridden inline
+  retryBtn: { backgroundColor: "#005191", padding: 8, borderRadius: 6 }, // Overridden inline
+  retryText: { color: "#fff", fontWeight: "600" }, // Overridden inline
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "white",
+    backgroundColor: "white", // Overridden inline
     padding: 12,
     marginTop: -60,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderBottomColor: "#ddd", // Overridden inline
     position: "relative",
   },
   headerBack: { flexDirection: "row", alignItems: "center", width: 90, zIndex: 1, },
-  headerBackText: { marginLeft: 4, color: "#005191", fontSize: 16 },
+  headerBackText: { marginLeft: 4, color: "#005191", fontSize: 16 }, // Overridden inline
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 16, fontWeight: "600" },
-  headerSubtitle: { fontSize: 15, color: "#666" },
+  headerTitle: { fontSize: 16, fontWeight: "600" }, // Overridden inline
+  headerSubtitle: { fontSize: 15, color: "#666" }, // Overridden inline
   headerRight: { width: 90 },
-  searchSection: { backgroundColor: "white", padding: 12 },
+  searchSection: { backgroundColor: "white", padding: 12 }, // Not visible/used in final view
   locationBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -543,7 +578,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
   },
-  locationInput: { flex: 1, marginLeft: 8, fontSize: 16, color: "#333" },
+  locationInput: { flex: 1, marginLeft: 8, fontSize: 16, color: "#333" }, 
   clearButton: {
     marginLeft: 8,
     backgroundColor: "#dc3545",
@@ -560,6 +595,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   saveButtonText: { color: "white", fontSize: 14 },
-  dropdownWrapper: { backgroundColor: "white" },
+  dropdownWrapper: { backgroundColor: "white" }, // Overridden inline
   footer: { padding: 16 },
 });

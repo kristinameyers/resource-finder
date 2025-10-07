@@ -8,7 +8,6 @@ import {
   Linking,
   ActivityIndicator,
 } from 'react-native';
-import type { StackScreenProps } from '@react-navigation/stack';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTranslatedText } from '../components/TranslatedText';
@@ -17,38 +16,31 @@ import {
   ServiceAtLocationDetails,
   stripHtmlTags,
 } from '../api/resourceApi';
+import { DrawerScreenProps } from '@react-navigation/drawer';
+import { DrawerParamList } from '../App';
+import { useAccessibility } from '../contexts/AccessibilityContext'; // 👈 IMPORTED
 
-// Define the structure of the data passed from the ResourceListScreen
-export type ResourceListBackParams = {
-  keyword: string; // The main search keyword/category name
-  zipCode: string; // The ZIP code used for sorting/filtering
-  isSubcategory: boolean;
-  selectedSubcategory: string | null;
-};
+// The correct, specific props type for this screen.
+type ResourceDetailScreenProps = DrawerScreenProps<DrawerParamList, 'ResourceDetail'>;
 
-export type DetailScreenParams = {
-  ResourceList: {
-    keyword: string;
-    zipCode: string;
-    isSubcategory: boolean;
-    // Note: We don't explicitly pass selectedSubcategory here, as it's handled by keyword
-  };
-  ResourceDetail: {
-    // These are the only params the screen cares about, regardless of the stack
-    resourceId: string; 
-    backToList?: ResourceListBackParams; // If you need this optional from ResourcesList
-  };
-};
-
-type ResourceDetailScreenProps = StackScreenProps<DetailScreenParams, 'ResourceDetail'>;
+// ❌ Removed: FONT_SCALING constants (using getFontSize from context)
+// const FONT_SCALING = { ... };
 
 export default function ResourceDetailScreen({
   route,
   navigation,
 }: ResourceDetailScreenProps) {
-  const { resourceId, backToList } = route.params;
-  const id = resourceId;
+  // ✅ UPDATE: Get theme and getFontSize (instead of `fontSize` and custom scaler)
+  const { theme, getFontSize, highContrast } = useAccessibility();
+  
+  // ❌ Removed: Define the scaling utility function (using getFontSize instead)
+  // const getScaledFontSize = (base: number) => { ... };
 
+  const { resourceId, backToList } = route.params;
+  
+  const idToQuery = resourceId; 
+
+  // Translated Texts
   const { text: backText } = useTranslatedText('Back');
   const { text: resourceDetailText } = useTranslatedText('Resource Details');
   const { text: callText } = useTranslatedText('Call');
@@ -70,80 +62,101 @@ export default function ResourceDetailScreen({
     isError,
     refetch,
   } = useQuery<ServiceAtLocationDetails | null>({
-    queryKey: ['serviceAtLocationDetails', id],
-    queryFn: () => fetchServiceAtLocationDetails(id),
-    enabled: !!id,
+    queryKey: ['serviceAtLocationDetails', idToQuery], 
+    queryFn: () => fetchServiceAtLocationDetails(idToQuery),
+    enabled: !!idToQuery,
+    staleTime: Infinity, // Details are unlikely to change frequently
   });
 
   useEffect(() => {
     if (resourceDetails) {
       console.log('Loaded resource details:', {
-        id: id,
+        id: idToQuery,
         name: resourceDetails.serviceName,
         org: resourceDetails.organizationName,
       });
     }
-  }, [resourceDetails, id]);
+  }, [resourceDetails, idToQuery]);
 
   const renderHeader = () => (
-    <View style={styles.header}>
-
+    // ✅ HC: Apply header background and border
+    <View style={[styles.header, { 
+        backgroundColor: theme.backgroundSecondary,
+        borderBottomColor: theme.border,
+    }]}>
       <TouchableOpacity
-  style={styles.backButton}
-  onPress={() => {
-    // 🛠️ FIX: Check if backToList exists. It will be undefined when coming from FavoritesScreen.
-    if (backToList && backToList.keyword) {
-      // 1. Navigation path for returning to the specific ResourceList search
-      navigation.navigate('ResourceList', {
-        // This is safe because we checked if backToList exists
-        keyword: backToList.selectedSubcategory || backToList.keyword,
-        zipCode: backToList.zipCode,
-        isSubcategory: Boolean(backToList.selectedSubcategory) || backToList.isSubcategory,
-      });
-    } else {
-      // 2. Navigation path for when coming from FavoritesScreen (no list context)
-      // Safely go back to the previous screen (which is the FavoritesScreen)
-      navigation.goBack(); 
-    }
-  }}
->
-        <MaterialIcons name="arrow-back" size={24} color="#005191" />
-        <Text style={styles.backButtonText}>{backText}</Text>
+        style={styles.backButton}
+        onPress={() => {
+          if (backToList && backToList.keyword) {
+            navigation.navigate('ResourceList', {
+              keyword: backToList.selectedSubcategory || backToList.keyword,
+              zipCode: backToList.zipCode,
+              isSubcategory: Boolean(backToList.selectedSubcategory) || backToList.isSubcategory,
+            });
+          } else {
+            navigation.goBack(); 
+          }
+        }}
+      >
+        {/* ✅ HC: Apply icon color */}
+        <MaterialIcons name="arrow-back" size={24} color={theme.primary} />
+        {/* FONT SCALING & HC: backButtonText (Base 16) */}
+        <Text style={[styles.backButtonText, { 
+            fontSize: getFontSize(16),
+            color: theme.primary
+        }]}>{backText}</Text>
       </TouchableOpacity>
-      <Text style={styles.headerTitle}>{resourceDetailText}</Text>
+      {/* FONT SCALING & HC: headerTitle (Base 18) */}
+      <Text style={[styles.headerTitle, { 
+          fontSize: getFontSize(18),
+          color: theme.text
+      }]}>{resourceDetailText}</Text>
       <View style={styles.headerRight} />
     </View>
   );
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      // ✅ HC: Apply container background
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         {renderHeader()}
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#005191" />
-          <Text style={styles.loadingText}>{loadingText}</Text>
+          {/* ✅ HC: Apply indicator color */}
+          <ActivityIndicator size="large" color={theme.primary} />
+          {/* FONT SCALING & HC: loadingText (Base 16) */}
+          <Text style={[styles.loadingText, { 
+              fontSize: getFontSize(16),
+              color: theme.primary
+          }]}>{loadingText}</Text>
         </View>
       </View>
     );
   }
 
   if (isError || !resourceDetails) {
-    // 🛑 TEMPORARY DEBUG LOGS 🛑
-  console.log("-----------------------------------------");
-  console.log("RENDERING DETAILS for ID:", id);
-  console.log("Service Name (Found):", resourceDetails?.serviceName);
-  console.log("Organization Name (Found):", resourceDetails?.organizationName);
-  console.log("Full Resource Details Object:", JSON.stringify(resourceDetails, null, 2)); 
-  console.log("-----------------------------------------");
     return (
-      <View style={styles.container}>
+      // ✅ HC: Apply container background
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         {renderHeader()}
         <View style={styles.centerContainer}>
-          <Text style={styles.noDataText}>Resource details not available</Text>
-          <Text style={styles.debugText}>Resource ID: {id}</Text>
+          {/* FONT SCALING & HC: noDataText (Base 18) */}
+          <Text style={[styles.noDataText, { 
+              fontSize: getFontSize(18),
+              color: theme.text
+          }]}>Resource details not available</Text>
+          {/* FONT SCALING & HC: debugText (Base 14) */}
+          <Text style={[styles.debugText, { 
+              fontSize: getFontSize(14),
+              color: theme.textSecondary
+          }]}>Resource ID: {idToQuery}</Text>
           <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
-            <MaterialIcons name="refresh" size={20} color="#005191" />
-            <Text style={styles.retryText}>Retry</Text>
+            {/* ✅ HC: Apply icon color */}
+            <MaterialIcons name="refresh" size={20} color={theme.primary} />
+            {/* FONT SCALING & HC: retryText (Base 16) */}
+            <Text style={[styles.retryText, { 
+                fontSize: getFontSize(16),
+                color: theme.primary
+            }]}>Retry</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -162,35 +175,70 @@ export default function ResourceDetailScreen({
     : null;
 
   return (
-    <View style={styles.container}>
+    // ✅ HC: Apply container background
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {renderHeader()}
       <ScrollView style={styles.scrollContainer}>
-        <View style={styles.section}>
-          <Text style={styles.title}>
+        {/* ✅ HC: Apply section background and optional border */}
+        <View style={[styles.section, { 
+            backgroundColor: theme.backgroundSecondary,
+            borderWidth: highContrast ? 1 : 0,
+            borderColor: theme.border,
+        }]}>
+          {/* FONT SCALING & HC: title (Base 22) */}
+          <Text style={[styles.title, { 
+              fontSize: getFontSize(22),
+              color: theme.primary
+          }]}>
             {resourceDetails.serviceName || 'Service Details'}
           </Text>
           {resourceDetails.organizationName && (
-            <Text style={styles.organizationText}>
+            // FONT SCALING & HC: organizationText (Base 16)
+            <Text style={[styles.organizationText, { 
+                fontSize: getFontSize(16),
+                color: theme.text
+            }]}>
               {resourceDetails.organizationName}
             </Text>
           )}
           {resourceDetails.locationName && (
-            <Text style={styles.locationText}>
+            // FONT SCALING & HC: locationText (Base 14)
+            <Text style={[styles.locationText, { 
+                fontSize: getFontSize(14),
+                color: theme.textSecondary
+            }]}>
               {resourceDetails.locationName}
             </Text>
           )}
           {resourceDetails.serviceDescription && (
             <>
-              <Text style={styles.label}>{descriptionText}</Text>
-              <Text style={styles.text}>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>{descriptionText}</Text>
+              {/* FONT SCALING & HC: text (Base 14) */}
+              <Text style={[styles.text, { 
+                  fontSize: getFontSize(14),
+                  color: theme.textSecondary
+              }]}>
                 {stripHtmlTags(resourceDetails.serviceDescription)}
               </Text>
             </>
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
+        {/* ✅ HC: Apply section background and optional border */}
+        <View style={[styles.section, { 
+            backgroundColor: theme.backgroundSecondary,
+            borderWidth: highContrast ? 1 : 0,
+            borderColor: theme.border,
+        }]}>
+          {/* FONT SCALING & HC: sectionTitle (Base 18) */}
+          <Text style={[styles.sectionTitle, { 
+              fontSize: getFontSize(18),
+              color: theme.primary
+          }]}>Contact Information</Text>
           {resourceDetails.servicePhones?.map(
             (
               phone: { number?: string; extension?: string; type?: string },
@@ -206,8 +254,13 @@ export default function ResourceDetailScreen({
                     Linking.openURL(`tel:${phoneNumber.replace(/\D/g, '')}`)
                   }
                 >
-                  <Ionicons name="call-outline" size={20} color="#005191" />
-                  <Text style={styles.actionLabel}>
+                  {/* ✅ HC: Apply icon color */}
+                  <Ionicons name="call-outline" size={20} color={theme.primary} />
+                  {/* FONT SCALING & HC: actionLabel (Base 15) */}
+                  <Text style={[styles.actionLabel, { 
+                      fontSize: getFontSize(15),
+                      color: theme.primary // Links/actions use primary color
+                  }]}>
                     {callText}: {phoneNumber}
                     {phone.extension ? ` ext. ${phone.extension}` : ''}
                   </Text>
@@ -220,8 +273,13 @@ export default function ResourceDetailScreen({
               style={styles.actionRow}
               onPress={() => Linking.openURL(resourceDetails.website!)}
             >
-              <Ionicons name="globe-outline" size={20} color="#005191" />
-              <Text style={styles.actionLabel}>{websiteText}</Text>
+              {/* ✅ HC: Apply icon color */}
+              <Ionicons name="globe-outline" size={20} color={theme.primary} />
+              {/* FONT SCALING & HC: actionLabel (Base 15) */}
+              <Text style={[styles.actionLabel, { 
+                  fontSize: getFontSize(15),
+                  color: theme.primary
+              }]}>{websiteText}</Text>
             </TouchableOpacity>
           )}
           {formattedAddress && (
@@ -235,66 +293,138 @@ export default function ResourceDetailScreen({
                 )
               }
             >
-              <Ionicons name="location-outline" size={20} color="#005191" />
-              <Text style={styles.actionLabel}>
+              {/* ✅ HC: Apply icon color */}
+              <Ionicons name="location-outline" size={20} color={theme.primary} />
+              {/* FONT SCALING & HC: actionLabel (Base 15) */}
+              <Text style={[styles.actionLabel, { 
+                  fontSize: getFontSize(15),
+                  color: theme.primary
+              }]}>
                 {addressText}: {formattedAddress}
               </Text>
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Service Information</Text>
+        {/* ✅ HC: Apply section background and optional border */}
+        <View style={[styles.section, { 
+            backgroundColor: theme.backgroundSecondary,
+            borderWidth: highContrast ? 1 : 0,
+            borderColor: theme.border,
+        }]}>
+          {/* FONT SCALING & HC: sectionTitle (Base 18) */}
+          <Text style={[styles.sectionTitle, { 
+              fontSize: getFontSize(18),
+              color: theme.primary
+          }]}>Service Information</Text>
           {resourceDetails.serviceHoursText && (
             <>
-              <Text style={styles.label}>{hoursText}</Text>
-              <Text style={styles.text}>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>{hoursText}</Text>
+              {/* FONT SCALING & HC: text (Base 14) */}
+              <Text style={[styles.text, { 
+                  fontSize: getFontSize(14),
+                  color: theme.textSecondary
+              }]}>
                 {resourceDetails.serviceHoursText}
               </Text>
             </>
           )}
           {resourceDetails.fees && (
             <>
-              <Text style={styles.label}>{feesText}</Text>
-              <Text style={styles.text}>{resourceDetails.fees}</Text>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>{feesText}</Text>
+              {/* FONT SCALING & HC: text (Base 14) */}
+              <Text style={[styles.text, { 
+                  fontSize: getFontSize(14),
+                  color: theme.textSecondary
+              }]}>{resourceDetails.fees}</Text>
             </>
           )}
           {resourceDetails.eligibility && (
             <>
-              <Text style={styles.label}>{eligibilityText}</Text>
-              <Text style={styles.text}>{resourceDetails.eligibility}</Text>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>{eligibilityText}</Text>
+              {/* FONT SCALING & HC: text (Base 14) */}
+              <Text style={[styles.text, { 
+                  fontSize: getFontSize(14),
+                  color: theme.textSecondary
+              }]}>{resourceDetails.eligibility}</Text>
             </>
           )}
           {resourceDetails.applicationProcess && (
             <>
-              <Text style={styles.label}>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>
                 {applicationProcessText}
               </Text>
-              <Text style={styles.text}>
+              {/* FONT SCALING & HC: text (Base 14) */}
+              <Text style={[styles.text, { 
+                  fontSize: getFontSize(14),
+                  color: theme.textSecondary
+              }]}>
                 {resourceDetails.applicationProcess}
               </Text>
             </>
           )}
           {resourceDetails.documentsRequired && (
             <>
-              <Text style={styles.label}>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>
                 {documentsRequiredText}
               </Text>
-              <Text style={styles.text}>
+              {/* FONT SCALING & HC: text (Base 14) */}
+              <Text style={[styles.text, { 
+                  fontSize: getFontSize(14),
+                  color: theme.textSecondary
+              }]}>
                 {resourceDetails.documentsRequired}
               </Text>
             </>
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
+        {/* ✅ HC: Apply section background and optional border */}
+        <View style={[styles.section, { 
+            backgroundColor: theme.backgroundSecondary,
+            borderWidth: highContrast ? 1 : 0,
+            borderColor: theme.border,
+            marginBottom: 32, // Add extra space at the bottom
+        }]}>
+          {/* FONT SCALING & HC: sectionTitle (Base 18) */}
+          <Text style={[styles.sectionTitle, { 
+              fontSize: getFontSize(18),
+              color: theme.primary
+          }]}>
             Accessibility & Languages
           </Text>
           {resourceDetails.disabilitiesAccess && (
             <>
-              <Text style={styles.label}>{accessibilityText}</Text>
-              <Text style={styles.text}>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>{accessibilityText}</Text>
+              {/* FONT SCALING & HC: text (Base 14) */}
+              <Text style={[styles.text, { 
+                  fontSize: getFontSize(14),
+                  color: theme.textSecondary
+              }]}>
                 {resourceDetails.disabilitiesAccess}
               </Text>
             </>
@@ -302,11 +432,20 @@ export default function ResourceDetailScreen({
           {Array.isArray(resourceDetails.languagesOffered) &&
           resourceDetails.languagesOffered.length > 0 && (
             <>
-              <Text style={styles.label}>{languagesText}</Text>
+              {/* FONT SCALING & HC: label (Base 15) */}
+              <Text style={[styles.label, { 
+                  fontSize: getFontSize(15),
+                  color: theme.text
+              }]}>{languagesText}</Text>
               <View style={styles.badgeRow}>
                 {resourceDetails.languagesOffered.map(
                   (lang: string, i: number) => (
-                    <Text key={i} style={styles.languageBadge}>
+                    // FONT SCALING & HC: languageBadge (Base 12)
+                    <Text key={i} style={[styles.languageBadge, { 
+                        fontSize: getFontSize(12),
+                        backgroundColor: theme.accent, // Use accent for badges
+                        color: theme.backgroundSecondary, // Text color contrasts with accent
+                    }]}>
                       {lang}
                     </Text>
                   )
@@ -320,6 +459,8 @@ export default function ResourceDetailScreen({
   );
 }
 
+// ⚠️ NOTE: Stylesheet is simplified and default colors are set to match standard light mode
+// but are mostly overridden by inline styles.
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   scrollContainer: { flex: 1 },
@@ -333,9 +474,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   backButton: { flexDirection: 'row', alignItems: 'center' },
-  backButtonText: { marginLeft: 4, color: '#005191', fontSize: 16 },
+  backButtonText: { marginLeft: 4, color: '#005191' }, 
   headerTitle: {
-    fontSize: 18,
     fontWeight: '600',
     color: '#333',
     flex: 1,
@@ -349,52 +489,53 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   noDataText: {
-    fontSize: 18,
     color: '#333',
     marginBottom: 16,
     textAlign: 'center',
   },
   debugText: {
-    fontSize: 14,
     color: '#666',
     marginBottom: 8,
     textAlign: 'center',
   },
-  loadingText: { fontSize: 16, color: '#005191', marginTop: 10 },
+  loadingText: { color: '#005191', marginTop: 10 },
   section: {
     margin: 16,
     padding: 16,
     backgroundColor: 'white',
     borderRadius: 8,
+    // Shadow properties remain for standard mode
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   title: {
-    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 8,
     color: '#005191',
   },
-  organizationText: { fontSize: 16, color: '#666', marginBottom: 8 },
-  locationText: { fontSize: 14, color: '#888', marginBottom: 12 },
+  organizationText: { color: '#666', marginBottom: 8 },
+  locationText: { color: '#888', marginBottom: 12 },
   sectionTitle: {
-    fontSize: 18,
     fontWeight: '600',
     color: '#005191',
     marginBottom: 12,
   },
   label: {
-    fontSize: 15,
     fontWeight: '600',
     marginTop: 12,
     marginBottom: 6,
+    color: '#333', // Default text color
   },
   text: {
-    fontSize: 14,
     color: '#333',
     lineHeight: 20,
     marginBottom: 8,
   },
   actionRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
-  actionLabel: { fontSize: 15, marginLeft: 8, color: '#007aff', flex: 1 },
+  actionLabel: { marginLeft: 8, color: '#007aff', flex: 1, textDecorationLine: 'underline' },
   retryButton: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
   retryText: { color: '#005191', marginLeft: 8 },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
@@ -403,7 +544,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     backgroundColor: '#f0f0f0',
     borderRadius: 4,
-    fontSize: 12,
     color: '#333',
     marginRight: 6,
     marginBottom: 6,

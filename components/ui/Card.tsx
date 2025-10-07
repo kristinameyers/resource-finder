@@ -1,9 +1,10 @@
 import React from "react";
-import { View, StyleSheet, ViewStyle } from "react-native";
+import { View, StyleSheet, ViewStyle, StyleProp } from "react-native";
 
 interface CardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  // ✅ FIX 1: Change ViewStyle to StyleProp<ViewStyle> to allow style arrays
+  style?: StyleProp<ViewStyle>; 
   elevation?: number;
   rounded?: number;
   backgroundColor?: string;
@@ -11,6 +12,9 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({
   children,
+  // ⚠️ Note: If `style` is a default empty object, it should be an empty array []
+  // to avoid issues when merging arrays, but we will leave the default as {} for simplicity
+  // since the main fix is the type update.
   style = {},
   elevation = 3,
   rounded = 12,
@@ -20,6 +24,10 @@ export const Card: React.FC<CardProps> = ({
     <View
       style={[
         styles.card,
+        // The array combines: 
+        // 1. The base static style
+        // 2. Dynamic/default props (elevation, rounded, backgroundColor)
+        // 3. The user-provided `style` prop (which is the combined array from AboutScreen)
         { elevation, borderRadius: rounded, backgroundColor },
         style,
       ]}

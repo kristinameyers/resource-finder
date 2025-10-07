@@ -44,7 +44,7 @@ export type DrawerParamList = {
     selectedSubcategory?: string | null;
   };
   ResourceDetail: { 
-    id: string; 
+    resourceId: string; 
     backToList: ResourceListBackParams; 
   };
   Favorites: undefined;

@@ -2,67 +2,67 @@
   "housing": {
     "id": "housing",
     "name": "Housing",
-    "keywords": ["housing", "shelter", "home"],
+    "keywords": ["shelter"],
     "icon": "housing"
   },
   "food": {
     "id": "food",
     "name": "Food",
-    "keywords": ["food", "meals", "pantry"],
+    "keywords": ["food"],
     "icon": "food"
   },
   "education": {
     "id": "education",
     "name": "Education",
-    "keywords": ["education", "school", "literacy"],
+    "keywords": ["literacy"],
     "icon": "education"
   },
   "healthcare": {
     "id": "healthcare",
     "name": "Health Care",
-    "keywords": ["health", "clinic", "doctor", "healthcare"],
+    "keywords": ["health"],
     "icon": "healthcare"
   },
   "children-family": {
     "id": "children-family",
     "name": "Children & Family",
-    "keywords": ["family", "children", "parent"],
+    "keywords": ["children"],
     "icon": "children-family"
   },
   "substance-use": {
     "id": "substance-use",
     "name": "Substance Use",
-    "keywords": ["substance", "addiction", "rehab", "substance use"],
+    "keywords": ["drugs"],
     "icon": "substance-use"
   },
   "young-adults": {
     "id": "young-adults",
     "name": "Young Adults",
-    "keywords": ["teen", "youth", "young", "young adults"],
+    "keywords": ["youth"],
     "icon": "young-adults"
   },
   "legal-assistance": {
     "id": "legal-assistance",
     "name": "Legal Assistance",
-    "keywords": ["legal", "lawyer", "court"],
+    "keywords": ["legal"],
     "icon": "legal-assistance"
   },
   "utilities": {
     "id": "utilities",
     "name": "Utilities",
-    "keywords": ["utilities", "electric", "water", "bill"],
+    "keywords": ["electric"],
     "icon": "utilities"
   },
   "transportation": {
     "id": "transportation",
     "name": "Transportation",
-    "keywords": ["transportation", "bus", "ride"],
+    "keywords": ["transportation"],
     "icon": "transportation"
   },
   "hygiene-household": {
     "id": "hygiene-household",
     "name": "Hygiene & Household",
-    "keywords": ["household", "hygiene", "clean"],
+    "keywords": ["home"],
     "icon": "hygiene-household"
   }
 }
