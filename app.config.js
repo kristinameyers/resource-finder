@@ -44,14 +44,17 @@ module.exports = ({ config }) => {
         "expo-font"
       ],
       
-      // ✅ CONSOLIDATED 'extra' BLOCK
+      // ✅ API KEY
       extra: {
-        // 1. KEEP: The API URL (public information)
+        // 1. The API URL (public information)
         EXPO_PUBLIC_NATIONAL_211_API_URL: process.env.EXPO_PUBLIC_NATIONAL_211_API_URL,
 
-        // 2. REMOVE: EXPO_PUBLIC_NATIONAL_211_API_KEY (it's now handled securely via EAS Secrets and eas.json)
+        // 2. Inject the private key value into the app's manifest
+        // The value of NATIONAL_211_API_KEY is read during the build
+        // and is copied into the app's static manifest for runtime access.
+        national211ApiKey: process.env.NATIONAL_211_API_KEY, 
         
-        // 3. KEEP: The EAS project ID configuration
+        // 3. EAS project ID configuration
         eas: {
           projectId: "b75ac5b2-6971-45ec-859f-ad0b65644a77" 
         }
