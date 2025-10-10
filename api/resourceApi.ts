@@ -1,4 +1,5 @@
 // resourceApi.ts
+import Constants from 'expo-constants'; // 👈 1. ADD THIS IMPORT
 import * as Location from "expo-location";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -21,8 +22,8 @@ export interface ResourcePage {
 }
 
 /* ENVIRONMENT */
-const API_KEY = process.env.EXPO_PUBLIC_NATIONAL_211_API_KEY ?? "";
-const BASE_URL = process.env.EXPO_PUBLIC_NATIONAL_211_API_URL ?? "https://api.211.org/resources/v2";
+const API_KEY = Constants.expoConfig?.extra?.national211ApiKey as string ?? "";
+const BASE_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_NATIONAL_211_API_URL as string ?? "https://api.211.org/resources/v2";
 
 /* SANTA BARBARA COUNTY CONSTANT */
 const SANTA_BARBARA_COUNTY = "santa barbara county";

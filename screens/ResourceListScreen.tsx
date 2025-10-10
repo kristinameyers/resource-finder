@@ -47,6 +47,8 @@ import type { Resource } from "../types/shared-schema";
 import type { HomeStackParamList } from "../navigation/AppNavigator";
 import SubcategoryDropdown from "../components/SubcategoryDropdown";
 import ResourceCard from "../components/ResourceCard";
+// 🎯 NEW IMPORT: ResourceCardSkeleton
+import ResourceCardSkeleton from "../components/ResourceCardSkeleton"; 
 import { SafeAreaView } from "react-native-safe-area-context";
 // 👈 NEW IMPORTS:
 import { useAccessibility } from "../contexts/AccessibilityContext";
@@ -417,11 +419,12 @@ export default function ResourceListScreen() {
   // 3. Main resource loading
   if (loadingResources && !data) {
     return (
-      // ✅ HC: Apply background color
-      <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        {/* FONT SCALING & HC: info (Base 15) */}
-        <Text style={[styles.info, { fontSize: getFontSize(15), color: theme.textSecondary }]}>Loading…</Text>
+      // 🎯 MODIFICATION: Replace ActivityIndicator with ResourceCardSkeleton
+      <View style={[styles.container, { backgroundColor: theme.background, paddingVertical: 12 }]}>
+        {/* Render 8 ResourceCardSkeleton components while loading */}
+        {[...Array(8)].map((_, index) => (
+          <ResourceCardSkeleton key={index} />
+        ))}
       </View>
     );
   }
