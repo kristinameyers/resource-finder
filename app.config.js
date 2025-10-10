@@ -37,9 +37,6 @@ module.exports = ({ config }) => {
           backgroundColor: "#FFFFFF"
         }
       },
-      web: {
-        favicon: "./assets/images/icon.png"
-      },
       plugins: [
         "expo-font"
       ],
